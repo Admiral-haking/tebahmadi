@@ -1,0 +1,14 @@
+node_modules/
+.local/
+.next/
+dist/
+.vinext/
+.sites-runtime/
+.wrangler/
+.openai/
+test-results/
+playwright-report/
+tsconfig.tsbuildinfo
+.env
+.env.*
+!.env.example

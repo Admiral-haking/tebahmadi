@@ -1,0 +1,5 @@
+ALTER TABLE products ADD COLUMN ingredients TEXT NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN usage_text TEXT NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN warning_text TEXT NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN sku TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS products_sku_idx ON products(sku);

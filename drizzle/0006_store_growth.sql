@@ -1,0 +1,11 @@
+ALTER TABLE customers ADD COLUMN email TEXT;
+ALTER TABLE customers ADD COLUMN marketing_consent INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE customers ADD COLUMN last_seen_at TEXT;
+CREATE TABLE IF NOT EXISTS login_otps (
+  phone TEXT PRIMARY KEY NOT NULL,
+  code_hash TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  resend_after INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

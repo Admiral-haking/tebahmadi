@@ -1,0 +1,2 @@
+import type { MetadataRoute } from "next";
+export default function sitemap(): MetadataRoute.Sitemap { const base = process.env.NEXT_PUBLIC_SITE_URL || "https://tab-ahmadi.example"; return [{ url: base, changeFrequency: "daily", priority: 1 }, { url: `${base}/products`, changeFrequency: "daily", priority: .9 }, { url: `${base}/blog`, changeFrequency: "weekly", priority: .8 }, { url: `${base}/policies`, changeFrequency: "yearly", priority: .3 }]; }

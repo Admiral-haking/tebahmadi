@@ -1,6 +1,6 @@
 # فروشگاه طب احمدی
 
-A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
+A local-first Persian/RTL commerce application running on Vinext, Node.js and SQLite.
 
 ## Prerequisites
 
@@ -11,11 +11,11 @@ A clean full-stack starter running on [vinext](https://github.com/cloudflare/vin
 
 ## Local ecommerce workflow
 
-Local development uses the Worker, Wrangler/Miniflare and a persistent local D1 database. Payment and shipping default to mock adapters; copy `.env.example` only when configuring local values and never commit real credentials.
+Local development uses Node.js and a persistent SQLite database. Payment, shipping and SMS default to mock adapters; copy `.env.example` only when configuring local values and never commit real credentials.
 
 `PAYMENT_PROVIDER=mock` and `SHIPPING_PROVIDER=mock` are the safe local defaults. Selecting `http`, `zarinpal`, or `tapin` without the required credentials does not silently fall back to mock: readiness returns `503` and the integration status exposes only the provider name and a boolean configuration flag. Public order creation also validates the request origin and is rate-limited per client IP.
 
-Provider values are injected into the Worker bindings at startup. For production, set `PAYMENT_PROVIDER=zarinpal`, `SHIPPING_PROVIDER=tapin`, and the required credentials as Cloudflare secrets/vars; never rely on an omitted provider. Without an explicit provider, `/api/readiness` returns `503` with `unconfigured` providers. Local `pnpm dev` explicitly injects both mock providers.
+Provider values are read from environment variables. Configure `PAYMENT_PROVIDER=zarinpal`, `SHIPPING_PROVIDER=tapin`, or `SMS_PROVIDER=sms_ir` only when the corresponding credentials are available; local mode remains deterministic with mock providers.
 
 برای عملیات ارسال، ادمین مجاز می‌تواند مرسوله را از مسیر `POST /api/admin/shipping/tapin/register` ثبت و از مسیر `POST /api/admin/shipping/tapin/track` دوباره پیگیری کند. endpoint پیگیری، سفارش و کد رهگیری را اعتبارسنجی می‌کند و وضعیت shipment، سفارش و timeline را هم‌زمان به‌روزرسانی می‌کند. در Tapin مستقیم از endpoint رسمی `order/post/get-status/report` استفاده می‌شود.
 
@@ -53,7 +53,7 @@ The Sites initializer copies the shared starter and selects managed-linux only w
 
 Run `node <plugin-root>/scripts/configure-execution-profile.mjs` only when the profile is unknown for the current checkout and environment. Profile changes do not alter tracked source or require reinstalling otherwise-valid dependencies; restart an existing preview to use the new selection. Do not commit or upload `.sites-runtime/`.
 
-This starter does not use `wrangler.jsonc`.
+Local development does not require `wrangler.jsonc`, a Cloudflare account, or a remote database.
 
 Publish archives outside the source checkout or under its ignored `outputs/` directory. Local `.env*`, `.dev.vars*`, TypeScript build state, and tool runtime directories are ignored; keep the hosting manifest, migrations, and authored scripts in source control.
 
@@ -62,7 +62,7 @@ Publish archives outside the source checkout or under its ignored `outputs/` dir
 - **Portable:** Preserve host HOME, npm cache, registry, proxy, temporary paths, retry/concurrency settings, and lifecycle-script policy. Use `--prefer-offline --no-audit --no-fund`.
 - **Managed Linux:** Use the existing project-local HOME/cache/tmp setup and Linux install lock, tarball preflight, and timeout. Restore the image-seeded npm cache only when its lockfile hash matches; retain network fallback. Builds keep their existing timeout. These helpers are not invoked by the portable profile.
 
-`scripts/sites-env.mjs` preserves the caller's HOME, npm cache, proxy, XDG, and temporary-directory configuration while defaulting Wrangler and Miniflare state to the checkout. If npm reports an unwritable cache, select a writable path with `npm_config_cache` for that install. The `dev` and `start` scripts also keep Wrangler logs inside the checkout. Generated `.sites-runtime/` and `.wrangler/` directories are disposable and ignored by Git.
+The local runtime keeps application data in `.local/store.sqlite`; generated tool directories are disposable local state.
 
 On portable, `npm run dev` uses `vinext dev` with HMR, starting at port 5173. Vinext records the running server in ignored `.vinext/` state, rejects an ordinary duplicate launch, and recovers stale state after a stopped process; exactly simultaneous starts can race. Pass `--port <port>` or `--hostname <host>` after `npm run dev --` when needed; keep portable previews on loopback.
 
@@ -70,27 +70,21 @@ For managed Linux browser QA, follow the Sites skill's managed preview reference
 
 The portable profile simulates ChatGPT sign-in only for loopback development requests. Visit `/signin-with-chatgpt?return_to=/` to sign in as `local_seedy` (`seedy@sites.test`, display name `Seedy`) and `/signout-with-chatgpt?return_to=/` to sign out. The development cookie preserves that identity across server restarts. Mock auth is disabled in the managed-linux profile and is not included in production builds; hosted authentication remains dispatch-owned.
 
-The Worker uses `vinext/server/fetch-handler`, including Vinext's config-aware image handling. After building, `npm start` runs that Worker locally through Wrangler on `127.0.0.1`, sharing `.wrangler/state` with dev preview and local D1 migrations; it does not deploy the site or simulate sign-in. Use the URL printed by the server. Pass `npm start -- --port <port>` to select a different built-preview port.
+The application uses Vinext for rendering and runs locally on Node at `127.0.0.1`; it does not deploy the site or require a remote service. Use the URL printed by the server.
 
-Local previews use Miniflare's placeholder `Request.cf` metadata without a network lookup. Set `CLOUDFLARE_CF_FETCH_ENABLED=true` to opt into fetching preview metadata; this setting does not change hosted request metadata.
-
-Local tool usage metrics are disabled by default. Set `WRANGLER_SEND_METRICS=true` to opt in.
+Local previews do not fetch remote request metadata or send usage metrics.
 
 ## Included Shape
 
 - edit site code under `app/`
 - `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `worker/index.ts` is the production Worker entrypoint and preserves request-scoped connector bindings
+- `.local/store.sqlite` contains the local application database
+- `lib/local-node-runtime.ts` provides the local runtime and D1-compatible query surface
 - `scripts/vite/` contains the maintained Vite integrations and the vendored Sites plugin license
-- `scripts/connector-preview/` contains the local connector preview Worker and session helpers
 - the remaining `scripts/` files select execution profiles and run installation, development, and builds; the plugin's helpers orchestrate the Sites lifecycle
-- `dist/` contains generated deployment output; `.vinext/`, `.wrangler/`, and `.sites-runtime/` contain ignored local tool state
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
+- `dist/` contains generated build output; `.local/`, `.vinext/`, and test reports contain ignored local state
+- `db/index.ts` exposes the typed data access boundary used by the application
 - `db/schema.ts` contains the typed Drizzle schema for the ecommerce tables
-- `@cloudflare/workers-types` provides Worker types; `cloudflare-env.d.ts` declares optional `DB`/`BUCKET` bindings—update these declarations if binding names change
-- `examples/d1/` contains an optional D1 example surface
 - `drizzle.config.ts` supports local migration generation when needed
 
 ## Workspace Auth Headers
@@ -143,35 +137,20 @@ SIWC establishes identity only; it does not prove workspace membership. Use the 
 
 Use SIWC for account pages, user-specific dashboards, saved records, and write actions tied to the current ChatGPT user. Leave public content anonymous.
 
-## Local D1 migrations
+## Local Node/SQLite database
 
-For a D1-backed local preview, use the project migration runner. Build once to generate `dist/server/wrangler.json`, then run `pnpm db:migrate:local`; the runner creates a SQL backup before migrating an existing local database, tracks applied IDs in `schema_migrations`, and does not replay migrations. Use `pnpm db:reset:local` only when intentionally resetting local state, and `pnpm db:seed:local` only for local/CI fixtures.
+Local development is independent of Cloudflare, Wrangler, and D1. `pnpm dev` and `pnpm start` run Vinext on the Node runtime and use the SQLite database at `.local/store.sqlite`. The existing route contracts are backed by a small D1-compatible adapter, so migrations and API behavior stay consistent while the application remains local-first.
 
-To create or verify an explicit local backup:
-
-```sh
-pnpm db:backup:local
-pnpm db:verify:backup .wrangler/backups/<backup>.sql
-```
-
-The verifier restores the SQL dump into an in-memory SQLite database and runs `PRAGMA integrity_check`; it does not modify the active D1 database.
-
-```sh
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_example.sql
-```
-
-Replace the filename with the pending migration and `DB` with your D1 binding name if different. Use `.wrangler/state`, not `.wrangler/state/v3`; Wrangler adds the versioned directories. Do not replay migrations already applied locally. This updates only the preview database; publishing applies production migrations separately.
+Run `pnpm db:migrate:local` to apply the ordered SQL migrations, `pnpm db:verify` to inspect migration/table counts, and `pnpm db:seed:local` to create disposable local fixtures. Use `pnpm db:reset:node` only when intentionally resetting local state. The optional ZarinPal, Tapin, and SMS.ir adapters remain disabled unless their provider and credentials are explicitly configured.
 
 ## Diagnostic Commands
 
 - `pnpm install`: install the locked dependencies
 - `pnpm dev`: start the Vite/Vinext development server
-- `pnpm build`: build the deployable Worker artifact
-- `pnpm start`: preview the built Worker locally with D1 support
+- `pnpm build`: build the application with the local Node runtime
+- `pnpm start`: start the local Node/Vinext preview with SQLite
 - `pnpm db:generate`: generate Drizzle migrations after schema changes
-- `pnpm db:migrate:local`: apply pending migrations to local D1
-- `pnpm db:backup:local`: create a SQL backup of local D1
-- `pnpm db:verify:backup <file>`: validate a backup without changing local D1
+- `pnpm db:migrate:local`: apply pending migrations to local SQLite
 - `pnpm db:verify`: verify tables and migration tracking
 - `pnpm test:e2e`: run browser smoke tests
 

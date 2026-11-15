@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS financial_entries (id TEXT PRIMARY KEY NOT NULL,kind TEXT NOT NULL CHECK(kind IN ('income','expense')),category TEXT NOT NULL,amount_toman INTEGER NOT NULL CHECK(amount_toman>0),description TEXT NOT NULL,reference TEXT,order_id TEXT REFERENCES orders(id),created_by TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX IF NOT EXISTS finance_created_idx ON financial_entries(created_at,kind);
+CREATE TABLE IF NOT EXISTS return_requests (id TEXT PRIMARY KEY NOT NULL,order_id TEXT NOT NULL REFERENCES orders(id),customer_id TEXT NOT NULL REFERENCES customers(id),reason TEXT NOT NULL,details TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'requested' CHECK(status IN ('requested','approved','rejected','received','refunded','closed')),restock INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX IF NOT EXISTS returns_order_idx ON return_requests(order_id,created_at);
+CREATE TABLE IF NOT EXISTS loyalty_ledger (id TEXT PRIMARY KEY NOT NULL,customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,order_id TEXT REFERENCES orders(id),points INTEGER NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX IF NOT EXISTS loyalty_customer_idx ON loyalty_ledger(customer_id,created_at);
+ALTER TABLE orders ADD COLUMN invoice_number TEXT;
+ALTER TABLE orders ADD COLUMN shipping_toman INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN tax_toman INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'unpaid';
