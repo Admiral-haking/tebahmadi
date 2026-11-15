@@ -1,9 +1,10 @@
 import { env } from "@/lib/runtime";
 import { isValidPhone, normalizePhone } from "@/lib/input-normalization";
+import { originAllowed } from "@/lib/origin-validation";
 const COOKIE="tabah_customer";
 const enc=new TextEncoder();
 export { normalizePhone };
-export function validOrigin(request:Request){const origin=request.headers.get("Origin");if(!origin)return false;try{return new URL(origin).origin===new URL(request.url).origin}catch{return false}}
+export function validOrigin(request:Request){return originAllowed(request.headers.get("Origin"),request.url,String(env.NEXT_PUBLIC_SITE_URL||""))}
 export function phoneValid(phone:string){return isValidPhone(phone)}
 async function digest(value:string){const result=await crypto.subtle.digest("SHA-256",enc.encode(value));return [...new Uint8Array(result)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 function base64url(bytes:Uint8Array){return btoa(String.fromCharCode(...bytes)).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_")}

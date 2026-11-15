@@ -54,6 +54,7 @@ const DB = {
 export const env = {
   DB,
   APP_ENV: process.env.APP_ENV || "local",
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER || "mock",
   SHIPPING_PROVIDER: process.env.SHIPPING_PROVIDER || "mock",
   SMS_PROVIDER: process.env.SMS_PROVIDER || "mock",
