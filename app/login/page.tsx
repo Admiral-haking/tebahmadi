@@ -2,6 +2,7 @@
 import { useSmsCode } from "@/hooks/use-sms-code";
 
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
@@ -37,11 +38,11 @@ export default function LoginPage() {
   return (
     <main className="account-page brand-auth-page" dir="rtl">
       <aside className="auth-brand-panel" aria-label="طب احمدی">
-        <a className="auth-brand-mark" href="/" aria-label="بازگشت به فروشگاه طب احمدی"><span>طب احمدی</span></a>
+        <a className="auth-brand-mark" href="/" aria-label="بازگشت به فروشگاه طب احمدی"><BrandLogo inverse/></a>
         <div><h2>اصالت طبیعت، عیار تندرستی</h2><p>ورود امن به حساب، سفارش‌ها و پیگیری خریدهای شما.</p></div>
       </aside>
       <section className="account-card">
-        <a className="admin-brand" href="/">فروشگاه طب احمدی</a>
+        <a className="auth-form-brand" href="/"><BrandLogo compact/></a>
         <h1>{sent ? "تأیید کد ورود" : "ورود با شماره همراه"}</h1>
         <p>{sent ? "کد پیامک‌شده را وارد کنید؛ در مرورگرهای سازگار، کد به‌صورت خودکار در این کادر قرار می‌گیرد." : "برای ورود یا ساخت حساب، شماره همراه خود را وارد کنید."}</p>
         <form className="account-form" onSubmit={submit}>

@@ -13,3 +13,17 @@ for (const width of [375,768,1024,1440]) {
     }
   });
 }
+
+test("catalog header exposes a keyboard-accessible mobile menu", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/products");
+  await page.waitForLoadState("networkidle");
+  const menu = page.getByRole("button", { name: "باز کردن منوی فروشگاه" });
+  await expect(menu).toBeVisible();
+  await menu.click();
+  await expect(menu).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("navigation", { name: "منوی فروشگاه" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

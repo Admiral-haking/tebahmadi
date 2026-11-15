@@ -70,9 +70,15 @@ test("promotion management page hides its form without an admin session", async 
 });
 
 test("account page routes unauthenticated users to the shared login form", async ({ page }) => {
+  await page.route("**/api/customer/me", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await route.fulfill({ json: { customer: null, orders: [], addresses: [] } });
+  });
   await page.goto("/account", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("status", { name: "در حال بررسی حساب" })).toBeVisible();
+  expect(await page.getByRole("heading", { name: "ورود با شماره همراه" }).count()).toBe(0);
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole("heading", { name: "ورود" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ورود با شماره همراه" })).toBeVisible();
   await expect(page.getByRole("button", { name: /ارسال کد ورود/ })).toBeVisible();
   await expect(page.getByText(/نوع حساب|ورود مشتری|ورود ادمین/)).toHaveCount(0);
 });
