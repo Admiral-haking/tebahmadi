@@ -12,7 +12,9 @@ export default defineConfig({
   webServer: {
     command: "APP_ENV=local PAYMENT_PROVIDER=mock SHIPPING_PROVIDER=mock SMS_PROVIDER=mock ADMIN_SESSION_SECRET=local-admin-secret OTP_PEPPER=local-otp-pepper pnpm db:seed:local && APP_ENV=local PAYMENT_PROVIDER=mock SHIPPING_PROVIDER=mock SMS_PROVIDER=mock ADMIN_SESSION_SECRET=local-admin-secret OTP_PEPPER=local-otp-pepper pnpm dev",
     url: "http://127.0.0.1:5173/api/health",
-    reuseExistingServer: true,
+    // E2E mutates OTP limits, inventory and orders; reusing a developer server
+    // makes later runs depend on stale database state instead of the seed above.
+    reuseExistingServer: false,
     timeout: 120_000,
   },
   use: {

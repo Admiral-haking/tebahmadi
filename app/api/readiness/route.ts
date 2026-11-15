@@ -1,4 +1,5 @@
 import { env } from "@/lib/runtime";
+import { resolveSmsOtpTemplateId } from "@/lib/sms-provider";
 
 const headers = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
@@ -12,7 +13,7 @@ export async function GET() {
     const paymentConfigured = paymentProvider === "mock" ? !production : paymentProvider === "http" ? !!(env.PAYMENT_API_URL && env.PAYMENT_API_TOKEN) : paymentProvider === "zarinpal" ? !!env.ZARINPAL_MERCHANT_ID : false;
     const refundConfigured = paymentProvider === "mock" ? !production : paymentProvider === "http" ? !!(env.PAYMENT_API_URL && env.PAYMENT_API_TOKEN) : false;
     const shippingConfigured = shippingProvider === "mock" ? !production : shippingProvider === "http" ? !!(env.SHIPPING_API_URL && env.SHIPPING_API_TOKEN) : shippingProvider === "tapin" ? !!(env.TAPIN_TOKEN && env.TAPIN_SHOP_ID) : false;
-    const smsConfigured = smsProvider === "mock" ? !production : smsProvider === "sms_ir" ? !!(env.SMS_IR_API_KEY && env.SMS_IR_TEMPLATE_ID) : false;
+    const smsConfigured = smsProvider === "mock" ? !production : smsProvider === "sms_ir" ? !!(env.SMS_IR_API_KEY && resolveSmsOtpTemplateId(env)) : false;
     const providers = { payment: { provider: paymentProvider, configured: paymentConfigured, refundConfigured }, shipping: { provider: shippingProvider, configured: shippingConfigured }, sms: { provider: smsProvider, configured: smsConfigured } };
     if (!paymentConfigured || !shippingConfigured || !smsConfigured) return Response.json({ status: "not_ready", database: "ok", providers }, { status: 503, headers });
     return Response.json({ status: "ready", database: "ok", providers }, { status: 200, headers });

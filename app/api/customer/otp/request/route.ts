@@ -1,6 +1,6 @@
 import { env } from "@/lib/runtime";
 import { normalizePhone, phoneValid, validOrigin } from "../../session";
-import { sendOtpSms } from "../../../../../lib/sms-provider";
+import { resolveSmsOtpTemplateId, sendOtpSms } from "../../../../../lib/sms-provider";
 
 const enc = new TextEncoder();
 async function hash(value: string) {
@@ -22,8 +22,8 @@ export async function POST(request: Request) {
     .bind(scopedPhone, await hash(phone + ":" + code + ":" + (env.OTP_PEPPER || env.ADMIN_SESSION_SECRET || "")), now + 5 * 60_000, now + 60_000, now).run();
   if (!(saved.meta?.changes || 0)) return Response.json({ error: "برای دریافت کد جدید کمی صبر کنید" }, { status: 429 });
   const localMock = env.SMS_PROVIDER === "mock" && ["local", "test"].includes(String(env.APP_ENV || "").toLowerCase());
-  if (localMock) return Response.json({ ok: true, devCode: code, message: "کد ورود local ایجاد شد." }, { headers: { "Cache-Control": "no-store" } });
-  if (!env.SMS_IR_API_KEY || !env.SMS_IR_TEMPLATE_ID) return Response.json({ error: "سرویس پیامک هنوز پیکربندی نشده است؛ کد ارسال نشد" }, { status: 503 });
+  if (localMock) return Response.json({ ok: true, devCode: code, message: "کد ورود آماده شد." }, { headers: { "Cache-Control": "no-store" } });
+  if (!env.SMS_IR_API_KEY || !resolveSmsOtpTemplateId(env)) return Response.json({ error: "سرویس پیامک هنوز پیکربندی نشده است؛ کد ارسال نشد" }, { status: 503 });
   try { await sendOtpSms(env, phone, code); } catch { await env.DB.prepare("DELETE FROM login_otps WHERE phone=?").bind(scopedPhone).run(); return Response.json({ error: "ارتباط با سرویس پیامک برقرار نشد" }, { status: 502 }); }
   return Response.json({ ok: true, message: "کد ورود ارسال شد. تا ۵ دقیقه معتبر است." }, { headers: { "Cache-Control": "no-store" } });
 }

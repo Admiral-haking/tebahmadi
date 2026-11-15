@@ -14,6 +14,7 @@ test("returning customer submits checkout in five clicks with saved address",asy
   await page.route("**/api/orders",async route=>{body=route.request().postDataJSON();await route.fulfill({json:{orderId:"quick-order"}})});
   await page.route("**/api/payments/zarinpal/request",route=>route.fulfill({status:503,json:{error:"unavailable"}}));
   await page.goto("/");
+  await expect(page.locator(".product-image-placeholder")).toContainText("تصویر محصول ثبت نشده");
   await page.getByRole("button",{name:"افزودن به سبد"}).click();
   await page.getByRole("button",{name:/سبد خرید/}).click();
   await page.getByRole("button",{name:"ادامه و ثبت سفارش ←"}).click();

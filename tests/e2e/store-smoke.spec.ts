@@ -91,6 +91,7 @@ test("local customer OTP creates a session without SMS credentials", async ({ re
   expect(otp.status()).toBe(200);
   const otpData = await otp.json();
   expect(otpData.devCode).toMatch(/^\d{4}$/);
+  expect(String(otpData.message || "")).not.toMatch(/local|تست|آزمایشی/i);
   const needsName = await request.post("/api/customer/otp/verify", { headers: origin, data: { phone, code: otpData.devCode } });
   expect(needsName.status()).toBe(400);
   expect(await needsName.json()).toMatchObject({ needsName: true });

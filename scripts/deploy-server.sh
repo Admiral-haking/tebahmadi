@@ -19,14 +19,20 @@ git merge --ff-only "origin/$DEPLOY_BRANCH"
 pnpm install --frozen-lockfile
 pnpm db:backup:local
 pnpm db:migrate:local
+pnpm db:verify
 pnpm build
 if [ ! -f .env.server ]; then
   echo "Missing $DEPLOY_PATH/.env.server; refusing to restart production" >&2
   exit 12
 fi
+if [ "$(stat -c '%a' .env.server)" != "600" ]; then
+  echo "Expected $DEPLOY_PATH/.env.server to have mode 600" >&2
+  exit 14
+fi
 set -a
 . ./.env.server
 set +a
+pnpm config:verify:server
 pm2 restart tebahmadi --update-env
 pm2 save
 for attempt in $(seq 1 30); do
@@ -40,5 +46,6 @@ for attempt in $(seq 1 30); do
   fi
   sleep 1
 done
+curl --fail --silent --show-error http://127.0.0.1:3210/api/readiness >/dev/null
 printf '\nDeployment completed at %s\n' "$(date -Is)"
 REMOTE

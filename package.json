@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "test:all": "pnpm lint && pnpm test && pnpm typecheck && pnpm test:e2e && pnpm build",
     "verify:release": "pnpm config:verify:production && pnpm test:all && pnpm db:verify",
+    "config:verify:server": "node --import tsx scripts/verify-server-config.mjs",
     "smoke:local": "node scripts/smoke-local.mjs",
     "smoke:local:with-server": "node scripts/smoke-local-with-server.mjs",
     "config:verify:production": "node --import tsx scripts/verify-production-config.mjs",

@@ -11,10 +11,12 @@ test("admin mobile drawer closes after selecting products and Escape",async({pag
  await expect(page.getByRole("heading",{name:"داشبورد طب احمدی",exact:true})).toBeVisible();
  const menu=page.getByRole("button",{name:"باز کردن منوی مدیریت"});
  await menu.click();
- await page.locator(".admin-tabs").getByRole("button",{name:"محصولات",exact:true}).click();
+ await page.locator(".admin-tabs").getByRole("button",{name:"محصولات و واریانت‌ها",exact:true}).click();
  await expect(page.getByRole("heading",{name:"افزودن محصول",exact:true})).toBeVisible();
- await expect(page.locator("body")).not.toHaveClass(/admin-menu-open/);
+ await expect(page.locator(".admin-page")).not.toHaveClass(/menu-open/);
+ await expect(menu).toHaveAttribute("aria-expanded","false");
  await menu.click();await page.keyboard.press("Escape");
- await expect(page.locator("body")).not.toHaveClass(/admin-menu-open/);
+ await expect(page.locator(".admin-page")).not.toHaveClass(/menu-open/);
+ await expect(menu).toHaveAttribute("aria-expanded","false");
  await expect(menu).toBeFocused();
 });

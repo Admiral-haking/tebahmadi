@@ -1,6 +1,6 @@
 import { env } from "@/lib/runtime";
 import { normalizePhone, phoneValid, validOrigin } from "../../../customer/session";
-import { sendOtpSms } from "../../../../../lib/sms-provider";
+import { resolveSmsOtpTemplateId, sendOtpSms } from "../../../../../lib/sms-provider";
 const enc = new TextEncoder();
 async function hash(v:string){return [...new Uint8Array(await crypto.subtle.digest("SHA-256",enc.encode(v)))].map(x=>x.toString(16).padStart(2,"0")).join("")}
 export async function POST(request:Request){
@@ -14,7 +14,7 @@ export async function POST(request:Request){
   if(!limit)return Response.json({error:"سامانهٔ ورود هنوز آماده نیست"},{status:503});if(Number(limit.count)>8)return Response.json({error:"تلاش زیاد است؛ کمی بعد دوباره امتحان کنید"},{status:429});
   const prior=await env.DB.prepare("SELECT resend_after FROM login_otps WHERE phone=?").bind("staff:"+phone).first<any>();if(prior&&Number(prior.resend_after)>now)return Response.json({error:"برای دریافت کد تازه کمی صبر کنید"},{status:429});
   const localMock = env.SMS_PROVIDER === "mock" && ["local", "test"].includes(String(env.APP_ENV || "").toLowerCase());
-  if(!localMock && (!env.SMS_IR_API_KEY||!env.SMS_IR_TEMPLATE_ID))return Response.json({error:"سرویس پیامک هنوز پیکربندی نشده است"},{status:503});
+  if(!localMock && (!env.SMS_IR_API_KEY||!resolveSmsOtpTemplateId(env)))return Response.json({error:"سرویس پیامک هنوز پیکربندی نشده است"},{status:503});
   const code=String(crypto.getRandomValues(new Uint32Array(1))[0]%10000).padStart(4,"0"),key=env.OTP_PEPPER||env.ADMIN_SESSION_SECRET||"";
   await env.DB.prepare("INSERT INTO login_otps(phone,code_hash,expires_at,attempts,resend_after) VALUES(?,?,?,0,?) ON CONFLICT(phone) DO UPDATE SET code_hash=excluded.code_hash,expires_at=excluded.expires_at,attempts=0,resend_after=excluded.resend_after").bind("staff:"+phone,await hash("admin:"+phone+":"+code+":"+key),now+5*60_000,now+60_000).run();
   if(!localMock){try{await sendOtpSms(env,phone,code)}catch{await env.DB.prepare("DELETE FROM login_otps WHERE phone=?").bind("staff:"+phone).run();return Response.json({error:"ارسال پیامک ناموفق بود"},{status:502})}}

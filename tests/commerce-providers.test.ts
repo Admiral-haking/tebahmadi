@@ -3,7 +3,7 @@ import test from "node:test";
 import { HttpPaymentProvider, MockPaymentProvider, MockShippingProvider, TapinShippingProvider, ZarinPalPaymentProvider, getPaymentProvider, getShippingProvider } from "../lib/commerce-providers";
 import { getTapinConfig, trackTapinShipment } from "../lib/tapin";
 import { normalizeShipmentStatus } from "../lib/shipment-operations";
-import { sendOtpSms } from "../lib/sms-provider";
+import { buildSmsVerifyPayload, sendOtpSms } from "../lib/sms-provider";
 
 test("mock payment creates and verifies an order payment", async () => {
   const provider = new MockPaymentProvider();
@@ -94,4 +94,27 @@ test("SMS.ir OTP adapter uses the API key header and verify template", async () 
     assert.equal(seenUrl, "https://api.sms.ir/v1/send/verify");
     await assert.rejects(() => sendOtpSms({}, "09120000000", "1234"), /sms_not_configured/);
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test("SMS.ir OTP adapter resolves the semantic OTP template setting", async () => {
+  const originalFetch = globalThis.fetch;
+  let body: { templateId?: number } = {};
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body || "{}"));
+    return Response.json({ status: 1 });
+  }) as typeof fetch;
+  try {
+    await sendOtpSms({ SMS_IR_API_KEY: "secret-key", SMS_IR_OTP_TEMPLATE_ID: "765432" }, "09120000000", "1234");
+    assert.equal(body.templateId, 765432);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("SMS.ir verify payload uses the approved CODE parameter", () => {
+  assert.deepEqual(buildSmsVerifyPayload("09120000000", "765432", "1234"), {
+    mobile: "09120000000",
+    templateId: 765432,
+    parameters: [{ name: "CODE", value: "1234" }],
+  });
 });

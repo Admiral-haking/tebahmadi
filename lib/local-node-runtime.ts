@@ -60,6 +60,7 @@ export const env = {
   ADMIN_SESSION_SECRET: process.env.ADMIN_SESSION_SECRET || "local-admin-secret",
   OTP_PEPPER: process.env.OTP_PEPPER || "local-otp-pepper",
   SMS_IR_API_KEY: process.env.SMS_IR_API_KEY,
+  SMS_IR_OTP_TEMPLATE_ID: process.env.SMS_IR_OTP_TEMPLATE_ID,
   SMS_IR_TEMPLATE_ID: process.env.SMS_IR_TEMPLATE_ID,
   PAYMENT_API_URL: process.env.PAYMENT_API_URL,
   PAYMENT_API_TOKEN: process.env.PAYMENT_API_TOKEN,

@@ -1,3 +1,5 @@
+import { isValidSmsOtpTemplateId } from "./sms-provider";
+
 export type ProductionConfigInput = Record<string, string | undefined>;
 
 export function validateProductionConfig(env: ProductionConfigInput): string[] {
@@ -16,7 +18,9 @@ export function validateProductionConfig(env: ProductionConfigInput): string[] {
   if (!new Set(["tapin", "http"]).has(shipping)) errors.push(`Unsupported SHIPPING_PROVIDER: ${shipping || "(empty)"}`);
   const sms = provider("SMS_PROVIDER");
   if (sms !== "sms_ir") errors.push("SMS_PROVIDER must be sms_ir in production");
-  if (sms === "sms_ir" && (!env.SMS_IR_API_KEY || !env.SMS_IR_TEMPLATE_ID)) errors.push("SMS_IR_API_KEY and SMS_IR_TEMPLATE_ID are missing");
+  const smsTemplateId = env.SMS_IR_OTP_TEMPLATE_ID || env.SMS_IR_TEMPLATE_ID;
+  if (sms === "sms_ir" && (!env.SMS_IR_API_KEY || !smsTemplateId)) errors.push("SMS_IR_API_KEY and SMS_IR_OTP_TEMPLATE_ID are missing");
+  else if (sms === "sms_ir" && !isValidSmsOtpTemplateId(smsTemplateId)) errors.push("SMS_IR_OTP_TEMPLATE_ID must be a positive integer");
   for (const name of ["ADMIN_SESSION_SECRET", "OTP_PEPPER"]) if (!env[name]) errors.push(`${name} is missing`);
   return errors;
 }

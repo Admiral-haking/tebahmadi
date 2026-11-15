@@ -1,134 +1,122 @@
-# چک‌لیست انتشار production
+# چک‌لیست انتشار طب احمدی
 
-این پروژه local-first است و deploy یا migration production را خودکار انجام نمی‌دهد.
+این پروژه روی Node.js، SQLite محلی، PM2 و nginx اجرا می‌شود. اجرای سایت به Cloudflare، D1، Wrangler یا سرویس ابری نیاز ندارد. SMS.ir، زرین‌پال و Tapin فقط adapterهای اختیاری هستند و با credential محیط سرور فعال می‌شوند.
 
-این سند یک runbook اجرایی است؛ وجود تیک‌ها به‌تنهایی به معنی فعال بودن پرداخت آنلاین یا
-اتصال واقعی Tapin نیست. تا وقتی credential معتبر، دسترسی Wrangler و تأیید sandbox وجود
-نداشته باشد، فقط mock provider روی local قابل استفاده است.
+## پیش‌نیازهای سرور
 
-## پیش‌نیازها
+- [ ] checkout سرور در `/home/ali/tebahmadi` روی branch `main` تمیز است.
+- [ ] user سرویس `ali` است و PM2 با همین user اجرا می‌شود.
+- [ ] فایل `/home/ali/tebahmadi/.env.server` وجود دارد و mode آن `600` است.
+- [ ] `ADMIN_SESSION_SECRET` و `OTP_PEPPER` تصادفی و جدا از هم هستند.
+- [ ] هیچ secret در source، Git، bundle یا log چاپ نشده است.
+- [ ] nginx سایت را به `127.0.0.1:3210` proxy می‌کند.
 
-- [ ] backup قابل بازیابی از D1 production تهیه و checksum آن ثبت شده است.
-- [ ] مقدار `ADMIN_SESSION_SECRET` و `OTP_PEPPER` با secret manager تنظیم شده‌اند.
-- [ ] `ZARINPAL_MERCHANT_ID` در sandbox تنظیم شده و `ZARINPAL_SANDBOX=true` است.
-- [ ] `TAPIN_TOKEN` و `TAPIN_SHOP_ID` در محیط تست معتبر هستند.
-- [ ] اگر adapter عمومی استفاده می‌شود، `PAYMENT_PROVIDER`/`SHIPPING_PROVIDER` فقط با URL و token محیط secret manager تنظیم شده‌اند؛ در غیر این صورت مقدار `mock` باقی می‌ماند.
-- [ ] credentialها در source، `.env.example`، bundle و log وجود ندارند.
+## تنظیمات محیط
 
-## ترتیب فعال‌سازی امن
-
-ترتیب زیر باید حفظ شود. فعال‌سازی provider واقعی قبل از موفق شدن readiness و callback
-عمومی می‌تواند باعث سفارش‌های پرداخت‌نشده یا مرسوله‌های تکراری شود.
-
-1. **Local:** migration، seed، تست و smoke با `mock`.
-2. **Sandbox:** ZarinPal sandbox و Tapin test با secretهای خارج از repository.
-3. **Production data:** backup، checksum، اجرای migration افزایشی و verify کردن tracking.
-4. **Worker:** deploy با providerها خاموش یا در حالت امن، سپس health/readiness.
-5. **Callback:** تست callback واقعی از URL عمومی و تکرار همان callback برای idempotency.
-6. **فعال‌سازی:** ابتدا payment، سپس shipping؛ هر مرحله با feature flag و مانیتورینگ.
-
-### متغیرهای محیطی
-
-نمونهٔ زیر فقط نام متغیرها را نشان می‌دهد و نباید با مقدار واقعی در shell history یا Git
-ذخیره شود:
+از `deploy/server.env.example` کپی بگیر و مقدارهای واقعی را فقط در `.env.server` قرار بده:
 
 ```sh
-export APP_ENV=production
-export PAYMENT_PROVIDER=zarinpal
-export SHIPPING_PROVIDER=tapin
-export SMS_PROVIDER=sms_ir
-export ZARINPAL_MERCHANT_ID='set-in-secret-manager'
-export ZARINPAL_SANDBOX=true
-export TAPIN_TOKEN='set-in-secret-manager'
-export TAPIN_SHOP_ID='set-in-secret-manager'
-export ADMIN_SESSION_SECRET='set-in-secret-manager'
-export OTP_PEPPER='set-in-secret-manager'
-export SMS_IR_API_KEY='set-in-secret-manager'
-export SMS_IR_TEMPLATE_ID='set-in-secret-manager'
+APP_ENV=server
+APP_RUNTIME=node
+NEXT_PUBLIC_SITE_URL=https://tebahmadi.ir
+PAYMENT_PROVIDER=mock
+SHIPPING_PROVIDER=mock
+SMS_PROVIDER=sms_ir
+SMS_IR_OTP_TEMPLATE_ID=<approved-otp-template-id>
 ```
 
-`pnpm config:verify:production` فقط نام provider و خطاهای configuration را چاپ می‌کند؛
-secretها را چاپ نمی‌کند. در production هر مقدار `mock` عمداً رد می‌شود.
-
-## بررسی قبل از فعال‌سازی
+`SMS_IR_API_KEY`، secret نشست و pepper فقط در `.env.server` قرار می‌گیرند. دستور بررسی محیط مقدار secret را چاپ نمی‌کند:
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm config:verify:production
-pnpm test:all
-pnpm db:verify
+set -a
+. ./.env.server
+set +a
+pnpm config:verify:server
 ```
 
-- [ ] `/api/health` مقدار `ok` برمی‌گرداند.
-- [ ] `/api/readiness` مقدار `ready`، `database=ok` و `providers.payment.configured=true`، `providers.shipping.configured=true` و `providers.sms.configured=true` برمی‌گرداند؛ credential ناقص باید `503 not_ready` بدهد.
-- [ ] برای سفارش عمومی، Origin معتبر و محدودیت rate limit بررسی شده است.
-- [ ] پرداخت sandbox، callback تکراری و مبلغ server-side بررسی شده‌اند.
-- [ ] مسیر refund با provider واقعی تأیید شده است؛ تا قبل از آن، ZarinPal refund را موفق اعلام نمی‌کند و refund production باید دستی و خارج از سامانه reconcile شود.
-- [ ] ثبت shipment در Tapin sandbox، retry و جلوگیری از ثبت تکراری بررسی شده‌اند.
-- [ ] `POST /api/admin/shipping/tapin/track` با provider mock/http و endpoint رسمی Tapin (`order/post/get-status/report`) تست شده و تغییر هم‌زمان وضعیت shipment، سفارش و timeline تأیید شده است.
-- [ ] خروجی سفارش، tracking و audit log بررسی شده‌اند.
+برای فعال‌سازی production کامل، علاوه بر SMS.ir باید `PAYMENT_PROVIDER=zarinpal` و `SHIPPING_PROVIDER=tapin` و credential معتبر sandbox/production آن‌ها تنظیم و جداگانه تست شوند. تا آن زمان پرداخت و ارسال mock باقی می‌مانند.
 
-## migration و انتشار
+## انتشار کنترل‌شده
 
-### local
+از checkout توسعه و پس از commit و push به GitHub:
+
+```sh
+./scripts/deploy-server.sh
+```
+
+اسکریپت:
+
+1. فقط fast-forward از `origin/main` می‌گیرد و با تغییر tracked روی سرور متوقف می‌شود.
+2. lockfile را نصب می‌کند.
+3. قبل از migration از SQLite سرور backup می‌گیرد.
+4. migrationهای ثبت‌نشده را اجرا و دیتابیس را verify می‌کند.
+5. build می‌گیرد.
+6. mode و تنظیمات `.env.server` را بررسی می‌کند.
+7. PM2 را با محیط جدید restart و process list را ذخیره می‌کند.
+8. `/api/health` و `/api/readiness` را از localhost بررسی می‌کند.
+
+برای بررسی عمومی:
+
+```sh
+./scripts/health-check.sh https://tebahmadi.ir
+```
+
+## PM2 و nginx
+
+فایل [ecosystem.config.cjs](../ecosystem.config.cjs) مقدارهای provider را از محیط shell می‌گیرد و دیگر مقدار `mock` را روی `.env.server` تحمیل نمی‌کند. nginx از [deploy/nginx/tebahmadi.conf](../deploy/nginx/tebahmadi.conf) استفاده می‌کند:
+
+```sh
+sudo install -m 0644 deploy/nginx/tebahmadi.conf /etc/nginx/sites-available/tebahmadi
+sudo ln -sfn /etc/nginx/sites-available/tebahmadi /etc/nginx/sites-enabled/tebahmadi
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+اگر TLS در لایهٔ CDN/Arvan terminate می‌شود، ارتباط origin با nginx همچنان روی port 80 داخلی باقی می‌ماند؛ health عمومی باید از دامنهٔ HTTPS بررسی شود.
+
+## SMS.ir
+
+قالب تأییدشدهٔ OTP از متغیر server-only به نام `SMS_IR_OTP_TEMPLATE_ID` خوانده می‌شود و پارامتر `CODE` را دریافت می‌کند. شناسه در source ثابت نیست و با تغییر قالب فقط تنظیم سرور تغییر می‌کند. مسیر درخواست OTP کد را server-side تولید می‌کند، شماره را normalize می‌کند و payload زیر را به adapter می‌دهد:
+
+```json
+{
+  "mobile": "09120000000",
+  "templateId": "<approved-otp-template-id>",
+  "parameters": [{ "name": "CODE", "value": "1234" }]
+}
+```
+
+برای تست واقعی فقط یک درخواست به شمارهٔ متعلق به صاحب سامانه بفرست. پاسخ provider و رسیدن پیامک را جداگانه بررسی کن؛ HTTP موفق به‌تنهایی اثبات تحویل پیامک نیست. کد در فرم ورود با `autocomplete="one-time-code"` و Web OTP در صورت پشتیبانی مرورگر قابل درج خودکار است؛ submit همچنان با تأیید کاربر انجام می‌شود.
+
+برای WebOTP، پیامک دریافتی باید در آخرین خط، اتصال دامنه و کد را دقیقاً به شکل زیر داشته باشد:
+
+```text
+@tebahmadi.ir #1234
+```
+
+بنابراین قالب پنل SMS.ir باید علاوه بر متن معرفی و `#CODE#`، این خط origin-bound را نیز تولید کند. معیار، متن نهایی پیامک دریافتی است؛ اگر پنل برای استفادهٔ دوباره از پارامتر به escape ویژه نیاز داشت، ابتدا با یک پیامک آزمایشی تأیید شود. شناسهٔ عددی قالب فقط در `.env.server` نگه‌داری می‌شود و تغییر آن نیازی به تغییر کد ندارد.
+
+## backup و rollback
+
+backup محلی قبل از migration ساخته می‌شود. برای backup دستی:
 
 ```sh
 pnpm db:backup:local
-pnpm db:verify:backup .wrangler/backups/<backup>.sql
-pnpm db:migrate:local
-pnpm db:seed:local
 pnpm db:verify
-pnpm smoke:local
 ```
 
-`db:reset:local` فقط برای توسعه است؛ قبل از reset خودش backup می‌سازد و نباید در
-production اجرا شود.
-
-### production D1
-
-این مرحله نیازمند دسترسی واقعی به حساب Cloudflare، نام database و مجوز Wrangler است و
-از داخل تست local اجرا نمی‌شود. پس از backup تأییدشده و review migrationها:
-
-نام database را از محیط deployment بگیرید و در command یا source hardcode نکنید. runner
-محافظت‌شدهٔ همین repository از tracking سفارشی `schema_migrations` استفاده می‌کند:
+rollback فقط به commit سالم و backup تأییدشده محدود است؛ migration destructive یا حذف سفارش و موجودی انجام نشود:
 
 ```sh
+cd /home/ali/tebahmadi
+git fetch origin
+git reset --hard <KNOWN_GOOD_COMMIT>
+pnpm install --frozen-lockfile
 pnpm build
-D1_DATABASE_NAME='<database-name>' \
-CONFIRM_REMOTE_MIGRATION=YES \
-WRANGLER_CONFIG='<optional-wrangler-config>' \
-pnpm db:migrate:remote
+set -a; . ./.env.server; set +a
+pnpm config:verify:server
+pm2 restart tebahmadi --update-env
+pm2 save
 ```
 
-این command فقط بعد از backup و review دستی migrationها مجاز است، migrationهای ثبت‌شده را
-دوباره اجرا نمی‌کند، seed نمی‌زند و در پایان tracking کامل را verify می‌کند. اگر محیط شما
-از config پیش‌فرض Wrangler استفاده می‌کند، `WRANGLER_CONFIG` را حذف کنید. هیچ migration را
-دوباره با `--file` دستی replay نکنید.
-
-بعد از migration، Worker را deploy کنید و `/api/health`، `/api/readiness`، یک checkout
-sandbox و callback عمومی را بررسی کنید. deploy واقعی و migration remote عمداً در این
-checkout انجام نشده است.
-
-فعال‌سازی فروش production بدون قرارداد refund معتبر مجاز نیست. وضعیت `refunded` در UI
-به‌تنهایی انتقال وجه را ثابت نمی‌کند؛ تنها پاسخ موفق adapter و ثبت audit/financial entry
-معتبر است.
-
-## rollback
-
-- کد قبلی را آمادهٔ deploy نگه دارید.
-- در خطای provider، feature flag را به mock/manual برگردانید؛ سفارش‌ها و auditها را حذف نکنید.
-- migration destructive انجام ندهید؛ rollback داده‌ای فقط از backup تأییدشده انجام شود.
-- در صورت callback ناموفق، سفارش را با authority/reference و audit log reconcile کنید.
-
-### ترتیب rollback عملیاتی
-
-1. provider یا feature flag مشکل‌دار را غیرفعال و ثبت incident کنید.
-2. سفارش‌های pending را دوباره شارژ یا ثبت مرسوله نکنید؛ با authority/reference بررسی کنید.
-3. در صورت مشکل کد، فقط Worker را به نسخهٔ قبلی برگردانید؛ schema جدید باید با نسخهٔ قبلی
-   سازگار باشد.
-4. در صورت خرابی داده، restore فقط از backupی انجام شود که `db:verify:backup` یا معادل
-   رسمی D1 آن را سالم اعلام کرده و تأیید صاحب داده را دارد.
-5. پس از restore، `schema_migrations`، پرداخت‌ها، shipmentها و audit log را reconcile کنید.
-
-هیچ rollback خودکاری برای حذف جدول یا بازگرداندن migration وجود ندارد؛ این تصمیم عمدی است
-تا از از دست رفتن سفارش و موجودی جلوگیری شود.
+در خطای provider، ابتدا همان provider را به mock/manual برگردان و سفارش‌ها، پرداخت‌ها، shipmentها و audit logها را حذف نکن.
