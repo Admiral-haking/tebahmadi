@@ -24,6 +24,16 @@ set -a
 set +a
 pm2 restart tebahmadi --update-env
 pm2 save
-curl --fail --silent --show-error http://127.0.0.1:3210/api/health
+for attempt in $(seq 1 30); do
+  if curl --fail --silent --show-error http://127.0.0.1:3210/api/health; then
+    break
+  fi
+  if [ "$attempt" = "30" ]; then
+    echo "Application did not become healthy within 30 seconds" >&2
+    pm2 logs tebahmadi --lines 40 --nostream >&2 || true
+    exit 13
+  fi
+  sleep 1
+done
 printf '\nDeployment completed at %s\n' "$(date -Is)"
 REMOTE
