@@ -1,6 +1,6 @@
 import handler from "vinext/server/fetch-handler";
 import { runWithConnectorBinding } from "../lib/connector-context";
-import type { ConnectorBinding } from "../lib/connector-contract.mjs";
+import type { ConnectorBinding, Json } from "../lib/connector-contract.mjs";
 
 const worker = {
   async fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
@@ -15,7 +15,7 @@ const worker = {
           if (Date.now() >= expiresAt) return { status: "request_context_expired" };
           return preview.getContext?.() ?? { status: "binding_unavailable" };
         },
-        async invoke(connectorId, actionName, args) {
+        async invoke(connectorId: string, actionName: string, args: { [key: string]: Json }) {
           if (Date.now() >= expiresAt) {
             return { status: "request_context_expired", message: "This request has expired. Please try again." };
           }

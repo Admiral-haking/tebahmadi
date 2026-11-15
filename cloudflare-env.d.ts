@@ -28,3 +28,9 @@ declare namespace Cloudflare {
 interface Response {
   json(): Promise<any>;
 }
+
+interface ExecutionContext<TProps = unknown> {
+  props?: TProps;
+  waitUntil(promise: Promise<unknown>): void;
+  passThroughOnException(): void;
+}
