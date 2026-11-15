@@ -1,0 +1,20 @@
+import { test, expect } from "@playwright/test";
+test("admin mobile drawer closes after selecting products and Escape",async({page})=>{
+ const headers={Origin:"http://127.0.0.1:5173"};
+ const phone="09120000000";
+ const sent=await page.request.post("/api/admin/otp/request",{headers,data:{phone}});
+ expect(sent.ok()).toBe(true);
+ const {devCode}=await sent.json();
+ expect((await page.request.post("/api/admin/otp/verify",{headers,data:{phone,code:devCode}})).ok()).toBe(true);
+ await page.setViewportSize({width:375,height:850});
+ await page.goto("/admin");
+ await expect(page.getByRole("heading",{name:"داشبورد طب احمدی",exact:true})).toBeVisible();
+ const menu=page.getByRole("button",{name:"باز کردن منوی مدیریت"});
+ await menu.click();
+ await page.locator(".admin-tabs").getByRole("button",{name:"محصولات",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"افزودن محصول",exact:true})).toBeVisible();
+ await expect(page.locator("body")).not.toHaveClass(/admin-menu-open/);
+ await menu.click();await page.keyboard.press("Escape");
+ await expect(page.locator("body")).not.toHaveClass(/admin-menu-open/);
+ await expect(menu).toBeFocused();
+});

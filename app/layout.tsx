@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { NavigationBehavior } from "@/components/navigation-behavior";
 
 export const metadata: Metadata = {
   title: "طب احمدی | فروشگاه سلامت و مراقبت",
@@ -17,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased"><NavigationBehavior />{children}</body>
     </html>
   );
 }

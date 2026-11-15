@@ -10,9 +10,14 @@ ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_BRANCH=
 set -Eeuo pipefail
 cd "$DEPLOY_PATH"
 git fetch origin "$DEPLOY_BRANCH"
-git checkout --force "$DEPLOY_BRANCH"
-git reset --hard "origin/$DEPLOY_BRANCH"
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "Server has tracked changes; deployment stopped" >&2
+  exit 11
+fi
+git checkout "$DEPLOY_BRANCH"
+git merge --ff-only "origin/$DEPLOY_BRANCH"
 pnpm install --frozen-lockfile
+pnpm db:backup:local
 pnpm db:migrate:local
 pnpm build
 if [ ! -f .env.server ]; then

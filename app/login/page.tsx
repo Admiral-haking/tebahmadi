@@ -1,4 +1,5 @@
 "use client";
+import { useSmsCode } from "@/hooks/use-sms-code";
 
 import { useState } from "react";
 
@@ -6,6 +7,7 @@ export default function LoginPage() {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [sent, setSent] = useState(false);
+  useSmsCode(sent, setCode);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -19,7 +21,7 @@ export default function LoginPage() {
     });
     const data = await response.json().catch(() => ({}));
     setBusy(false);
-    setMessage(response.ok ? (sent ? "" : data.devCode ? `کد ورود local: ${data.devCode}` : "کد ورود ارسال شد") : (data.error || ""));
+    setMessage(response.ok ? (sent ? "" : "کد ورود ارسال شد") : (data.error || ""));
     if (response.ok) {
       if (!sent) setSent(true);
       else window.location.assign(data.user ? "/admin" : "/account");
