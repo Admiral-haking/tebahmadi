@@ -1225,3 +1225,50 @@ body { background: var(--brand-paper); color: var(--brand-ink); }
   .product-meta,.price-row{font-size:12px}
   .quick-add{font-size:13px}
 }
+
+/* Product discovery: clear hierarchy, low-friction filters, and resilient states. */
+.catalog-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:8px}
+.catalog-heading .eyebrow{display:inline-flex;margin-bottom:7px;color:var(--brand-green);font-size:12px;font-weight:750}
+.catalog-heading .page-lead{max-width:58ch;margin:8px 0 0;color:var(--brand-muted);font-size:14px;line-height:1.9}
+.catalog-result-count{flex:0 0 auto;padding:8px 12px;border:1px solid var(--line-soft);border-radius:999px;background:var(--surface-soft);color:var(--brand-green-deep);font-size:12px;font-weight:700}
+.catalog-controls{display:flex;align-items:flex-end;gap:12px}
+.catalog-search-label{flex:1;max-width:620px}
+.catalog-clear{min-height:48px;margin-bottom:34px;padding:0 14px;border:1px solid var(--line-soft);border-radius:10px;background:transparent;color:var(--brand-green-deep);font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.catalog-filters{display:flex;gap:9px;max-width:100%;margin:-12px 0 28px;padding:4px 1px 10px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#b8cbb9 transparent}
+.catalog-filter{flex:0 0 auto;min-height:40px;padding:8px 15px;border:1px solid var(--line-soft);border-radius:999px;background:var(--surface-raised);color:var(--brand-green-deep);font:inherit;font-size:12px;font-weight:650;white-space:nowrap;cursor:pointer;transition:background-color var(--motion-fast),border-color var(--motion-fast),color var(--motion-fast)}
+.catalog-filter:hover{border-color:#9db9a3;background:#f6f8f3}
+.catalog-filter.is-active{border-color:var(--brand-green);background:var(--brand-green);color:#fff}
+.catalog-state{display:grid;justify-items:center;gap:10px;min-height:220px;align-content:center;padding:28px;border:1px solid var(--line-soft);border-radius:var(--radius-surface);background:var(--surface-soft);text-align:center}
+.catalog-state>span{color:#829c7a;font-size:34px;line-height:1}
+.catalog-state h2{margin:0;color:var(--brand-green-deep);font-size:18px}
+.catalog-state p{max-width:50ch;margin:0 0 6px;color:var(--brand-muted);font-size:13px;line-height:1.9}
+.catalog-state-error{border-color:#ecd7ce;background:#fbf5f1}
+.catalog-state-error h2{color:#76493c}
+.catalog-skeleton{display:grid;gap:13px;min-width:0;padding:12px;border:1px solid var(--line-soft);border-radius:var(--radius-surface);background:var(--surface-raised)}
+.catalog-skeleton span,.catalog-skeleton i,.catalog-skeleton b{display:block;border-radius:9px;background:linear-gradient(100deg,#edf1e9 20%,#f7f8f5 40%,#edf1e9 60%);background-size:200% 100%;animation:catalog-shimmer 1.5s ease-in-out infinite}
+.catalog-skeleton span{aspect-ratio:1/1}
+.catalog-skeleton i{height:12px;width:56%}
+.catalog-skeleton i:nth-of-type(2){width:84%;height:17px}
+.catalog-skeleton b{height:42px;margin-top:6px}
+.catalog-card-footer>span{display:inline-flex;align-items:center;gap:6px}
+.catalog-card-footer>span span{transition:transform var(--motion-fast)}
+.catalog-card:hover .catalog-card-footer>span span{transform:translateX(-3px)}
+@keyframes catalog-shimmer{to{background-position-x:-200%}}
+
+@media(max-width:650px){
+  .catalog-heading{align-items:flex-start;margin-bottom:4px}
+  .catalog-heading .page-lead{max-width:34ch;font-size:13px}
+  .catalog-result-count{margin-top:20px;padding:7px 9px;font-size:11px}
+  .catalog-controls{align-items:stretch;gap:8px}
+  .catalog-search-label{margin:18px 0 22px}
+  .catalog-clear{min-height:48px;margin:37px 0 22px;padding:0 10px;font-size:11px}
+  .catalog-filters{margin:-8px 0 20px;gap:7px}
+  .catalog-filter{min-height:38px;padding:7px 12px}
+  .catalog-state{min-height:190px;padding:22px 16px}
+  .catalog-state h2{font-size:16px}
+  .catalog-skeleton{grid-template-columns:92px minmax(0,1fr);grid-template-rows:repeat(3,auto);column-gap:13px;padding:10px}
+  .catalog-skeleton span{grid-row:1/4;width:92px;height:112px;aspect-ratio:auto}
+  .catalog-skeleton i,.catalog-skeleton i:nth-of-type(2),.catalog-skeleton b{align-self:center;width:90%;height:12px}
+  .catalog-skeleton b{height:34px}
+}
+@media(prefers-reduced-motion:reduce){.catalog-skeleton span,.catalog-skeleton i,.catalog-skeleton b{animation:none}}
