@@ -1024,6 +1024,130 @@ body {
   .customer-order-card>footer{display:grid;grid-template-columns:1fr}
   .customer-order-action{width:100%}
 }
+
+/* Shared botanical surfaces and interaction polish across store and admin screens. */
+:root {
+  --surface-glass: rgba(249, 248, 246, .88);
+  --surface-raised: #fff;
+  --surface-soft: #f2f5ef;
+  --line-soft: #dce5dc;
+  --shadow-rest: 0 8px 24px rgba(31, 69, 52, .055);
+  --shadow-overlay: 0 20px 54px rgba(22, 54, 37, .2);
+  --radius-surface: 16px;
+  --radius-control: 10px;
+  --motion-fast: 160ms ease;
+}
+
+html { scroll-padding-top: 88px; }
+body { background: var(--brand-paper); color: var(--brand-ink); }
+
+:where(.header, .store-shell-header, .content-header, .account-top, .admin-top) {
+  background: var(--surface-glass);
+  border-color: color-mix(in srgb, var(--line-soft), transparent 12%);
+  -webkit-backdrop-filter: blur(12px) saturate(118%);
+  backdrop-filter: blur(12px) saturate(118%);
+}
+
+:where(.admin-panel, .account-card, .track-card, .policies-card, .blog-card, .catalog-card, .product-info-grid article, .faq, .related-products) {
+  border-color: var(--line-soft);
+  border-radius: var(--radius-surface);
+}
+
+.admin-panel, .account-card, .track-card, .policies-card, .blog-card, .catalog-card {
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-rest);
+}
+
+:where(input, textarea, select) {
+  border-radius: var(--radius-control) !important;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), background-color var(--motion-fast);
+}
+
+:where(input, textarea, select):focus-visible {
+  border-color: #6b9273 !important;
+  box-shadow: 0 0 0 3px rgba(42, 90, 68, .13);
+}
+
+:where(.primary, .admin-button, .quick-add, .cart-btn) {
+  transition: background-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
+}
+
+:where(.primary, .admin-button, .quick-add, .cart-btn):hover {
+  box-shadow: 0 5px 14px rgba(31, 69, 52, .14);
+  transform: translateY(-1px);
+}
+
+:where(.admin-outline, .admin-logout, .customer-order-action) {
+  transition: background-color var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.product-card {
+  border: 1px solid transparent;
+  border-radius: 16px;
+  transition: border-color var(--motion-fast), background-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.product-card:hover { border-color: var(--line-soft); box-shadow: var(--shadow-rest); }
+.product-card .product-image { border-radius: 12px; }
+.quick-add { min-height: 44px; }
+.product-detail-image { border-radius: 20px; }
+
+.catalog-card {
+  box-shadow: none;
+  transition: border-color var(--motion-fast), background-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.catalog-card:hover { box-shadow: var(--shadow-rest); }
+
+.product-info-grid article, .faq, .related-products { box-shadow: none; background: var(--surface-soft); }
+.admin-stats > div { background: var(--surface-raised); box-shadow: none; }
+.admin-panel { box-shadow: 0 1px 2px rgba(31, 69, 52, .035); }
+.admin-table-wrap { border-color: var(--line-soft); }
+.admin-table-wrap th { background: #f3f6f1; }
+
+.admin-nav-section { background: rgba(255, 255, 255, .72); box-shadow: none; }
+.admin-nav-items button.selected { background: #e7efe7; border-color: #c8d9ca; box-shadow: none; }
+.admin-hamburger { background: var(--surface-glass); box-shadow: var(--shadow-rest); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.admin-menu-overlay, .overlay, .variant-modal, .store-shell-backdrop {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.cart-drawer, .variant-form, .admin-navigation, .store-shell-drawer {
+  background: rgba(250, 250, 247, .96);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
+  box-shadow: var(--shadow-overlay);
+}
+.toast { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+
+.account-panel-heading { align-items: center; }
+.customer-order-card { box-shadow: 0 1px 2px rgba(31, 69, 52, .04); }
+.customer-order-card:hover { border-color: #c4d8c7; }
+.customer-order-action { min-height: 46px; }
+
+.hero-card { border-radius: 20px; overflow: hidden; clip-path: none; }
+.hero-art { background-size: cover; }
+.contact-section { border-radius: 20px; }
+.newsletter { background: var(--surface-soft); }
+
+@media (max-width: 700px) {
+  html { scroll-padding-top: 72px; }
+  .header, .store-shell-header { background: rgba(249, 248, 246, .96); }
+  .admin-navigation { background: rgba(249, 250, 247, .98); }
+  .product-card, .product-card:hover { box-shadow: none; }
+  .admin-panel, .account-card, .track-card, .policies-card { box-shadow: 0 4px 16px rgba(31, 69, 52, .045); }
+  .account-panel-heading { align-items: stretch; }
+  .account-panel-heading .admin-outline { justify-content: center; min-height: 44px; }
+  .hero-card { border-radius: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :where(.header, .store-shell-header, .content-header, .account-top, .admin-top, .cart-drawer, .variant-form, .admin-navigation, .store-shell-drawer) { background: #fbfaf6; }
+  :where(.admin-menu-overlay, .overlay, .variant-modal, .store-shell-backdrop) { background-color: rgba(20, 39, 28, .56); }
+}
 @keyframes account-spin{to{transform:rotate(360deg)}}
 
 .brand-auth-page{grid-template-columns:minmax(420px,1fr) minmax(440px,1fr)}
