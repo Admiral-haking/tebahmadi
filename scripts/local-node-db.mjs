@@ -63,7 +63,7 @@ if (process.argv[2] === "seed") {
   db.exec("UPDATE shipping_methods SET active=1 WHERE code='post_pishtaz';");
   db.exec("INSERT OR IGNORE INTO promotions(id,code,title,kind,value,min_subtotal_toman,usage_limit,active) VALUES('local-promotion-10','LOCAL10','تخفیف تست محلی','percent',10,0,NULL,1);");
   db.exec("UPDATE promotions SET active=1,usage_count=0 WHERE id='local-promotion-10';");
-  db.exec("INSERT OR IGNORE INTO admin_users(id,email,phone,name,password_hash,role,active) VALUES('local-owner','owner@local.test','09120000000','مالک local','otp-only','owner',1);");
+  db.exec("INSERT OR IGNORE INTO admin_users(id,email,phone,name,password_hash,role,active) VALUES('local-owner','owner@local.test','09120000000','مالک local','otp-only','owner',1); INSERT OR IGNORE INTO admin_users(id,email,phone,name,password_hash,role,active) VALUES('local-admin-09354395264','09354395264@staff.tabahmadi.local','09354395264','مدیر فروشگاه','otp-only','admin',1); UPDATE admin_users SET active=1,role='admin' WHERE phone='09354395264';");
   db.exec("DELETE FROM login_otps; DELETE FROM rate_limits; DELETE FROM admin_sessions WHERE admin_user_id='local-owner';");
 }
 

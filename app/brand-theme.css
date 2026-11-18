@@ -2135,7 +2135,9 @@ body.admin-menu-open .account-page .admin-tabs{z-index:45}
   background:#fff;
   box-shadow:0 7px 20px rgba(28,67,49,.07);
 }
+.enamad-seal{position:relative;overflow:hidden}
 .enamad-seal img{display:block;width:84px;max-height:84px;object-fit:contain}
+.enamad-fallback{display:none;color:var(--brand-muted);font-size:10px;line-height:1.7;text-align:center}
 .copyright{
   grid-column:1/-1;
   display:flex;
