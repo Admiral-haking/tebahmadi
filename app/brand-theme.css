@@ -1495,7 +1495,7 @@ body { background: var(--brand-paper); color: var(--brand-ink); }
 }
 
 .auth-stepper{
-  display:flex;
+  display:none;
   align-items:center;
   gap:10px;
   margin-bottom:4px;
@@ -1515,6 +1515,15 @@ body { background: var(--brand-paper); color: var(--brand-ink); }
   font-weight:800;
 }
 .otp-help{display:block;margin-top:12px;color:var(--brand-muted);font-size:11px;line-height:1.9}
+.brand-auth-page .account-card{padding:32px 34px}
+.brand-auth-page .account-card h1{margin:14px 0 7px;font-size:clamp(27px,3vw,35px);line-height:1.35}
+.brand-auth-page .account-card>p{margin:0 0 16px;font-size:12px;line-height:1.9}
+.brand-auth-page .account-form{gap:12px;margin-top:12px}
+.brand-auth-page .account-form label{gap:6px;font-size:12px}
+.brand-auth-page .account-form input{min-height:50px}
+.brand-auth-page .account-form input[name="phone"]{direction:ltr;text-align:left;unicode-bidi:plaintext;font-variant-numeric:tabular-nums}
+.brand-auth-page .account-switch,.brand-auth-page .back-home{display:inline-flex;width:auto;min-height:30px;margin:6px 0 0;padding:5px 0;font-size:11px}
+.brand-auth-page .account-switch{margin-inline-end:16px}
 .catalog-controls{display:flex;align-items:flex-end;gap:12px}
 .catalog-search-label{flex:1;max-width:620px}
 .catalog-clear{min-height:48px;margin-bottom:34px;padding:0 14px;border:1px solid var(--line-soft);border-radius:10px;background:transparent;color:var(--brand-green-deep);font:inherit;font-size:12px;font-weight:700;cursor:pointer}

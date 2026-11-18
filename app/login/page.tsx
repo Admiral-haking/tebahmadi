@@ -3,6 +3,7 @@ import { useSmsCode } from "@/hooks/use-sms-code";
 
 import { useEffect, useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
+import { normalizePhone } from "@/lib/input-normalization";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
@@ -19,11 +20,13 @@ export default function LoginPage() {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const normalizedPhone = normalizePhone(phone);
+    setPhone(normalizedPhone);
     setBusy(true);
     const response = await fetch(`/api/auth/otp/${sent ? "verify" : "request"}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, ...(sent ? { code, ...(needsName ? { name } : {}) } : {}) }),
+      body: JSON.stringify({ phone: normalizedPhone, ...(sent ? { code, ...(needsName ? { name } : {}) } : {}) }),
     });
     const data = await response.json().catch(() => ({}));
     setBusy(false);
@@ -43,22 +46,20 @@ export default function LoginPage() {
       </aside>
       <section className="account-card">
         <a className="auth-form-brand" href="/"><BrandLogo compact/></a>
-        <div className="auth-stepper" aria-label="مراحل ورود"><span className={!sent ? "active" : "done"}>۱ شماره همراه</span><i aria-hidden="true"/><span className={sent ? "active" : ""}>۲ کد تأیید</span></div>
         <h1>{sent ? "کد ورود را تأیید کنید" : "ورود با شماره همراه"}</h1>
         <p>{sent ? `کد ۴ رقمی ارسال‌شده به ${phone} را وارد کنید. کد تا ۵ دقیقه معتبر است.` : "برای ورود یا ساخت حساب، شماره همراه خود را وارد کنید."}</p>
         <form className="account-form" onSubmit={submit}>
           <label>شماره همراه
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" required readOnly={sent} disabled={!ready || busy} placeholder="۰۹۱۲۱۲۳۴۵۶۷" />
+            <input name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(normalizePhone(phone))} dir="ltr" inputMode="tel" autoComplete="tel" required readOnly={sent} disabled={!ready || busy} placeholder="۰۹۱۲۱۲۳۴۵۶۷" />
           </label>
           {sent && <label>کد ورود
-            <input className="otp-input" autoFocus value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9۰-۹٠-٩\s]{4,}" maxLength={8} required disabled={busy} aria-describedby="otp-help" />
+            <input className="otp-input" autoFocus value={code} onChange={(e) => setCode(e.target.value)} dir="ltr" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9۰-۹٠-٩\s]{4,}" maxLength={8} required disabled={busy} />
           </label>}
           {needsName && <label>نام و نام خانوادگی
             <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" minLength={2} maxLength={120} required disabled={busy} />
           </label>}
           <button className="admin-button" disabled={busy || !ready}>{busy ? "در حال بررسی…" : needsName ? "ساخت حساب و ورود" : sent ? "تأیید و ورود" : "ارسال کد ورود"}</button>
         </form>
-        {sent && <small id="otp-help" className="otp-help">کد را از پیامک کپی کنید؛ فاصله و ارقام فارسی هم پذیرفته می‌شود.</small>}
         {message && <div className="admin-message" role="status">{message}</div>}
         {sent && <button className="account-switch" onClick={() => { setSent(false); setNeedsName(false); setCode(""); setName(""); setMessage(""); }}>تغییر شماره</button>}
         <a className="back-home" href="/">بازگشت به فروشگاه</a>
