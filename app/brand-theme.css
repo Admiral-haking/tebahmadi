@@ -2409,6 +2409,19 @@ body.admin-menu-open .account-page .admin-tabs{z-index:45}
 .admin-order-center .admin-table-wrap{border-radius:15px}.admin-order-center .admin-table-wrap table{min-width:820px}.admin-order-center th{font-size:12px}.admin-order-center td{font-size:12px}.admin-order-center td b{font-weight:750;color:#294b38}.admin-order-center .order-pagination{padding:16px 4px 0}
 .admin-page input[type="date"],.admin-page input[type="datetime-local"]{font-variant-numeric:persian;font-family:inherit;direction:ltr;text-align:right;color:#294335;color-scheme:light}
 .admin-page input[type="date"]::-webkit-calendar-picker-indicator,.admin-page input[type="datetime-local"]::-webkit-calendar-picker-indicator{opacity:.7;filter:sepia(.3) saturate(.7)}
+.admin-page .admin-grid{grid-template-columns:minmax(0,1.05fr) minmax(0,1.35fr);align-items:start}
+.admin-page .product-form{min-width:0;width:100%}
+.admin-page .product-form label:has(input[name="image"]){display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:15px;border:1px solid #d7e8d9;border-radius:15px;background:linear-gradient(135deg,#f8fcf7,#eef7ef)}
+.admin-page .product-form label:has(input[name="image"])::before{content:"گالری و تصویر کالا";color:#205c40;font-size:13px;font-weight:800}
+.admin-page .product-form label:has(input[name="image"])::after{content:"برای اتصال تصویر به محصول، لینک مستقیم فایل تصویر را وارد کنید. تصویر در فروشگاه و صفحه جزئیات کالا استفاده می‌شود.";color:#789080;font-size:10px;line-height:1.8}
+.admin-page .product-form label:has(input[name="image"]) input{background:#fff}
+.admin-page .admin-product-list{min-width:0;overflow:hidden}
+.admin-page .admin-product-list>div{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:10px}
+.admin-page .admin-product-list>div>span{min-width:0;overflow-wrap:anywhere}.admin-page .admin-product-list>div>b{font-size:12px}
+.admin-page .variant-table-wrap{overflow-x:auto;max-width:100%;border:1px solid #e2ece3;border-radius:12px}
+.admin-page .variant-table-wrap table{min-width:680px}
+.admin-page .variant-modal{overflow:auto}
+@media(max-width:760px){.admin-page .admin-grid{grid-template-columns:1fr}.admin-page .admin-product-list>div{grid-template-columns:minmax(0,1fr) auto;gap:7px}.admin-page .admin-product-list>div>span{grid-column:1/-1}.admin-page .admin-product-list>div>button{justify-self:end}.admin-page .variant-table-wrap table{min-width:620px}.admin-page .product-form label:has(input[name="image"]){padding:12px}}
 @media(max-width:1100px){.order-filters{grid-template-columns:repeat(3,minmax(0,1fr))}.order-search-field{grid-column:1/-1}.filter-submit{width:100%}.order-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){.order-center-panel{padding:16px;border-radius:18px}.order-center-head{align-items:stretch;gap:14px}.order-export{width:100%}.order-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:16px 0}.order-summary span{min-height:76px;padding:12px;border-radius:13px;font-size:11px}.order-summary b{font-size:17px}.order-filter-box{padding:13px;border-radius:15px}.order-filter-heading{align-items:flex-start;flex-direction:column;gap:5px}.order-filters{grid-template-columns:1fr 1fr;gap:9px}.order-search-field{grid-column:1/-1}.order-filters label{font-size:10px}.order-filters input,.order-filters select,.filter-submit{height:42px;font-size:11px}.filter-submit{grid-column:1/-1}.order-empty{min-height:160px;margin:8px 0}.admin-order-center .admin-table-wrap table{min-width:760px}}
 @media(max-width:390px){.order-filters{grid-template-columns:1fr}.order-search-field,.filter-submit{grid-column:auto}.order-summary .summary-revenue{grid-column:1/-1}}
