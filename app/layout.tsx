@@ -22,7 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body className="antialiased"><NavigationBehavior />{children}</body>
+      <body className="antialiased">
+        <a className="skip-link" href="#site-content">رفتن به محتوای اصلی</a>
+        <NavigationBehavior />
+        <div id="site-content" tabIndex={-1}>{children}</div>
+      </body>
     </html>
   );
 }

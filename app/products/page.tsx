@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RemoteImage } from "../../components/remote-image";
 import { StoreHeader } from "../../components/store-header";
+import { BrandLogo } from "../../components/brand-logo";
 
 type Product = {
   id: string;
@@ -76,7 +77,6 @@ export default function ProductsPage() {
       <div className="wrap catalog-content">
         <header className="catalog-heading">
           <div>
-            <span className="eyebrow">فروشگاه طب احمدی</span>
             <h1>محصولات</h1>
             <p className="page-lead">مشخصات، ترکیبات، وزن و روش مصرف را پیش از خرید بررسی کنید.</p>
           </div>
@@ -112,7 +112,7 @@ export default function ProductsPage() {
           <div className="catalog-grid">
             {visibleProducts.map((product) => (
               <a className="catalog-card" href={`/products/${product.slug}`} key={product.id}>
-                {product.image_url ? <RemoteImage src={product.image_url} alt={product.name} /> : <div className="catalog-placeholder"><span aria-hidden="true">⌁</span><b>طب احمدی</b></div>}
+                {product.image_url ? <RemoteImage src={product.image_url} alt={product.name} /> : <div className="catalog-placeholder"><BrandLogo compact /><small>تصویر محصول به‌زودی</small></div>}
                 {product.category && <small>{product.category}</small>}
                 <h2>{product.name}</h2>
                 {(product.short_description || product.description) && <p>{product.short_description || product.description}</p>}
@@ -122,7 +122,6 @@ export default function ProductsPage() {
           </div>
         ) : (
           <section className="catalog-state">
-            <span aria-hidden="true">⌕</span>
             <h2>{rows.length ? "محصولی با این مشخصات پیدا نشد" : "هنوز محصولی برای نمایش ثبت نشده است"}</h2>
             <p>{rows.length ? "عبارت جستجو یا دسته‌بندی را تغییر دهید." : "بعداً دوباره به فروشگاه سر بزنید."}</p>
             {(query || category !== "همه محصولات") && <button className="admin-outline" type="button" onClick={() => { setQuery(""); setCategory("همه محصولات"); }}>پاک کردن فیلترها</button>}

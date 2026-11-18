@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { addCartQuantity, normalizeCart } from "../../../lib/cart-quantities";
 import { cartLineKey } from "../../../lib/storefront-cart";
 import { StoreHeader } from "../../../components/store-header";
+import { BrandLogo } from "../../../components/brand-logo";
 
 const money = (value: number) => `${new Intl.NumberFormat("fa-IR").format(value || 0)} تومان`;
 
@@ -75,7 +76,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
     <StoreHeader />
     <div className="wrap product-detail">
       <section className="product-detail-hero">
-        <div className="product-detail-image">{product.image_url ? <img src={product.image_url} alt={product.name} /> : <div className="product-detail-placeholder"><span aria-hidden="true">⌁</span><b>طب احمدی</b></div>}</div>
+        <div className="product-detail-image">{product.image_url ? <img src={product.image_url} alt={product.name} /> : <div className="product-detail-placeholder"><BrandLogo /><small>تصویر این محصول به‌زودی اضافه می‌شود</small></div>}</div>
         <div className="product-detail-copy">
           <a className="product-back-link" href="/products">فروشگاه{product.category ? ` / ${product.category}` : ""}</a>
           <h1>{product.name}</h1>

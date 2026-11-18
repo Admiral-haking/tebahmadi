@@ -21,7 +21,7 @@
 .checkout-form input, .checkout-form select { width: 100%; min-width: 0; }
 .checkout-form .checkout-consent { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: 8px; }
 .checkout-form .checkout-consent input { width: auto; }
-.payment-note { padding: 10px 12px; border-right: 3px solid #8eb59a; background: #f0f8f1; color: #526c5b; font-size: 11px; line-height: 1.9; }
+.payment-note { padding: 10px 12px; border: 1px solid #d7e5d8; border-radius: 10px; background: #f0f8f1; color: #526c5b; font-size: 11px; line-height: 1.9; }
 .admin-panel-head { gap: 10px; }
 .admin-panel-head input { flex: 1 1 220px; }
 .admin-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
