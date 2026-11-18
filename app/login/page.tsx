@@ -43,20 +43,22 @@ export default function LoginPage() {
       </aside>
       <section className="account-card">
         <a className="auth-form-brand" href="/"><BrandLogo compact/></a>
-        <h1>{sent ? "تأیید کد ورود" : "ورود با شماره همراه"}</h1>
-        <p>{sent ? "کد پیامک‌شده را وارد کنید؛ در مرورگرهای سازگار، کد به‌صورت خودکار در این کادر قرار می‌گیرد." : "برای ورود یا ساخت حساب، شماره همراه خود را وارد کنید."}</p>
+        <div className="auth-stepper" aria-label="مراحل ورود"><span className={!sent ? "active" : "done"}>۱ شماره همراه</span><i aria-hidden="true"/><span className={sent ? "active" : ""}>۲ کد تأیید</span></div>
+        <h1>{sent ? "کد ورود را تأیید کنید" : "ورود با شماره همراه"}</h1>
+        <p>{sent ? `کد ۴ رقمی ارسال‌شده به ${phone} را وارد کنید. کد تا ۵ دقیقه معتبر است.` : "برای ورود یا ساخت حساب، شماره همراه خود را وارد کنید."}</p>
         <form className="account-form" onSubmit={submit}>
           <label>شماره همراه
             <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" required readOnly={sent} disabled={!ready || busy} placeholder="۰۹۱۲۱۲۳۴۵۶۷" />
           </label>
           {sent && <label>کد ورود
-            <input value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9۰-۹٠-٩]{4}" maxLength={4} required disabled={busy} />
+            <input className="otp-input" autoFocus value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9۰-۹٠-٩\s]{4,}" maxLength={8} required disabled={busy} aria-describedby="otp-help" />
           </label>}
           {needsName && <label>نام و نام خانوادگی
             <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" minLength={2} maxLength={120} required disabled={busy} />
           </label>}
           <button className="admin-button" disabled={busy || !ready}>{busy ? "در حال بررسی…" : needsName ? "ساخت حساب و ورود" : sent ? "تأیید و ورود" : "ارسال کد ورود"}</button>
         </form>
+        {sent && <small id="otp-help" className="otp-help">کد را از پیامک کپی کنید؛ فاصله و ارقام فارسی هم پذیرفته می‌شود.</small>}
         {message && <div className="admin-message" role="status">{message}</div>}
         {sent && <button className="account-switch" onClick={() => { setSent(false); setNeedsName(false); setCode(""); setName(""); setMessage(""); }}>تغییر شماره</button>}
         <a className="back-home" href="/">بازگشت به فروشگاه</a>

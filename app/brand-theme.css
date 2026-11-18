@@ -1493,6 +1493,28 @@ body { background: var(--brand-paper); color: var(--brand-ink); }
   .brand-auth-page .account-card h1{font-size:27px}
   .brand-auth-page .account-card>p{font-size:12px}
 }
+
+.auth-stepper{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:4px;
+  color:var(--brand-muted);
+  font-size:11px;
+  font-weight:700;
+}
+.auth-stepper i{width:26px;height:1px;background:var(--line);display:block}
+.auth-stepper span{opacity:.55}
+.auth-stepper span.active,.auth-stepper span.done{opacity:1;color:var(--brand-green-deep)}
+.auth-stepper span.done::before{content:"✓ ";color:var(--brand-green)}
+.otp-input{
+  direction:ltr;
+  text-align:center;
+  letter-spacing:.28em;
+  font-variant-numeric:tabular-nums;
+  font-weight:800;
+}
+.otp-help{display:block;margin-top:12px;color:var(--brand-muted);font-size:11px;line-height:1.9}
 .catalog-controls{display:flex;align-items:flex-end;gap:12px}
 .catalog-search-label{flex:1;max-width:620px}
 .catalog-clear{min-height:48px;margin-bottom:34px;padding:0 14px;border:1px solid var(--line-soft);border-radius:10px;background:transparent;color:var(--brand-green-deep);font:inherit;font-size:12px;font-weight:700;cursor:pointer}

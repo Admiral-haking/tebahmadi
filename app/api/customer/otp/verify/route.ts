@@ -1,5 +1,6 @@
 import { env } from "@/lib/runtime";
 import { createCustomerSession, normalizePhone, phoneValid, validOrigin } from "../../session";
+import { normalizeOtp } from "@/lib/input-normalization";
 
 const enc = new TextEncoder();
 async function hash(value: string) {
@@ -13,14 +14,15 @@ export async function POST(request: Request) {
   let body: any;
   try { body = await request.json(); } catch { return Response.json({ error: "درخواست نامعتبر است" }, { status: 400 }); }
   const phone = normalizePhone(String(body.phone || ""));
-  const code = String(body.code || "").replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
-  if (!phoneValid(phone) || !/^\d{4}$/.test(code)) return Response.json({ error: "شماره همراه یا کد ۴ رقمی معتبر نیست" }, { status: 400 });
+  const code = normalizeOtp(body.code);
+  if (!phoneValid(phone) || code.length !== 4) return Response.json({ error: "شماره همراه یا کد ۴ رقمی معتبر نیست" }, { status: 400 });
   const otp = await env.DB.prepare("SELECT code_hash,expires_at,attempts FROM login_otps WHERE phone=?").bind("customer:"+phone).first<any>();
   if (!otp || Number(otp.expires_at) < Date.now() || Number(otp.attempts) >= 5) return Response.json({ error: "کد منقضی شده یا بیش از حد تلاش شده است؛ کد تازه بگیرید" }, { status: 401 });
   const actual = await hash(phone + ":" + code + ":" + (env.OTP_PEPPER || env.ADMIN_SESSION_SECRET || ""));
   if (!constantTimeEqual(String(otp.code_hash), actual)) {
     await env.DB.prepare("UPDATE login_otps SET attempts=attempts+1 WHERE phone=?").bind("customer:"+phone).run();
-    return Response.json({ error: "کد ورود نادرست است" }, { status: 401 });
+    const remaining = Math.max(0, 5 - Number(otp.attempts) - 1);
+    return Response.json({ error: remaining ? `کد ورود نادرست است؛ ${remaining} تلاش باقی مانده` : "کد ورود نادرست است؛ کد تازه بگیرید" }, { status: 401 });
   }
   await env.DB.prepare("DELETE FROM login_otps WHERE phone=?").bind("customer:"+phone).run();
   const customer = await env.DB.prepare("SELECT id,name,phone FROM customers WHERE phone=?").bind(phone).first<any>();
