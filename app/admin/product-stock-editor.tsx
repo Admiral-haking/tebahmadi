@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { VariantManager } from "./variant-manager";
+import { ProductGalleryManager } from "./product-gallery-manager";
 
 type Product = {
   id: string;
@@ -47,7 +48,7 @@ export function ProductStockEditor({ product, onSaved }: { product: Product; onS
     onSaved();
   }
 
-  if (!open) return <><button type="button" onClick={() => setOpen(true)} aria-label="ویرایش قیمت و موجودی">✎</button><VariantManager product={product} onSaved={onSaved} /></>;
+  if (!open) return <><button type="button" onClick={() => setOpen(true)} aria-label="ویرایش قیمت و موجودی">✎</button><VariantManager product={product} onSaved={onSaved} /><ProductGalleryManager productId={product.id} productName={product.name} /></>;
   return <div className="inline-product-editor" role="group" aria-label={`ویرایش ${product.name}`}>
     <label>قیمت<input type="number" min="1" value={price} onChange={(event) => setPrice(event.target.value)} /></label>
     <label>موجودی<input type="number" min="0" max="100000" value={stock} onChange={(event) => setStock(event.target.value)} /></label>

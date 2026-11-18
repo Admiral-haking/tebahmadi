@@ -15,6 +15,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const [quantity, setQuantity] = useState(0);
   const [variantId, setVariantId] = useState("");
   const [added, setAdded] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
   const product = data?.product;
   const variants = useMemo(() => Array.isArray(product?.variants) ? product.variants : [], [product]);
   const variant = variants.find((item: any) => item.id === variantId) || variants[0];
@@ -76,7 +77,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
     <StoreHeader />
     <div className="wrap product-detail">
       <section className="product-detail-hero">
-        <div className="product-detail-image">{product.image_url ? <img src={product.image_url} alt={product.name} /> : <div className="product-detail-placeholder"><BrandLogo /><small>تصویر این محصول به‌زودی اضافه می‌شود</small></div>}</div>
+        <div className="product-detail-media">{(product.images?.[selectedImage]?.url || product.image_url) ? <img className="product-detail-image" src={product.images?.[selectedImage]?.url || product.image_url} alt={product.images?.[selectedImage]?.alt_text || product.name} /> : <div className="product-detail-placeholder"><BrandLogo /><small>تصویر این محصول به‌زودی اضافه می‌شود</small></div>}{product.images?.length > 1 && <div className="product-image-thumbs" aria-label="تصاویر محصول">{product.images.map((image: any, index: number) => <button type="button" className={selectedImage === index ? "is-active" : ""} key={image.id} onClick={() => setSelectedImage(index)}><img src={image.url} alt={image.alt_text || `${product.name} تصویر ${index + 1}`} /></button>)}</div>}</div>
         <div className="product-detail-copy">
           <a className="product-back-link" href="/products">فروشگاه{product.category ? ` / ${product.category}` : ""}</a>
           <h1>{product.name}</h1>

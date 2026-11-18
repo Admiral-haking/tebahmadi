@@ -11,6 +11,7 @@ type Product = {
   name: string;
   category?: string | null;
   image_url?: string | null;
+  images?: { url: string; alt_text?: string | null }[];
   short_description?: string | null;
   description?: string | null;
   current_price_toman?: number;
@@ -112,7 +113,7 @@ export default function ProductsPage() {
           <div className="catalog-grid">
             {visibleProducts.map((product) => (
               <a className="catalog-card" href={`/products/${product.slug}`} key={product.id}>
-                {product.image_url ? <RemoteImage src={product.image_url} alt={product.name} /> : <div className="catalog-placeholder"><BrandLogo compact /><small>تصویر محصول به‌زودی</small></div>}
+                {(product.images?.[0]?.url || product.image_url) ? <RemoteImage src={product.images?.[0]?.url || product.image_url || ""} alt={product.images?.[0]?.alt_text || product.name} /> : <div className="catalog-placeholder"><BrandLogo compact /><small>تصویر محصول به‌زودی</small></div>}
                 {product.category && <small>{product.category}</small>}
                 <h2>{product.name}</h2>
                 {(product.short_description || product.description) && <p>{product.short_description || product.description}</p>}

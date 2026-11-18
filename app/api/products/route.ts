@@ -14,9 +14,11 @@ export async function GET(request: Request) {
     const rows = await env.DB.prepare(sql).bind(...args).all<any>();
     const ids = rows.results.map((row: any) => row.id);
     const variants = ids.length ? await env.DB.prepare(`SELECT v.*,COALESCE(v.stock_quantity-v.reserved_quantity,0) AS available_quantity FROM product_variants v WHERE v.product_id IN (${ids.map(() => "?").join(",")}) AND v.active=1 ORDER BY v.sort_order,v.created_at`).bind(...ids).all<any>() : { results: [] };
+    const images = ids.length ? await env.DB.prepare(`SELECT id,product_id,variant_id,storage_key,alt_text,sort_order,is_primary FROM product_images WHERE product_id IN (${ids.map(() => "?").join(",")}) ORDER BY is_primary DESC,sort_order,created_at`).bind(...ids).all<any>() : { results: [] };
     const byProduct = new Map<string, any[]>();
     for (const variant of variants.results) { const list = byProduct.get(variant.product_id) || []; list.push({ ...variant, attributes: JSON.parse(variant.attributes_json || "{}") }); byProduct.set(variant.product_id, list); }
-    return Response.json({ products: rows.results.map((row: any) => ({ ...row, variants: byProduct.get(row.id) || [] })) }, { headers: { "Cache-Control": "public, max-age=60" } });
+    const byImage = new Map<string, any[]>(); for (const image of images.results) { const list = byImage.get(image.product_id) || []; list.push({ ...image, url: `/media/${image.storage_key}` }); byImage.set(image.product_id, list); }
+    return Response.json({ products: rows.results.map((row: any) => ({ ...row, variants: byProduct.get(row.id) || [], images: byImage.get(row.id) || [] })) }, { headers: { "Cache-Control": "public, max-age=60" } });
   } catch {
     try { const legacy=await env.DB.prepare("SELECT id,name,slug,category,price_toman,compare_at_toman,image_url,description,stock,ingredients,usage_text,warning_text,sku,price_toman AS current_price_toman,NULL AS campaign_discount FROM products WHERE active=1 ORDER BY created_at DESC LIMIT ?").bind(limit).all();return Response.json({products:legacy.results},{headers:{"Cache-Control":"public, max-age=60"}}) } catch { return Response.json({ error: "سرویس محصولات موقتاً در دسترس نیست" }, { status: 503 }); }
   }
