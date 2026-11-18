@@ -90,6 +90,23 @@ test("product detail exposes quantity controls without role-specific login text"
   await expect(page.getByText(/نوع حساب|ورود مشتری|ورود ادمین/)).toHaveCount(0);
 });
 
+test("product detail adds the selected variant to the shared cart key", async ({ page }) => {
+  await page.route("**/api/products/variant-detail-fixture", (route) => route.fulfill({ json: {
+    product: { id: "product-fixture", slug: "variant-detail-fixture", name: "کالای چندمدلی", category: "گیاهی", price_toman: 10000, stock: 5, variants: [
+      { id: "variant-small", title: "بسته کوچک", price_toman: 10000, available_quantity: 2, sku: "SMALL" },
+      { id: "variant-large", title: "بسته بزرگ", price_toman: 18000, available_quantity: 1, sku: "LARGE" },
+    ] }, related: [],
+  } }));
+  await page.goto("/products/variant-detail-fixture");
+  const picker = page.getByLabel("انتخاب مدل");
+  await expect(picker).toBeVisible();
+  await picker.selectOption("variant-large");
+  await expect(page.locator(".product-detail-copy .price-row")).toContainText("۱۸٬۰۰۰");
+  await page.getByRole("button", { name: "افزایش تعداد" }).click();
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("tab-ahmadi-cart") || "{}"))).toEqual({ "variant-large": 1 });
+  await expect(page.getByRole("button", { name: "افزایش تعداد" })).toBeDisabled();
+});
+
 test("local customer OTP creates a session without SMS credentials", async ({ request }) => {
   const phone = `0912${Date.now().toString().slice(-7)}`;
   const origin = { Origin: "http://127.0.0.1:5173" };

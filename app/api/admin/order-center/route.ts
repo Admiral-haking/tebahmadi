@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     const clauses = filters.clauses.map(qualify), values = [...filters.values];
     if (url.searchParams.get("q")?.trim()) { const needle = `%${url.searchParams.get("q")!.trim().slice(0, 80)}%`; clauses.push("(o.tracking_code LIKE ? OR s.tracking_code LIKE ?)"); values.push(needle, needle); }
     const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
-    const rows = await env.DB.prepare(`SELECT o.*,s.provider AS shipment_provider,s.status AS shipment_status,s.tracking_code AS shipment_tracking_code FROM orders o LEFT JOIN shipments s ON s.order_id=o.id ${where} ORDER BY o.created_at DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+    const rows = await env.DB.prepare(`SELECT o.*,s.provider AS shipment_provider,s.status AS shipment_status,s.tracking_code AS shipment_tracking_code FROM orders o LEFT JOIN shipments s ON s.order_id=o.id ${where} ORDER BY CASE WHEN s.status='failed' THEN 0 WHEN o.payment_status='paid' AND o.status IN ('paid','processing') AND COALESCE(s.status,'') NOT IN ('registered','in_transit','delivered') THEN 1 ELSE 2 END,o.created_at DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
     const all = await env.DB.prepare(`SELECT o.status,o.payment_status,o.shipping_status,o.subtotal_toman FROM orders o LEFT JOIN shipments s ON s.order_id=o.id ${where}`).bind(...values).all();
     const total = all.results.length;
     return Response.json({ orders: rows.results, page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)), summary: summarizeOrders(all.results as any[]) }, { headers: { "Cache-Control": "no-store" } });

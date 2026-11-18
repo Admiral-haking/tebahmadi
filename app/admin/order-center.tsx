@@ -491,7 +491,7 @@ export function OrderCenter({ role }: { role: string }) {
                 {selected.tracking_code ||
                   selected.shipment_tracking_code ||
                   "—"}
-                {selected.shipment_last_error && <><br />خطای ارسال: {selected.shipment_last_error}</>}
+                {selected.shipment_last_error && <div className="shipment-error-help" role="status"><b>ثبت مرسوله کامل نشد</b><span>{selected.shipment_last_error}</span><small>اطلاعات گیرنده، کدپستی و وزن را بررسی کنید؛ پس از رفع مشکل می‌توانید ثبت را دوباره اجرا کنید.</small></div>}
               </p>
               {canEdit && (
                 <>

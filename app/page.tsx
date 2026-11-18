@@ -9,6 +9,7 @@ import { cartLineKey, resolveCartLines } from "../lib/storefront-cart";
 import { BrandLogo } from "../components/brand-logo";
 
 const toman = (n:number) => new Intl.NumberFormat("fa-IR").format(n) + " تومان";
+const normalizeSearch=(value:string)=>value.normalize("NFKC").replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/[۰-۹]/g,d=>String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/\s+/g," ").trim().toLocaleLowerCase("fa-IR");
 
 function ProductCard({p,selectedId,onSelect,onAdd,favorite,onFavorite,toman}:{p:any;selectedId?:string;onSelect:(id:string)=>void;onAdd:()=>void;favorite:boolean;onFavorite:()=>void;toman:(n:number)=>string}){
  const v=p.variants?.find((x:any)=>x.id===selectedId)||p.variants?.[0], price=v?.price_toman??p.price, stock=v?.available_quantity??p.stock;
@@ -31,6 +32,7 @@ function ProductCard({p,selectedId,onSelect,onAdd,favorite,onFavorite,toman}:{p:
 
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
+  const [catalogError, setCatalogError] = useState(false);
   const [category, setCategory] = useState("همه محصولات");
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -45,7 +47,7 @@ export default function Home() {
     try { const saved = localStorage.getItem("tab-ahmadi-cart"); if (saved) setCart(normalizeCart(JSON.parse(saved))); } catch {}
     try { const saved = localStorage.getItem("tab-ahmadi-favorites"); if (saved) setFavorites(JSON.parse(saved)); } catch {}
     fetch("/api/customer/me",{cache:"no-store"}).then(r=>r.ok?r.json():null).then((d:any)=>{if(d?.customer)setAccountCustomer(d.customer);setSavedAddress(d?.addresses?.[0]||null)}).catch(()=>{});
-    fetch("/api/products").then(r=>r.ok?r.json():null).then((d:any)=>{if(d?.products){setProducts(d.products.map((p:any)=>{const variants=Array.isArray(p.variants)?p.variants:[];const selected=variants[0];return {id:p.id,slug:p.slug||p.id,name:p.name,category:p.category,price:selected?.price_toman??p.current_price_toman??p.price_toman,old:p.campaign_discount?p.price_toman:(selected?.compare_at_toman||p.compare_at_toman||undefined),badge:(selected?.available_quantity??p.stock)>0?"موجود":"به‌زودی",imageUrl:p.image_url,tone:"sand",stock:selected?.available_quantity??p.stock,description:p.description,ingredients:p.ingredients,usage:p.usage_text,warning:p.warning_text,sku:selected?.sku||p.sku,variants};}));setCatalogLoaded(true)}}).catch(()=>{});
+    fetch("/api/products").then(r=>r.ok?r.json():Promise.reject(new Error("catalog"))).then((d:any)=>{if(d?.products){setProducts(d.products.map((p:any)=>{const variants=Array.isArray(p.variants)?p.variants:[];const selected=variants[0];return {id:p.id,slug:p.slug||p.id,name:p.name,category:p.category,price:selected?.price_toman??p.current_price_toman??p.price_toman,old:p.campaign_discount?p.price_toman:(selected?.compare_at_toman||p.compare_at_toman||undefined),badge:(selected?.available_quantity??p.stock)>0?"موجود":"به‌زودی",imageUrl:p.image_url,tone:"sand",stock:selected?.available_quantity??p.stock,description:p.description,ingredients:p.ingredients,usage:p.usage_text,warning:p.warning_text,sku:selected?.sku||p.sku,variants};}));setCatalogLoaded(true)}else throw new Error("catalog")}).catch(()=>{setCatalogError(true);setCatalogLoaded(true)});
     fetch("/api/shipping/methods").then(r=>r.ok?r.json():null).then((d:any)=>{if(d?.methods?.length){setShippingMethods(d.methods);setShippingMethod(d.methods[0].code)}}).catch(()=>{});
   }, []);
   useEffect(() => { try { localStorage.setItem("tab-ahmadi-cart", JSON.stringify(cart)); } catch {} }, [cart]);
@@ -59,7 +61,7 @@ export default function Home() {
   const [shippingMethod,setShippingMethod]=useState("post_pishtaz");
   const [couponDiscount,setCouponDiscount]=useState(0);
   const availableCategories = useMemo(() => ["همه محصولات",...Array.from(new Set(products.map(p=>p.category)))], [products]);
-  const shown = useMemo(() => products.filter(p => (category === "همه محصولات" || p.category === category) && p.name.includes(query)), [category, query, products]);
+  const shown = useMemo(() => products.filter(p => (category === "همه محصولات" || p.category === category) && normalizeSearch(`${p.name} ${p.category||""}`).includes(normalizeSearch(query))), [category, query, products]);
   const selectedVariant = (p:any) => p.variants?.find((v:any)=>v.id===variantSelection[p.id]) || p.variants?.[0];
   const cartLines = useMemo(() => resolveCartLines(cart, products), [cart, products]);
   const count = Object.values(cart).reduce((a,b)=>a+b,0);
@@ -75,26 +77,20 @@ export default function Home() {
     try { const payment=await fetch("/api/payments/zarinpal/request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:d.orderId})}); const paymentData=await payment.json(); if(payment.ok&&paymentData.gatewayUrl){ window.location.assign(paymentData.gatewayUrl); return; } } catch {}
     setOrderCode(d.orderId);setCart({});setCheckout(false);setDrawer(false);setNotice("سفارش ثبت شد؛ وضعیت پرداخت را در سفارش‌های من بررسی کنید.");
   }
-  return <main dir="rtl">
+  return <main dir="rtl" id="top">
     <header className="header wrap">
       <details className="store-mobile-navigation" suppressHydrationWarning><summary aria-label="منو"><Menu aria-hidden="true"/></summary><nav aria-label="منوی موبایل"><a href="#shop">فروشگاه</a><a href="/account">حساب و سفارش‌ها</a><a href="/track">پیگیری سفارش</a><a href="#contact">تماس</a></nav></details>
       <a className="brand" href="#top" aria-label="صفحه اصلی طب احمدی"><BrandLogo/></a>
       <nav className={mobileNav?"nav nav-open":"nav"}><a href="#shop">فروشگاه</a><a href="#story">درباره ما</a><a href="#benefits">خدمات</a><a href="/track">پیگیری سفارش</a></nav>
       <div className="header-actions"><label className="search"><Search aria-hidden="true"/><input aria-label="جستجوی محصول" value={query} onChange={e=>setQuery(e.target.value)} placeholder="جستجوی محصول..." /></label><a className="icon-btn account" aria-label="حساب کاربری" href="/account"><UserRound aria-hidden="true"/></a><button className="cart-btn" onClick={()=>setDrawer(true)}>سبد خرید <span>{count}</span></button></div>
     </header>
-    <section className="hero wrap" id="top">
-      <div className="hero-card">
-       <div className="hero-copy"><h1>اصالت طبیعت، عیار تندرستی</h1><p>محصولات طبیعی، گیاهان دارویی و فرآورده‌های منتخب را با اطلاعات روشن، انتخاب مدل و امکان پیگیری سفارش تهیه کنید.</p><div className="hero-buttons"><a className="primary" href="#shop">مشاهده محصولات</a><a className="text-link" href="/account">سفارش‌های من</a></div></div>
-       <div className="hero-art" aria-label="نشان طب احمدی"><div className="hero-seal"><b>طب احمدی</b><span>اصالت، سلامتی، طبیعت</span></div></div>
-      </div>
-    </section>
-    <section className="promise-strip" id="benefits" aria-label="مزیت‌های فروشگاه"><div className="wrap promise-items"><div><Leaf aria-hidden="true"/><b>انتخاب طبیعی</b><small>گیاهان و فرآورده‌های منتخب</small></div><div><BadgeCheck aria-hidden="true"/><b>اطلاعات روشن</b><small>ترکیبات و روش مصرف محصول</small></div><div><PackageCheck aria-hidden="true"/><b>ارسال و پیگیری</b><small>پست پیشتاز و وضعیت سفارش</small></div><div><Headphones aria-hidden="true"/><b>پشتیبانی خرید</b><small>پاسخ‌گویی در مسیر سفارش</small></div></div></section>
     <section className="shop-section wrap" id="shop"><div className="section-head"><h2>محصولات</h2></div>
       <div className="category-row">{availableCategories.map(c=><button key={c} className={category===c?"category active":"category"} onClick={()=>setCategory(c)}>{c}</button>)}</div>
-      <div className="product-grid">{shown.map(p=><ProductCard key={p.id} p={p} selectedId={variantSelection[p.id]} onSelect={id=>setVariantSelection(s=>({...s,[p.id]:id}))} onAdd={()=>add(p.id)} favorite={favorites.includes(p.id)} onFavorite={()=>toggleFavorite(p.id)} toman={toman}/> )}</div>
+      {catalogError?<div className="catalog-empty" role="alert"><b>دریافت محصولات انجام نشد.</b><button className="admin-outline" onClick={()=>window.location.reload()}>تلاش دوباره</button></div>:<div className="product-grid">{shown.map(p=><ProductCard key={p.id} p={p} selectedId={variantSelection[p.id]} onSelect={id=>setVariantSelection(s=>({...s,[p.id]:id}))} onAdd={()=>add(p.id)} favorite={favorites.includes(p.id)} onFavorite={()=>toggleFavorite(p.id)} toman={toman}/> )}{!catalogLoaded&&Array.from({length:4},(_,i)=><div className="home-product-skeleton" key={i} aria-hidden="true"><span/><b/><i/></div>)}</div>}
       {catalogLoaded&&products.length===0&&<div className="catalog-empty"><b>محصولی برای فروش ثبت نشده است.</b><a className="text-link" href="#contact">تماس با پشتیبانی</a></div>}
       {shown.length===0&&products.length>0&&<p className="empty">محصولی با این عبارت پیدا نشد.</p>}
     </section>
+    <section className="promise-strip" id="benefits" aria-label="مزیت‌های فروشگاه"><div className="wrap promise-items"><div><Leaf aria-hidden="true"/><b>انتخاب طبیعی</b><small>گیاهان و فرآورده‌های منتخب</small></div><div><BadgeCheck aria-hidden="true"/><b>اطلاعات روشن</b><small>ترکیبات و روش مصرف محصول</small></div><div><PackageCheck aria-hidden="true"/><b>ارسال و پیگیری</b><small>پست پیشتاز و وضعیت سفارش</small></div><div><Headphones aria-hidden="true"/><b>پشتیبانی خرید</b><small>پاسخ‌گویی در مسیر سفارش</small></div></div></section>
     <section className="story wrap" id="story"><div className="story-art" role="img" aria-label="نقش‌های اسلیمی و گیاهی هویت طب احمدی"><span className="story-caption">اصالت طبیعت در یک انتخاب آگاهانه</span></div><div className="story-copy"><h2>پلی میان دانش کهن و نیاز امروز</h2><p>در دنیای پرمشغلهٔ امروز که فاصله‌مان با طبیعت بیشتر شده است، طب احمدی پلی است میان اصالت طب سنتی و نیاز دنیای مدرن به انتخابی آگاهانه. محصولات طبیعی، گیاهان دارویی و فرآورده‌های منتخب را با دقت گردآوری می‌کنیم تا اطلاعات، اصالت و کیفیت در دسترس شما باشد.</p><p>پیش از خرید، ترکیبات، روش مصرف و هشدارهای هر محصول را بخوانید. فرآورده‌های سنتی جایگزین تشخیص یا درمان پزشکی نیستند.</p><div className="story-links"><a className="text-link" href="/track">پیگیری سفارش</a><a className="text-link" href="/policies">شرایط خرید و حریم خصوصی</a></div></div></section>
     <section className="contact-section wrap" id="contact"><div><h2>برای پشتیبانی خرید بنویسید</h2><p>پیام شما در پنل پشتیبانی فروشگاه ثبت می‌شود تا پیگیری کنیم.</p><div className="contact-hours">پاسخ‌گویی: شنبه تا پنج‌شنبه، ۱۰ تا ۱۷</div></div><form onSubmit={async e=>{e.preventDefault();const form=e.currentTarget;const data=new FormData(form);const r=await fetch("/api/contact",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:data.get("name"),email:data.get("email"),phone:data.get("phone"),message:data.get("message"),website:data.get("website")})});const d=await r.json();setNotice(d.message||d.error);if(r.ok)form.reset()}}><label>نام<input name="name" required minLength={2} maxLength={120} defaultValue={accountCustomer?.name||""}/></label><label>ایمیل (اختیاری)<input name="email" type="email" defaultValue={accountCustomer?.email||""}/></label><label>شماره همراه<input name="phone" type="tel" inputMode="tel" required defaultValue={accountCustomer?.phone||""} readOnly={!!accountCustomer}/></label><label>پیام<textarea name="message" required minLength={10} maxLength={3000} rows={4}/></label><input name="website" className="honeypot" tabIndex={-1} autoComplete="off" aria-hidden="true"/><button className="primary">ارسال پیام ←</button></form></section>
     <section className="newsletter" id="newsletter"><div className="wrap newsletter-inner"><div><h2>از پیشنهادهای ویژه باخبر شوید</h2><p>ایمیل خود را ثبت کنید تا خبر محصولات و پیشنهادهای فروشگاه را دریافت کنید.</p></div><form onSubmit={async e=>{e.preventDefault();const form=e.currentTarget;const email=String(new FormData(form).get("email"));const r=await fetch("/api/newsletter",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});const d=await r.json();setNotice(d.message||d.error);if(r.ok)form.reset()}}><input name="email" type="email" required placeholder="آدرس ایمیل"/><button>عضویت در خبرنامه ←</button></form></div></section>
