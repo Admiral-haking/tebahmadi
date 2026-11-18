@@ -1339,3 +1339,59 @@ body { background: var(--brand-paper); color: var(--brand-ink); }
 .home-product-skeleton i{height:40px}
 @media(max-width:650px){.hero-featured-product{inset:7% 8%;border-radius:18px}.hero-art-product .hero-seal{top:10px;right:10px;min-width:unset;padding:9px;font-size:11px}.hero-featured-product span{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.home-product-skeleton span,.home-product-skeleton b,.home-product-skeleton i{animation:none}}
+
+/* Consistent, touch-ready controls with predictable sizing in narrow layouts. */
+:where(button,.primary,.admin-button,.admin-outline,.cart-btn,.quick-add,.customer-order-action){
+  min-height:44px;
+  max-width:100%;
+  border-radius:10px;
+  font:inherit;
+  font-size:13px;
+  line-height:1.45;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  transition:background-color var(--motion-fast),border-color var(--motion-fast),color var(--motion-fast),box-shadow var(--motion-fast),transform var(--motion-fast);
+}
+:where(button,.primary,.admin-button,.admin-outline,.cart-btn,.quick-add,.customer-order-action):disabled{opacity:.58;cursor:not-allowed;transform:none;box-shadow:none}
+:where(input:not([type="checkbox"]):not([type="radio"]),select,textarea){
+  min-width:0;
+  max-width:100%;
+  min-height:46px;
+  padding:10px 13px;
+  border:1px solid var(--line-strong,#cbd9cc);
+  border-radius:10px;
+  background-color:#fff;
+  color:var(--brand-ink,#233b2e);
+  font:inherit;
+  font-size:15px;
+  line-height:1.55;
+}
+:where(textarea){min-height:112px;resize:vertical}
+:where(form,.product-form,.account-form,.checkout-form,.order-filters,.admin-form-row,.header-actions,.search){min-width:0;max-width:100%}
+:where(label){min-width:0}
+:where(input,select,textarea)::placeholder{color:#7d897f;opacity:1}
+:where(button,.primary,.admin-button,.admin-outline,.cart-btn,.quick-add):focus-visible,
+:where(input,select,textarea):focus-visible{outline:3px solid rgba(42,90,68,.35);outline-offset:2px}
+
+@media(max-width:900px){
+  .header{gap:12px}
+  .nav{gap:13px;font-size:12px}
+  .header-actions{gap:8px}
+  .search{width:clamp(125px,22vw,190px)}
+  .admin-form-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea){min-height:48px;padding:11px 12px;font-size:16px}
+  :where(button,.primary,.admin-button,.admin-outline,.cart-btn,.quick-add,.customer-order-action){min-height:46px;font-size:14px}
+  .header{gap:7px}
+  .header-actions{gap:6px;flex:0 0 auto}
+  .search{width:40px;height:42px;min-height:42px;padding:6px;border-radius:11px}
+  .search:focus-within{position:fixed;z-index:60;top:10px;left:12px;right:12px;width:auto;height:50px;padding:8px 12px;border:1px solid var(--line-soft);box-shadow:var(--shadow-overlay)}
+  .search:focus-within input{width:100%;min-height:38px;font-size:16px}
+  .cart-btn{min-width:44px;padding:8px 10px}
+  .admin-form-row{grid-template-columns:minmax(0,1fr)}
+  .product-form,.account-form,.checkout-form{gap:14px}
+  .checkout-form .coupon-check{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}
+  .checkout-form .coupon-check .admin-outline{min-width:82px}
+  .admin-page,.account-page,.track-page{overflow-x:clip}
+}
