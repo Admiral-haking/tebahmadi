@@ -240,11 +240,11 @@ export function OrderCenter({ role }: { role: string }) {
             </label>
             <label>
               <span>از تاریخ</span>
-              <input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} />
+              <input type="date" lang="fa-IR" dir="ltr" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} />
             </label>
             <label>
               <span>تا تاریخ</span>
-              <input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} />
+              <input type="date" lang="fa-IR" dir="ltr" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} />
             </label>
             <button className="admin-button filter-submit" type="button" onClick={() => { setPage(1); void load(); }}>
               اعمال فیلتر
