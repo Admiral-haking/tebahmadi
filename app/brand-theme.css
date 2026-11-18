@@ -1975,6 +1975,53 @@ body.admin-menu-open .account-page .admin-tabs{z-index:45}
   .promise-items>div:nth-last-child(2){border-bottom:1px solid rgba(249,248,246,.18)}
 }
 
+/* Refined value strip: a compact, scannable panel instead of a full-width wall. */
+.promise-strip{
+  padding:18px 0;
+  border-block:1px solid #dce7de;
+  background:var(--surface-soft);
+}
+.promise-items{
+  min-height:0;
+  padding:18px 20px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  background:var(--brand-green-deep);
+  box-shadow:0 14px 30px rgba(22,62,43,.1);
+}
+.promise-items>div{
+  min-height:58px;
+  padding:8px clamp(14px,2.2vw,28px);
+  border-inline-start:1px solid rgba(255,255,255,.2);
+}
+.promise-items>div:first-child{padding-inline-start:10px}
+.promise-items svg{
+  width:29px;
+  height:29px;
+  padding:5px;
+  border:1px solid rgba(213,178,104,.55);
+  border-radius:50%;
+  color:var(--brand-gold);
+  stroke-width:1.7;
+}
+.promise-items b{color:#fff;font-size:13px;line-height:1.65}
+.promise-items small{color:rgba(255,255,255,.72);font-size:11px;line-height:1.7}
+@media(max-width:900px){
+  .promise-strip{padding:14px 0}
+  .promise-items{padding:14px}
+  .promise-items>div{padding:12px 14px;border-inline-start:0}
+  .promise-items>div:first-child{padding-inline-start:14px}
+}
+@media(max-width:700px){
+  .promise-strip{padding:12px 0}
+  .promise-items{padding:10px}
+  .promise-items>div{min-height:62px;padding:11px 9px}
+  .promise-items>div:first-child{padding-inline-start:9px}
+  .promise-items svg{width:27px;height:27px}
+  .promise-items b{font-size:12px}
+  .promise-items small{font-size:10px}
+}
+
 /* Compact newsletter and calm, content-led footer */
 .newsletter{
   padding:38px 0;
