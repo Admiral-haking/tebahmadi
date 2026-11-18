@@ -19,10 +19,13 @@ export async function POST(request: Request) {
   if (idempotencyKey) { const previous = await env.DB.prepare("SELECT id,status,subtotal_toman,discount_toman,shipping_toman,shipping_method FROM orders WHERE idempotency_key=?").bind(idempotencyKey).first<any>(); if (previous) return Response.json({ orderId: previous.id, status: previous.status, shippingMethod: previous.shipping_method, ...orderResponseTotals(previous), idempotent: true }, { headers: { "Cache-Control": "no-store" } }); }
   const name = typeof body.name === "string" ? body.name.trim().slice(0, 120) : "";
   const phone = typeof body.phone === "string" ? normalizePhone(body.phone) : "";
-  const address = typeof body.address === "string" ? body.address.trim().slice(0, 500) : "";
-  const postalCode = typeof body.postalCode === "string" ? normalizePostalCode(body.postalCode) : null;
+  const province = typeof body.province === "string" ? body.province.trim().slice(0, 80) : "";
+  const city = typeof body.city === "string" ? body.city.trim().slice(0, 80) : "";
+  const streetAddress = typeof body.address === "string" ? body.address.trim().slice(0, 500) : "";
+  const address = [province, city, streetAddress].filter(Boolean).join("، ");
+  const postalCode = typeof body.postalCode === "string" ? normalizePostalCode(body.postalCode) : "";
   const items = Array.isArray(body.items) ? body.items.slice(0, 30) as CartItem[] : [];
-  if (name.length < 2 || phone.replace(/\D/g, "").length < 10 || address.length < 8 || items.length < 1) return Response.json({ error: "نام، تلفن، نشانی و اقلام سفارش را بررسی کنید" }, { status: 400 });
+  if ((province || city) && (name.trim().split(/\s+/).length < 2 || province.length < 2 || city.length < 2) || !/^09\d{9}$/.test(phone) || streetAddress.length < 8 || postalCode.length !== 10 || items.length < 1) return Response.json({ error: "نام و نام خانوادگی، شماره همراه، استان، شهر، نشانی و کد پستی ۱۰ رقمی را کامل وارد کنید" }, { status: 400 });
   try {
     const requested = items.map((item) => ({ variantId: String(item.variantId || item.id || "").slice(0, 80), quantity: integer(item.quantity) }));
     if (requested.some((item) => !item.variantId || !Number.isSafeInteger(item.quantity) || item.quantity < 1 || item.quantity > 20)) return Response.json({ error: "شناسه و تعداد اقلام نامعتبر است" }, { status: 400 });
