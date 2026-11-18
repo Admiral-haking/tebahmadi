@@ -168,102 +168,88 @@ export function OrderCenter({ role }: { role: string }) {
     }
   }
   return (
-    <div className="order-center">
-      <section className="admin-panel">
-        <div className="admin-panel-head">
-          <div>
+    <div className="order-center admin-order-center">
+      <section className="admin-panel order-center-panel">
+        <div className="admin-panel-head order-center-head">
+          <div className="order-center-title">
+            <span className="order-center-eyebrow">عملیات روزانه</span>
             <h2>مرکز عملیات سفارش</h2>
             <p className="commerce-note">
-              مدیریت سفارش، مشتری، ارسال پست پیشتاز و اتصال تاپین
+              سفارش‌ها را بررسی کنید، اطلاعات گیرنده را کامل کنید و وضعیت ارسال را از همین‌جا مدیریت کنید.
             </p>
           </div>
           <a
-            className="admin-outline"
+            className="admin-button order-export"
             href={`/api/admin/order-center/export?q=${encodeURIComponent(q)}&status=${status}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&shippingStatus=${encodeURIComponent(shippingFilter)}`}
           >
-            خروجی CSV
+            دانلود خروجی CSV
           </a>
         </div>
-        <div className="order-summary">
-          <span>
+        <div className="order-summary" aria-label="خلاصه سفارش‌ها">
+          <span className="summary-total">
             کل <b>{summary.count || 0}</b>
           </span>
-          <span>
+          <span className="summary-paid">
             وصول‌شده <b>{summary.paid || 0}</b>
           </span>
-          <span>
+          <span className="summary-ready">
             آماده ارسال <b>{summary.readyToShip || 0}</b>
           </span>
-          <span>
+          <span className="summary-shipped">
             ثبت‌شده در ارسال <b>{summary.shipped || 0}</b>
           </span>
-          <span>
+          <span className="summary-revenue">
             فروش <b>{money(summary.revenueToman)}</b>
           </span>
         </div>
-        <div className="order-filters">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && load()}
-            placeholder="جستجوی سفارش، نام یا موبایل"
-          />
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">همه وضعیت‌ها</option>
-            {Object.entries(labels).map(([v, l]) => (
-              <option value={v} key={v}>
-                {l}
-              </option>
-            ))}
-          </select>
-          <label>
-            وضعیت ارسال
-            <select
-              value={shippingFilter}
-              onChange={(e) => {
-                setShippingFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">همه ارسال‌ها</option>
-              {Object.entries(shippingLabels).map(([v, l]) => (
-                <option value={v} key={v}>
-                  {l}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            از تاریخ
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => {
-                setFrom(e.target.value);
-                setPage(1);
-              }}
-            />
-          </label>
-          <label>
-            تا تاریخ
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => {
-                setTo(e.target.value);
-                setPage(1);
-              }}
-            />
-          </label>
-          <button
-            className="admin-outline"
-            onClick={() => {
-              setPage(1);
-              load();
-            }}
-          >
-            جستجو
-          </button>
+        <div className="order-filter-box">
+          <div className="order-filter-heading">
+            <div>
+              <strong>فیلتر سفارش‌ها</strong>
+              <span>جستجو بر اساس شماره سفارش، نام مشتری یا موبایل</span>
+            </div>
+            {(q || status || shippingFilter || from || to) && (
+              <button className="filter-reset" type="button" onClick={() => { setQ(""); setStatus(""); setShippingFilter(""); setFrom(""); setTo(""); setPage(1); }}>
+                حذف فیلترها
+              </button>
+            )}
+          </div>
+          <div className="order-filters">
+            <label className="order-search-field">
+              <span>جستجو</span>
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && load()}
+                placeholder="شماره سفارش، نام یا موبایل"
+              />
+            </label>
+            <label>
+              <span>وضعیت سفارش</span>
+              <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+                <option value="">همه وضعیت‌ها</option>
+                {Object.entries(labels).map(([v, l]) => <option value={v} key={v}>{l}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>وضعیت ارسال</span>
+              <select value={shippingFilter} onChange={(e) => { setShippingFilter(e.target.value); setPage(1); }}>
+                <option value="">همه ارسال‌ها</option>
+                {Object.entries(shippingLabels).map(([v, l]) => <option value={v} key={v}>{l}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>از تاریخ</span>
+              <input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} />
+            </label>
+            <label>
+              <span>تا تاریخ</span>
+              <input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} />
+            </label>
+            <button className="admin-button filter-submit" type="button" onClick={() => { setPage(1); void load(); }}>
+              اعمال فیلتر
+            </button>
+          </div>
         </div>
         {message && (
           <div className="admin-message" role="status">
@@ -312,9 +298,11 @@ export function OrderCenter({ role }: { role: string }) {
               ))}
             </tbody>
           </table>
-          {!rows.length && (
-            <div className="admin-empty">سفارشی با این فیلتر پیدا نشد.</div>
-          )}
+          {!rows.length && <div className="admin-empty order-empty">
+            <span className="order-empty-icon" aria-hidden="true">⌕</span>
+            <strong>{q || status || shippingFilter || from || to ? "سفارشی با این فیلتر پیدا نشد" : "هنوز سفارشی ثبت نشده است"}</strong>
+            <small>{q || status || shippingFilter || from || to ? "فیلترها را تغییر دهید یا حذف کنید تا سفارش‌های بیشتری ببینید." : "با ثبت سفارش جدید، وضعیت آن در اینجا نمایش داده می‌شود."}</small>
+          </div>}
           {rows.length > 0 && (
             <div className="order-pagination">
               <button
