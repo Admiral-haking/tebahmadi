@@ -1926,6 +1926,78 @@ body.admin-menu-open .account-page .admin-tabs{z-index:45}
   .account-top>a:last-child{max-width:102px;padding-inline:8px;font-size:10px}
 }
 
+/* Operations dashboard refresh: fewer tiny tiles, stronger hierarchy, usable density. */
+.admin-page{
+  padding:24px clamp(20px,4vw,64px) 72px;
+  background:
+    radial-gradient(circle at 88% -10%,rgba(193,224,195,.72),transparent 34%),
+    linear-gradient(135deg,#f5f8f3 0%,#edf4ed 100%);
+}
+.admin-top,.admin-content{max-width:1440px}
+.admin-top{min-height:76px;padding:12px 18px;border-radius:20px;background:rgba(255,255,253,.82);box-shadow:0 12px 32px rgba(31,69,52,.08)}
+.admin-content{padding:38px 0 88px}
+.admin-heading{align-items:flex-end;gap:24px;margin:0 0 24px;padding:0 6px}
+.admin-heading h1{margin:0;font-size:clamp(30px,3.2vw,42px);font-weight:760;letter-spacing:-.035em;line-height:1.35}
+.admin-heading>.admin-button{min-width:142px;min-height:48px;border-radius:13px;font-size:13px;font-weight:700}
+.admin-message{margin:0 0 20px;padding:14px 18px;border-radius:13px;font-size:13px}
+.admin-stats{grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin:0 0 26px}
+.admin-stats>div{min-height:112px;padding:19px 18px;border:1px solid #d7e5d8;border-radius:18px;background:rgba(255,255,253,.9);box-shadow:0 10px 24px rgba(31,69,52,.055);justify-content:space-between}
+.admin-stats span{font-size:12px;color:#66786a}
+.admin-stats b{font-size:25px;line-height:1.25;color:#185d40}
+.admin-navigation{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 26px;padding:0;border:0;background:transparent}
+.admin-nav-section{min-width:0;padding:16px;border:1px solid #d7e5d8;border-radius:18px;background:rgba(255,255,253,.76);box-shadow:0 8px 20px rgba(31,69,52,.04)}
+.admin-nav-section h2{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid #e4ece4;color:#1b5b40;font-size:13px;font-weight:800}
+.admin-nav-items{display:grid;gap:4px}
+.admin-nav-items :where(button,.admin-nav-link){min-width:0;min-height:43px;padding:9px 10px;border:1px solid transparent;border-radius:10px;color:#53685b;font-size:12px;text-align:right;text-decoration:none;transition:background-color var(--motion-fast),border-color var(--motion-fast),color var(--motion-fast)}
+.admin-nav-items :where(button,.admin-nav-link):hover{background:#f0f6ef;border-color:#d7e5d8;color:#185d40}
+.admin-nav-items button.selected{background:#dfeee0;border-color:#bdd5c1;color:#155b3d;font-weight:800}
+.admin-nav-badge{float:left;min-width:22px;padding:2px 6px;border-radius:99px;background:#cfe6d2;color:#1b6948;font-size:10px;text-align:center}
+.admin-panel{padding:26px;border-radius:20px;border-color:#d7e5d8;background:rgba(255,255,253,.88);box-shadow:0 12px 30px rgba(31,69,52,.055)}
+.admin-panel h2{margin-bottom:20px;font-size:20px;font-weight:760;color:#1d5139}
+.admin-panel h3{font-size:15px;color:#2a5e43}
+.admin-grid,.crm-grid,.commerce-workspace{gap:22px}
+.admin-table-wrap{border:1px solid #dfe9df;border-radius:14px;background:#fff;overflow:auto}
+.admin-table-wrap table{font-size:13px}
+.admin-table-wrap th{padding:14px 15px;background:#eff5ee;color:#52705c;font-weight:750}
+.admin-table-wrap td{padding:15px;border-bottom-color:#edf2ed}
+.admin-page input:not([type="checkbox"]),.admin-page select,.admin-page textarea{min-height:48px;border-radius:12px!important;font-size:13px!important}
+.admin-page textarea{min-height:112px}
+.product-form{gap:16px}
+.product-form label,.admin-login label,.admin-panel label{gap:7px;font-size:12px;font-weight:650;color:#56705d}
+.admin-button,.admin-outline,.admin-logout{min-height:44px;border-radius:11px;font-size:12px;font-weight:700}
+.admin-overview{background:linear-gradient(145deg,rgba(30,99,67,.98),rgba(22,76,52,.96));border-color:#1c6243;color:#fff;box-shadow:0 18px 38px rgba(22,76,52,.18)}
+.admin-overview h2{color:#fff}
+.admin-overview-grid{gap:12px}
+.admin-overview-grid>a{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;min-height:150px;padding:20px;border-radius:15px}
+.admin-overview-grid>a:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.38)}
+.admin-overview-grid>a strong{font-size:34px}
+
+@media(max-width:1100px){
+  .admin-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .admin-navigation{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .admin-page{padding:10px 12px 42px}
+  .admin-top{min-height:62px;padding:8px 10px;border-radius:15px}
+  .admin-content{padding:24px 0 52px}
+  .admin-heading{align-items:stretch;gap:14px;margin-bottom:18px;padding:0 2px;flex-direction:column}
+  .admin-heading h1{font-size:27px}
+  .admin-heading>.admin-button{width:100%}
+  .admin-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:18px}
+  .admin-stats>div{min-height:94px;padding:14px;border-radius:14px}
+  .admin-stats span{font-size:10px}
+  .admin-stats b{font-size:20px}
+  .admin-navigation{grid-template-columns:1fr;gap:9px}
+  .admin-navigation:not(.open){display:flex}
+  .admin-navigation.open{display:flex}
+  .admin-nav-section{padding:13px;border-radius:14px}
+  .admin-nav-section h2{font-size:12px}
+  .admin-nav-items :where(button,.admin-nav-link){min-height:44px;font-size:12px}
+  .admin-panel{padding:18px;border-radius:16px}
+  .admin-panel h2{font-size:18px}
+  .admin-table-wrap table{min-width:760px}
+}
+
 /* Homepage trust and support: clear separation, balanced fields, mobile-first reflow. */
 .promise-strip{
   margin:0;
