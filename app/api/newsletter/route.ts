@@ -1,4 +1,0 @@
-import { env } from "@/lib/runtime";
-import { validOrigin } from "../customer/session";
-import { isValidPhone, normalizePhone } from "@/lib/input-normalization";
-export async function POST(request:Request){if(!validOrigin(request))return Response.json({error:"مبدأ درخواست معتبر نیست"},{status:403});let b:any;try{b=await request.json()}catch{return Response.json({error:"درخواست نامعتبر است"},{status:400})}const phone=normalizePhone(b.phone);if(!isValidPhone(phone))return Response.json({error:"شمارهٔ همراه معتبر وارد کنید"},{status:400});try{await env.DB.prepare("INSERT OR IGNORE INTO subscribers(email,phone) VALUES(?,?)").bind(`${phone}@newsletter.local`,phone).run();return Response.json({ok:true,message:"عضویت شما ثبت شد"},{headers:{"Cache-Control":"no-store"}})}catch{return Response.json({error:"ثبت شمارهٔ همراه انجام نشد"},{status:503})}}

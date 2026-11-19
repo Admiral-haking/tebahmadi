@@ -1,1 +1,0 @@
-ALTER TABLE orders ADD COLUMN discount_toman INTEGER NOT NULL DEFAULT 0;

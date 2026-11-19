@@ -1,5 +1,0 @@
-import { clearCookieHeader, sameOrigin } from "../auth";
-import { env } from "@/lib/runtime";
-const enc=new TextEncoder();
-export async function POST(){return Response.json({error:"از ورود با شمارهٔ همراه و کد پیامکی استفاده کنید"},{status:410,headers:{"Cache-Control":"no-store"}})}
-export async function DELETE(request:Request){if(!sameOrigin(request))return Response.json({error:"مبدأ درخواست معتبر نیست"},{status:403});const token=request.headers.get("Cookie")?.split(";").map(x=>x.trim()).find(x=>x.startsWith("tabah_admin="))?.slice("tabah_admin=".length);if(token){try{const payload=token.split(".")[0],normalized=payload.replace(/-/g,"+").replace(/_/g,"/"),d=JSON.parse(atob(normalized+"=".repeat((4-normalized.length%4)%4))),hash=await crypto.subtle.digest("SHA-256",enc.encode(d.sid)),id=[...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,"0")).join("");await env.DB.prepare("DELETE FROM admin_sessions WHERE id=?").bind(id).run()}catch{}}return Response.json({ok:true},{headers:{"Set-Cookie":clearCookieHeader(),"Cache-Control":"no-store"}})}

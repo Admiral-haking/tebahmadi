@@ -1,6 +1,0 @@
-import { env } from "@/lib/runtime";
-import { isAdmin, sameOrigin } from "../auth";
-import { recordAudit } from "../login/audit";
-const statuses=new Set(["new","read","resolved"]);
-export async function GET(request:Request){if(!await isAdmin(request))return Response.json({error:"دسترسی مجاز نیست"},{status:401});const r=await env.DB.prepare("SELECT id,name,email,phone,message,status,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 200").all();return Response.json({messages:r.results},{headers:{"Cache-Control":"no-store"}})}
-export async function PATCH(request:Request){if(!await isAdmin(request))return Response.json({error:"دسترسی مجاز نیست"},{status:401});if(!sameOrigin(request))return Response.json({error:"مبدأ درخواست معتبر نیست"},{status:403});let b:any;try{b=await request.json()}catch{return Response.json({error:"ورودی نامعتبر است"},{status:400})}if(!b.id||!statuses.has(b.status))return Response.json({error:"وضعیت پیام نامعتبر است"},{status:400});const id=String(b.id).slice(0,60),r=await env.DB.prepare("UPDATE contact_messages SET status=? WHERE id=?").bind(b.status,id).run();if(r.meta?.changes)await recordAudit(request,"contact.status","contact_message",id,String(b.status));return Response.json({ok:(r.meta?.changes||0)>0})}

@@ -1,165 +1,568 @@
-# فروشگاه طب احمدی
+# Catalog Backend (Next.js App Router)
 
-A local-first Persian/RTL commerce application running on Vinext, Node.js and SQLite.
+This repository contains a backend-only catalog stack built on **Next.js 15 App Router** running in Node.js with **Mongoose** for persistence and **Zod** for runtime validation. It delivers:
 
-## Prerequisites
+- A dynamic product model driven by reusable **ProductType** definitions.
+- Variant-aware **Product** documents with price, inventory, and offer logic.
+- A hierarchical **Category** tree with efficient subtree queries.
+- REST-style route handlers under `/app/api/catalog/**` for product types, products, and categories.
 
-- Node.js `>=22.13.0`
-- Portable: Windows, macOS, or Linux; no Bash required
-- Managed Linux: managed Linux runtime with Bash, `flock`, `curl`, `sha256sum`, and GNU `timeout`
-- Git and `tar` (including Windows `tar.exe`) are required for publishing; portable publication does not require Bash
+> ⚠️ **Currency policy:** the storefront is permanently denominated in **Iranian Toman**. Prices and offers are stored as integers representing Toman amounts. No currency field is exposed anywhere in the API or the database.
 
-## Local ecommerce workflow
+## Implementation Guardrails
 
-Local development uses Node.js and a persistent SQLite database. Payment, shipping and SMS default to mock adapters; copy `.env.example` only when configuring local values and never commit real credentials.
+- Auth enforcement: Add an Edge middleware that verifies `auth_token` via `jose`, maps roles→permissions, and blocks unauthorized POST/PATCH/DELETE to admin routes. Keep handler-level `requirePermission()` checks for defense in depth. Public routes: `/api/auth/*`, `/api/media/[id]` (GET), `/api/offers/apply` (GET/POST), `/api/transport/quote` (GET/POST), and the `/payments/verify` page.
+- All currency inputs/outputs remain integer Toman amounts—never introduce alternate currency fields.
+- Cache reads must opt into Next.js tags/`unstable_cache`; write paths call `revalidateTag` / `revalidatePath` for affected resources.
 
-`PAYMENT_PROVIDER=mock` and `SHIPPING_PROVIDER=mock` are the safe local defaults. Selecting `http`, `zarinpal`, or `tapin` without the required credentials does not silently fall back to mock: readiness returns `503` and the integration status exposes only the provider name and a boolean configuration flag. Public order creation also validates the request origin and is rate-limited per client IP.
+## Architecture Overview
 
-Provider values are read from environment variables. Configure `PAYMENT_PROVIDER=zarinpal`, `SHIPPING_PROVIDER=tapin`, or `SMS_PROVIDER=sms_ir` only when the corresponding credentials are available; local mode remains deterministic with mock providers.
-
-برای عملیات ارسال، ادمین مجاز می‌تواند مرسوله را از مسیر `POST /api/admin/shipping/tapin/register` ثبت و از مسیر `POST /api/admin/shipping/tapin/track` دوباره پیگیری کند. endpoint پیگیری، سفارش و کد رهگیری را اعتبارسنجی می‌کند و وضعیت shipment، سفارش و timeline را هم‌زمان به‌روزرسانی می‌کند. در Tapin مستقیم از endpoint رسمی `order/post/get-status/report` استفاده می‌شود.
-
-```sh
-pnpm install
-pnpm build
-pnpm db:migrate:local
-pnpm db:seed:local
-pnpm dev
+```
+ProductType ─┐
+             ├─> buildProductValidator() ─┐
+Product      ┘                            ├─ materialize filterable attrs
+                                          └─ compute searchable text
+Category ─ hierarchical adjacency list with path + ancestors
 ```
 
-Useful verification commands:
+1. **ProductType** documents register attribute definitions (global & variant). Each definition controls validation, filtering, search behaviour, and variant handling.
+2. **Product** creation/update loads the matching ProductType, builds a Zod schema on the fly, validates the payload, and then materialises:
+   - `attributeValues` (global attributes)
+   - `variants[].attributeValues` (variant-driving attributes)
+   - `attrs.*` map for hot filters (only attributes flagged `filterable: true`)
+   - `searchableText` derived from title, brand, and searchable attributes
+3. **Category** stores `path`, `ancestors`, and `depth` to allow fast subtree lookups and breadcrumb construction. Moves/renames cascade to all descendants.
 
-```sh
-pnpm db:verify
-pnpm smoke:local
-pnpm smoke:local:with-server
-pnpm config:verify:production
-pnpm test:all
-```
+All data flows through `/lib/mongoose.ts` to re-use a single MongoDB connection in development.
 
-`smoke:local` یک سرور موجود روی `127.0.0.1:5173` را بررسی می‌کند؛ برای اجرای مستقل، از
-`smoke:local:with-server` استفاده کنید تا dev server با providerهای mock بالا بیاید،
-smoke اجرا شود و سپس server بسته شود.
+## Data Models
 
-`test:all` runs lint, unit tests, typecheck, Playwright E2E and build. The CI workflow also installs a clean local database, applies migrations, seeds only test data, and runs the same verification gates.
+### ProductType (`catalog/models/ProductType.ts`)
 
-Before a production release, run `pnpm config:verify:production` with the provider values and secrets injected by the deployment environment. The command validates presence and provider names without printing secret values.
+| Field | Type | Notes |
+| --- | --- | --- |
+| `name` | `string` | Unique, required |
+| `version` | `number` | Defaults to `1`; can be bumped manually |
+| `attributes[]` | `AttributeDef` | Drives validation/search/filter logic |
 
-The complete non-deploying release gate is `pnpm verify:release`; it validates production configuration, runs lint/unit/typecheck/E2E/build, and verifies the local migration/schema contract. Run it in the release environment before applying production migrations.
+`AttributeDef` fields:
 
-## Sites Lifecycle
+- `key` – unique per ProductType, alphanumeric/underscore.
+- `kind` – one of `text`, `number`, `boolean`, `enum`, `multi-enum`, `json`.
+- `required`, `variant`, `filterable`, `searchable` – booleans controlling behaviour.
+- `enumValues`, `min`, `max`, `regex`, `unit` – optional metadata/constraints.
 
-The Sites initializer copies the shared starter and selects managed-linux only when `SITES_MANAGED_LINUX_CONTAINER=1`; otherwise it selects portable. It saves the selection only in ignored `.sites-runtime/execution-profile.json`. Both profiles copy/configure first, then use the plugin's separate `install-dependencies.mjs` step to measure installation independently. Edit source under `app/` and follow the Sites skill for installation, preview, builds, and publishing.
+Index: `{ name: 1 }` (unique).
 
-Run `node <plugin-root>/scripts/configure-execution-profile.mjs` only when the profile is unknown for the current checkout and environment. Profile changes do not alter tracked source or require reinstalling otherwise-valid dependencies; restart an existing preview to use the new selection. Do not commit or upload `.sites-runtime/`.
+### Product (`catalog/models/Product.ts`)
 
-Local development does not require `wrangler.jsonc`, a Cloudflare account, or a remote database.
+| Field | Type | Notes |
+| --- | --- | --- |
+| `productTypeId` | `ObjectId` | Reference to ProductType |
+| `typeVersion` | `number` | Snapshot of ProductType.version |
+| `title` | `string` | Required |
+| `slug` | `string` | Unique |
+| `attributeValues[]` | `{ key, value }` | Global attributes |
+| `attrs` | `Map<string, Mixed>` | Materialised filterable attributes |
+| `variants[]` | `Variant` | At least one variant |
+| `categories[]` | `ObjectId` | Many-to-many relationship |
+| `searchableText` | `string` | Lowercased string for MongoDB full-text |
+| `status` | `draft` \\ `active` \\ `archived` | Defaults to `draft` |
 
-Publish archives outside the source checkout or under its ignored `outputs/` directory. Local `.env*`, `.dev.vars*`, TypeScript build state, and tool runtime directories are ignored; keep the hosting manifest, migrations, and authored scripts in source control.
+`Variant` subdocument:
 
-`install:ci` runs `npm ci` once against the shared lockfile, disables parent-workspace discovery, and includes required dev/optional dependencies despite production/omit settings. Sharp defaults to prebuilt binaries unless explicitly configured otherwise. Do not overlap installers.
+| Field | Type | Notes |
+| --- | --- | --- |
+| `sku` | `string` | Unique across catalog |
+| `attributeValues[]` | `{ key, value }` | Only variant-driving attributes |
+| `price` | `{ model, amount, unitOfMeasure? }` | `amount` in Toman |
+| `offer?` | `{ amount, startsAt?, endsAt?, label? }` | Absolute discount (Toman) |
+| `inventory` | `{ trackingUnit, quantity, lowStockThreshold? }` | Numbers in physical units |
+| `mediaIds?` | `ObjectId[]` | Optional binary references |
+| `barcode?` | `string` | |
+| `active` | `boolean` | Defaults to `true` |
 
-- **Portable:** Preserve host HOME, npm cache, registry, proxy, temporary paths, retry/concurrency settings, and lifecycle-script policy. Use `--prefer-offline --no-audit --no-fund`.
-- **Managed Linux:** Use the existing project-local HOME/cache/tmp setup and Linux install lock, tarball preflight, and timeout. Restore the image-seeded npm cache only when its lockfile hash matches; retain network fallback. Builds keep their existing timeout. These helpers are not invoked by the portable profile.
+Indexes (selected):
 
-The local runtime keeps application data in `.local/store.sqlite`; generated tool directories are disposable local state.
+- `{ slug: 1 }` unique
+- `{ categories: 1 }`
+- `{ brand: 1 }`
+- `{ searchableText: 'text' }`
+- `{ 'attrs.size': 1 }`, `{ 'attrs.color': 1 }` (example hot filters)
+- `{ 'variants.sku': 1 }` unique
+- `{ 'variants.offer.startsAt': 1 }`, `{ 'variants.offer.endsAt': 1 }`
 
-On portable, `npm run dev` uses `vinext dev` with HMR, starting at port 5173. Vinext records the running server in ignored `.vinext/` state, rejects an ordinary duplicate launch, and recovers stale state after a stopped process; exactly simultaneous starts can race. Pass `--port <port>` or `--hostname <host>` after `npm run dev --` when needed; keep portable previews on loopback.
+### Category (`catalog/models/Category.ts`)
 
-For managed Linux browser QA, follow the Sites skill's managed preview reference. The daemon runs the project's Vite dev script with `--host 0.0.0.0 --port 4173 --strictPort`; use the CLI's returned URL. The ignored local profile survives the daemon's cleared environment.
+| Field | Type | Notes |
+| --- | --- | --- |
+| `name` | `string` | Required |
+| `slug` | `string` | Unique among siblings |
+| `parentId?` | `ObjectId` | Nullable |
+| `path` | `string` | e.g. `men/shoes/running` |
+| `ancestors[]` | `ObjectId[]` | Ordered root → parent |
+| `depth` | `number` | Root = 0 |
+| `position` | `number` | Sibling ordering |
+| `isActive` | `boolean` | Defaults to `true` |
+| `seoTitle?`, `seoDescription?`, `imageId?` | Metadata |
 
-The portable profile simulates ChatGPT sign-in only for loopback development requests. Visit `/signin-with-chatgpt?return_to=/` to sign in as `local_seedy` (`seedy@sites.test`, display name `Seedy`) and `/signout-with-chatgpt?return_to=/` to sign out. The development cookie preserves that identity across server restarts. Mock auth is disabled in the managed-linux profile and is not included in production builds; hosted authentication remains dispatch-owned.
+Indexes: `{ path: 1 }` unique, `{ parentId: 1, slug: 1 }` unique, `{ ancestors: 1 }`, `{ parentId: 1, position: 1 }`.
 
-The application uses Vinext for rendering and runs locally on Node at `127.0.0.1`; it does not deploy the site or require a remote service. Use the URL printed by the server.
+## Category Hierarchy Strategy
 
-Local previews do not fetch remote request metadata or send usage metrics.
+Categories implement an **adjacency list** (`parentId`) plus **materialised path** (`path`) and **ancestor chain** (`ancestors`). This enables:
 
-## Included Shape
+- Constant-time breadcrumb queries (`ancestors` + self).
+- Efficient subtree expansion via `ancestors` (single indexed query).
+- Simple path slug generation (`parent.path + '/' + slug`).
 
-- edit site code under `app/`
-- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.local/store.sqlite` contains the local application database
-- `lib/local-node-runtime.ts` provides the local runtime and D1-compatible query surface
-- `scripts/vite/` contains the maintained Vite integrations and the vendored Sites plugin license
-- the remaining `scripts/` files select execution profiles and run installation, development, and builds; the plugin's helpers orchestrate the Sites lifecycle
-- `dist/` contains generated build output; `.local/`, `.vinext/`, and test reports contain ignored local state
-- `db/index.ts` exposes the typed data access boundary used by the application
-- `db/schema.ts` contains the typed Drizzle schema for the ecommerce tables
-- `drizzle.config.ts` supports local migration generation when needed
+When a category moves or renames, `categoryService.updateCategory()` recalculates the path/ancestors/depth for the node and cascades the update down the entire subtree, ensuring paths remain consistent.
 
-## Workspace Auth Headers
+## Validation & Pricing Rules
 
-Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
+- Zod schemas are built dynamically from each ProductType via `buildProductValidator()`.
+- Attribute arrays only accept keys defined in the ProductType; duplicates or missing required keys raise validation errors.
+- `offer.amount` is an absolute discount in Toman. Active window checks require `startsAt <= endsAt` when both provided.
+- Effective unit price helper:
 
-The user ID is stable for the same user on the same Site and different across Sites. Use it as the durable user key; use email and name for display or contact purposes.
-
-SIWC-authenticated workspace sites may also receive `oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty `name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by `oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const userId = requestHeaders.get("oai-authenticated-user-id");
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
+```ts
+function effectiveUnitPrice(variant, now = new Date()) {
+  const base = variant.price.amount;
+  const o = variant.offer;
+  const active = !!o && (!o.startsAt || now >= o.startsAt) && (!o.endsAt || now <= o.endsAt);
+  const discount = active ? o.amount : 0;
+  return Math.max(0, base - discount);
 }
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+- Inventory quantities & low-stock thresholds are integers tied to the specified `trackingUnit`.
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs optional or required ChatGPT sign-in:
+## API Endpoints
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use the returned `userId` as the stable user key for user-owned records; do not use email as a durable identifier.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send anonymous visitors through Sign in with ChatGPT.
-- In a Server Component, start sign-in with `<a href={chatGPTSignInPath(returnTo)} target="_top">`. The auth helper module is server-only; do not import it into a Client Component.
-- Do not use `fetch`, XHR, a client-side router, or a framework link that can prefetch the sign-in route. SIWC must start as a top-level navigation.
-- Never request the AuthAPI authorization endpoint directly. The dispatch-owned `/signin-with-chatgpt` route must start the SIWC flow.
-- Use `chatGPTSignOutPath(returnTo)` for browser sign-out links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because they depend on per-request identity headers.
+All endpoints live under `/api/catalog/**` and return JSON with `{ error: string }` on failures. Remember to set `Content-Type: application/json` on mutating requests.
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the OAuth cookies, and identity header injection. Do not implement app routes for those reserved paths. Routes that do not import and call the helper remain anonymous-compatible.
+### Product Types
 
-SIWC establishes identity only; it does not prove workspace membership. Use the Sites hosting platform's access policy controls for workspace-wide restrictions, or enforce explicit server-side membership or allowlist checks.
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/catalog/product-types` | List all product types |
+| `POST` | `/api/catalog/product-types` | Create a product type |
+| `GET` | `/api/catalog/product-types/:id` | Read a single product type |
+| `PATCH` | `/api/catalog/product-types/:id` | Update name/version/attributes |
+| `DELETE` | `/api/catalog/product-types/:id` | Delete (only if unused by products) |
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write actions tied to the current ChatGPT user. Leave public content anonymous.
+**Create ProductType**
 
-## Local Node/SQLite database
+```bash
+curl -X POST http://localhost:3000/api/catalog/product-types \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "name": "Shoes",
+        "version": 1,
+        "attributes": [
+          { "key": "gender", "label": "Gender", "kind": "enum", "enumValues": ["men","women"], "filterable": true },
+          { "key": "material", "label": "Material", "kind": "text", "searchable": true }
+        ]
+      }'
+```
 
-Local development is independent of Cloudflare, Wrangler, and D1. `pnpm dev` and `pnpm start` run Vinext on the Node runtime and use the SQLite database at `.local/store.sqlite`. The existing route contracts are backed by a small D1-compatible adapter, so migrations and API behavior stay consistent while the application remains local-first.
+### Products
 
-Run `pnpm db:migrate:local` to apply the ordered SQL migrations, `pnpm db:verify` to inspect migration/table counts, and `pnpm db:seed:local` to create disposable local fixtures. Use `pnpm db:reset:node` only when intentionally resetting local state. The optional ZarinPal, Tapin, and SMS.ir adapters remain disabled unless their provider and credentials are explicitly configured.
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/catalog/products` | List products with filtering |
+| `POST` | `/api/catalog/products` | Create a product (validates against ProductType) |
+| `GET` | `/api/catalog/products/:id` | Read product detail |
+| `PATCH` | `/api/catalog/products/:id` | Update a product (send a full payload) |
+| `DELETE` | `/api/catalog/products/:id` | Soft delete (status → `archived`) |
 
-## Diagnostic Commands
+Query parameters for listing:
 
-- `pnpm install`: install the locked dependencies
-- `pnpm dev`: start the Vite/Vinext development server
-- `pnpm build`: build the application with the local Node runtime
-- `pnpm start`: start the local Node/Vinext preview with SQLite
-- `pnpm db:generate`: generate Drizzle migrations after schema changes
-- `pnpm db:migrate:local`: apply pending migrations to local SQLite
-- `pnpm db:verify`: verify tables and migration tracking
-- `pnpm test:e2e`: run browser smoke tests
+- `productTypeId=<ObjectId>`
+- `categoryId=<ObjectId>` (expands to subtree automatically)
+- `q=<text>` (MongoDB `$text` search against `searchableText`)
+- `status=draft|active|archived` (repeatable)
+- `attr.<key>=<value>` (repeatable for OR matching)
+- `limit`, `skip`
 
-When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
+**Create Product** (prices & offers in Toman)
 
-The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.
+```bash
+curl -X POST http://localhost:3000/api/catalog/products \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "productTypeId": "662ea1a4fe31c5c7c7f5f310",
+        "title": "Air Runner",
+        "slug": "air-runner",
+        "brand": "Flux",
+        "attributeValues": [
+          { "key": "gender", "value": "men" }
+        ],
+        "variants": [
+          {
+            "sku": "AIR-RUNNER-42",
+            "attributeValues": [ { "key": "size", "value": "42" } ],
+            "price": { "model": "fixed", "amount": 2150000 },
+            "inventory": { "trackingUnit": "pair", "quantity": 24 }
+          }
+        ],
+        "categories": ["662ea3935e4b1c8fd6c0a912"],
+        "status": "active"
+      }'
+```
 
-## Learn More
+**Filter Products** by subtree & attribute:
 
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
-# tebahmadi
+```bash
+curl 'http://localhost:3000/api/catalog/products?categoryId=662ea3935e4b1c8fd6c0a912&attr.gender=men&attr.size=42'
+```
+
+**Archive Product**
+
+```bash
+curl -X DELETE http://localhost:3000/api/catalog/products/6630a0e7a4f3a1bdb0a3c9e1
+```
+
+> **PATCH behaviour:** send a full product payload (same shape as creation) so the catalog can revalidate and re-materialise attributes. Partial updates are not supported at the moment.
+
+### Categories
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/catalog/categories` | List roots (default) or pass `parentId`, `q`, `pathPrefix` |
+| `POST` | `/api/catalog/categories` | Create a category |
+| `GET` | `/api/catalog/categories/:id` | Read category + breadcrumb |
+| `PATCH` | `/api/catalog/categories/:id` | Update/move/rename (cascades to descendants) |
+| `DELETE` | `/api/catalog/categories/:id` | Delete only when leaf |
+
+**Create root category**
+
+```bash
+curl -X POST http://localhost:3000/api/catalog/categories \
+  -H 'Content-Type: application/json' \
+  -d '{ "name": "Shoes", "slug": "shoes" }'
+```
+
+**Move category under a new parent & rename**
+
+```bash
+curl -X PATCH http://localhost:3000/api/catalog/categories/6630a3c7a4f3a1bdb0a3cc11 \
+  -H 'Content-Type: application/json' \
+  -d '{ "slug": "running", "parentId": "6630a2eaa4f3a1bdb0a3cb01" }'
+```
+
+**List children of a parent**
+
+```bash
+curl 'http://localhost:3000/api/catalog/categories?parentId=6630a2eaa4f3a1bdb0a3cb01'
+```
+
+## Indexing & Performance
+
+- All critical indexes defined in the schemas (unique slugs, `searchableText` text index, category path/ancestors, variant SKU uniqueness).
+- `attrs.*` indexes exist for `size` and `color` as defaults; expand with additional `productSchema.index({ 'attrs.<key>': 1 })` entries when a filter becomes hot.
+- Product listing limits to 100 per request to protect the database.
+- Category subtree queries rely on `{ ancestors: 1 }` index for fast lookups.
+
+## Local Development
+
+1. Ensure dependencies are installed (root `package.json` already references `mongoose`, `zod`, `sharp`, etc.):
+   ```bash
+   npm install
+   ```
+2. Provide required environment variables via `.env.local` (or any environment loader supported by Next.js):
+   ```
+   MONGO_URI=mongodb://127.0.0.1:27017/catalog
+   JWT_SECRET=dev-placeholder
+   GHASEDAK_API_KEY=your-ghasedak-api-key
+   GHASEDAK_OTP_TEMPLATE=your-otp-template-name
+   ```
+   Only `MONGO_URI` is required for the catalog; additional secrets may be present for other parts of the project.
+3. Run the API locally:
+   ```bash
+   npm run dev
+   ```
+4. Use the REST endpoints documented above to seed product types, categories, and products.
+
+## Future Extensions
+
+- **Promotions engine:** layer campaign rules on top of the absolute offer model (percentage discounts, buy-one-get-one, etc.).
+- **Search indexing:** push `searchableText`, filterable attributes, and availability into a dedicated search service (Meilisearch/Elastic) for richer querying.
+- **Inventory reservations:** integrate with order workflow to hold stock during checkout.
+- **Media pipeline:** link `variants.mediaIds` to GridFS asset management for richer galleries.
+- **Analytics hooks:** emit domain events on product/category mutations for further processing.
+
+With these building blocks you can manage an extensible catalog with variant-aware pricing, precise validation, and hierarchy-aware category navigation—entirely within the Next.js App Router backend.
+
+## Payments (ZarinPal)
+
+The checkout flow now supports ZarinPal payments using the dedicated `PaymentTransaction` model and service layer. All values remain in **Iranian Toman** (integers).
+
+### Flow Overview
+
+1. **Invoice finalisation** – Create an invoice using the orders module (grand total already computed in Toman).
+2. **Create payment** – Call `createPaymentForInvoice({ invoiceId, userId, amount, ... })`. The service validates the invoice, creates a `PaymentTransaction`, calls ZarinPal's `PaymentRequest`, and returns `{ gatewayUrl, authority, transactionId }`.
+3. **Redirect customer** – Send the shopper to `gatewayUrl` (or show a button). Optionally call `markRedirected(transactionId)` when rendering the redirect link.
+4. **Gateway interaction** – Customer completes (or cancels) payment on ZarinPal.
+5. **Callback** – ZarinPal redirects back to `APP_BASE_URL + PAYMENT_CALLBACK_PATH` with `Authority`, `Status`, `invoiceId`, and `tx` query params.
+6. **Verification page** – `/payments/verify` parses the query, calls `verifyAndFinalize()`, and renders success or failure. Successful verifications mark the transaction as `paid` and update the linked invoice to `status='paid'`.
+
+### Transaction lifecycle
+
+`initiated → requested → redirected → paid | failed | canceled`
+
+- `createPaymentForInvoice()` moves a transaction from `initiated` to `requested` after a successful PaymentRequest.
+- `markRedirected()` records that the customer was sent to ZarinPal.
+- `verifyAndFinalize()` marks the record `paid` on ZarinPal codes **100** (success) and **101** (already verified). Any other code records the payload and marks the transaction `failed`.
+- The verify page marks `canceled` when the gateway returns `Status=NOK`.
+
+### Idempotency
+
+- Re-running verification on the same Authority returns the stored `refId` without double-charging.
+- ZarinPal code **101** is treated as a successful, already-verified payment.
+- Transactions are tied to invoices; once an invoice becomes `paid`, subsequent payment attempts for that invoice are rejected as `invoice_already_paid`.
+
+### Environment configuration
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `MONGO_URI` | ✅ | MongoDB connection string |
+| `APP_BASE_URL` | ✅ | Public site origin (e.g. `https://example.com`) |
+| `PAYMENT_CALLBACK_PATH` | optional | Defaults to `/payments/verify` |
+| `ZARINPAL_MERCHANT_ID` | ✅ | MerchantID from ZarinPal |
+| `ZARINPAL_SANDBOX` | optional | `'true'` (default) for sandbox, `'false'` for production |
+
+`callbackURL` is computed as `APP_BASE_URL + PAYMENT_CALLBACK_PATH + '?invoiceId=...&tx=...'`.
+
+### Usage snippets
+
+```ts
+import { createPaymentForInvoice, verifyAndFinalize } from '@/payments/paymentService';
+
+// Server action / route handler: create payment
+const { gatewayUrl, transactionId } = await createPaymentForInvoice({
+  invoiceId,
+  userId,
+  amount: invoice.grandTotal,
+  description: `Invoice ${invoice.number}`,
+  mobile: '+989123456789',
+});
+// Redirect shopper to gatewayUrl
+
+// Verification (already handled in /payments/verify)
+await verifyAndFinalize({ authority, invoiceId, transactionId });
+```
+
+### Security notes
+
+- Always validate the payment amount against the invoice total server-side; never trust client-submitted amounts.
+- Capture and persist `verifyPayload` for audit trails, but do not expose the raw payload to clients.
+- Treat the verification endpoint as the source of truth. Even if you later consume asynchronous webhooks, keep server-side verification in place.
+- Store sensitive configuration (`ZARINPAL_MERCHANT_ID`, `APP_BASE_URL`) in environment variables and avoid bundling them client-side.
+
+## Content & SEO Platform
+
+The content subsystem adds a full blogging stack, custom pages, and granular SEO controls layered on top of the existing Next.js backend. All models are designed for direct use within Server Components or Route Handlers (no REST round-trips required when composing pages).
+
+### Domain Overview
+
+- **BlogCategory** – hierarchical taxonomy with adjacency pointers plus materialised `path`/`ancestors` for fast subtree queries.
+- **BlogPost** – rich article document linking to categories, tags, and author metadata with embedded SEO overrides.
+- **Page** – arbitrary custom pages (`/about`, `/policies/refund`, etc.) with their own publish lifecycle and SEO fields.
+- **MetaOverride** – slug-based SEO overrides for routes that don’t map to a direct entity (e.g. `/`, `/blog`, `/store`).
+- **SiteInfo** – global copy and contact/social metadata consumable across layouts.
+- **SiteConfig** – runtime configuration bucket (replaces `.env` overrides) with first-run/onboarding enforcement.
+- **Metadata Resolver** – merges SEO inputs from entity → override → category → site info in that precedence order.
+
+### Data Models
+
+| Model | Key fields | Notes |
+| --- | --- | --- |
+| `BlogCategory` | `name`, `slug`, `parentId`, `path`, `ancestors[]`, `depth`, `position`, `isActive`, `seo` | Unique `path`, sibling-unique `slug`. `ancestors` stores ordered ObjectId chain root→parent. |
+| `BlogPost` | `title`, `slug`, `excerpt`, `content`, `coverImageId`, `categories[]`, `tags[]`, `authorId`, `status`, `publishedAt`, `seo` | Text index on `title/excerpt/content`. `status` workflow (`draft`→`published`→`archived`). |
+| `Page` | `title`, `slug`, `content`, `status`, `publishedAt`, `seo` | Supports nested slugs such as `policies/refund`. |
+| `MetaOverride` | `slug`, `seo` | Slug must start with `/` (`/`, `/blog`, `/store`). Used when no primary entity exists. |
+| `SiteInfo` | `appName`, `description`, `addresses[]`, `bio`, `phones[]`, `socials[]`, `customData` | Singleton document (service upserts). `customData` accepts arbitrary JSON for front-end experiments. |
+| `SiteConfig` | `isOnboardingComplete`, `requiredKeys[]`, `values` | Singleton document. `requiredKeys` lists configuration keys that must be present before onboarding completes. |
+
+### Category Hierarchy Strategy
+
+Categories combine an adjacency list (`parentId`) with materialised metadata:
+
+- **`path`** – concatenation of ancestor slugs (`root/child/grandchild`).
+- **`ancestors`** – ordered ObjectId chain used for breadcrumbs and subtree fetches.
+- **`depth`** – cached level (root = 0).
+
+When a category is created or moved, `categoryService` recomputes `path`, `ancestors`, and `depth`, then cascades updates to descendants via bulk writes.
+
+```
+Root: { slug: 'insights', path: 'insights', depth: 0 }
+Child: { slug: 'guides', path: 'insights/guides', depth: 1 }
+Grandchild: { slug: 'devops', path: 'insights/guides/devops', depth: 2 }
+```
+
+Moving `guides` under a new parent automatically rewrites every descendant path and ancestor chain.
+
+### SEO Metadata Resolution
+
+`resolveSeoForRoute({ slug, entitySeo?, categorySeo? })` merges metadata using the following precedence (highest first):
+
+1. **Entity SEO** – blog post or page level overrides (`BlogPost.seo`, `Page.seo`).
+2. **MetaOverride** – route-level overrides stored in `MetaOverride` (`/`, `/blog`, `/store`).
+3. **Category SEO** – useful when rendering a category archive listing.
+4. **SiteInfo defaults** – falls back to `SiteInfo.appName` and `SiteInfo.description`.
+5. **Hard defaults** – empty fields.
+
+Example: rendering `/blog/devops-guide` with a post-level title will return that title. If the post omits a description, the resolver inspects the `/blog` override, then the category’s SEO description, and finally the global site description.
+
+### Service Usage from Server Components
+
+All services are safe to import server-side:
+
+```ts
+import { listPosts } from '@/content/services/postService';
+import { resolveSeoForRoute } from '@/seo/services/metaResolve';
+
+export default async function BlogPage() {
+  const posts = await listPosts({ status: 'published', limit: 10 });
+  const seo = await resolveSeoForRoute({ slug: '/blog' });
+  // Render using posts + seo
+}
+```
+
+`settingsService.assertConfiguredOrThrow()` can guard routes/actions that require onboarding to be complete.
+
+### First-Run / Onboarding Flow
+
+- `SiteConfig.values` stores arbitrary configuration key/value pairs (API tokens, theme colours, etc.).
+- `SiteConfig.requiredKeys` names the keys that must be populated.
+- `isOnboardingComplete` flips to `true` once admins finish setup.
+- `settingsService.isConfigured()` returns `{ ok, missingKeys }` and `assertConfiguredOrThrow()` raises an error with `code='SETUP_REQUIRED'` when configuration is incomplete.
+
+### REST Endpoints & Examples
+
+All handlers live under `/app/api` and validate payloads with Zod.
+
+**Create root category**
+
+```bash
+curl -X POST http://localhost:3000/api/blog/categories \
+  -H 'Content-Type: application/json' \
+  -d '{ "name": "Insights", "slug": "insights" }'
+```
+
+**Move category under a new parent**
+
+```bash
+curl -X PATCH http://localhost:3000/api/blog/categories/6650f8f6e1b5f6dea4c1e101 \
+  -H 'Content-Type: application/json' \
+  -d '{ "parentId": "6650f8b3e1b5f6dea4c1e0f5", "slug": "guides" }'
+```
+
+**Create & publish a blog post**
+
+```bash
+curl -X POST http://localhost:3000/api/blog/posts \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "title": "DevOps in 2025",
+        "slug": "devops-2025",
+        "content": "# Future of DevOps...",
+        "status": "published",
+        "categories": ["6650f8f6e1b5f6dea4c1e101"]
+      }'
+```
+
+**Create a published custom page**
+
+```bash
+curl -X POST http://localhost:3000/api/pages \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "title": "About Us",
+        "slug": "about",
+        "content": "<p>Our story…</p>",
+        "status": "published"
+      }'
+```
+
+**Set a meta override for `/blog`**
+
+```bash
+curl -X POST http://localhost:3000/api/seo/meta-overrides \
+  -H 'Content-Type: application/json' \
+  -d '{ "slug": "/blog", "seo": { "title": "All Blog Posts", "description": "Latest insights" } }'
+```
+
+**Update global site information**
+
+```bash
+curl -X PATCH http://localhost:3000/api/settings/site-info \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "appName": "Acme Store",
+        "description": "Beautiful commerce experiences",
+        "phones": [{ "label": "Support", "number": "+98-21-123456" }]
+      }'
+```
+
+**Complete onboarding**
+
+```bash
+curl -X PATCH http://localhost:3000/api/settings/site-config \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "requiredKeys": ["primaryColor", "supportEmail"],
+        "values": { "primaryColor": "#ff7744", "supportEmail": "support@example.com" },
+        "isOnboardingComplete": true
+      }'
+```
+
+### Indexing & Performance Notes
+
+- `BlogCategory` indexes: unique `path`, `{ parentId, slug }`, `{ ancestors }`, `{ parentId, position }` for fast sibling ordering & subtree lookups.
+- `BlogPost` indexes: text index on `title/excerpt/content`, `{ status, publishedAt }`, `{ categories }` for archive filters.
+- `Page` indexes: `{ status, publishedAt }` plus unique `slug`.
+- `MetaOverride` unique `slug` ensures one override per route.
+- `SiteInfo`/`SiteConfig` rely on services to enforce singleton semantics (no additional indexes required).
+
+### Extensibility Ideas
+
+1. **Multi-language support** – introduce per-locale slugs and metadata fields, possibly via embedded translations.
+2. **Scheduled publishing** – extend services to support `publishAt` timestamps and background jobs.
+3. **Draft previews** – generate signed preview URLs that bypass publish-state checks.
+4. **Caching** – tag responses in Next.js RSC with cache tags (e.g., `revalidateTag('blog-posts')`) after service mutations.
+5. **Content revisions** – store historical versions of posts/pages for audit and rollback.
+
+---
+
+## Deployment & Server Migration
+
+A full, step-by-step migration guide (prerequisites, dependencies, environment
+variables, database/media transfer, PM2, Nginx, and cron automation) lives in
+**[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
+### Quick reference
+
+- **Runtime:** Node.js 20 LTS or 22 (production currently runs Node 24).
+- **Install:** `npm ci` — all public packages are pinned in `package-lock.json`.
+- **Config:** copy `.env.example` → `.env.production` and fill in secrets. Next.js
+  loads `.env.production` automatically when `NODE_ENV=production`.
+- **Build & run:** `npm run build`, then `pm2 start ecosystem.config.js` (two
+  processes: public `app` on `:3000` and background `worker` on `:3001`).
+- **Database:** MongoDB; media is stored in **GridFS**, so a single
+  `mongodump`/`mongorestore` migrates everything — no media files on disk.
+- **Automation:** `./cron.sh` installs the inventory/order sync cron jobs that hit
+  `/api/sync/*`.
+
+### Scripts (`package.json`)
+
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Local dev server (Turbopack) |
+| `npm run build` / `npm start` | Production build / serve |
+| `npm test` | Vitest test suite |
+| `npm run lint` | ESLint |
+| `npm run clear:carts` | Clear stale carts |
+| `npm run digikala:fetch` / `:import` / `:sync-daily` | Digikala catalog sync |
+| `npm run check:torob` / `:torob-products` | Torob feed checks |

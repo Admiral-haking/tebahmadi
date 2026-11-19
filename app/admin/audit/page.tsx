@@ -1,9 +1,0 @@
-"use client";
-import { useCallback, useEffect, useState } from "react";
-
-export default function AuditPage() {
-  const [rows, setRows] = useState<any[]>([]), [q, setQ] = useState(""), [message, setMessage] = useState("");
-  const load = useCallback(async () => { const response = await fetch(`/api/admin/audit?q=${encodeURIComponent(q)}`, { cache: "no-store" }), data = await response.json(); if (response.ok) setRows(data.logs || []); else setMessage(data.error || "گزارش فعالیت خوانده نشد"); }, [q]);
-  useEffect(() => { void load(); }, [load]);
-  return <main className="admin-page" dir="rtl"><header className="admin-top"><div><a className="admin-brand" href="/">طب احمدی</a><span>لاگ فعالیت‌ها</span></div><a className="admin-outline" href="/admin">بازگشت به پنل</a></header><div className="admin-content"><div className="admin-heading"><div><small>امنیت و ردیابی عملیات</small><h1>Audit Log</h1></div><button className="admin-button" onClick={() => void load()}>به‌روزرسانی</button></div><section className="admin-panel"><div className="order-filters"><input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === "Enter") void load(); }} placeholder="جستجو در actor، عملیات یا جزئیات"/><button className="admin-outline" onClick={() => void load()}>جستجو</button></div>{message && <p role="status">{message}</p>}<div className="admin-table-wrap"><table><thead><tr><th>زمان</th><th>کاربر</th><th>عملیات</th><th>موجودیت</th><th>جزئیات</th></tr></thead><tbody>{rows.map(x => <tr key={x.id}><td>{new Date(x.created_at + "Z").toLocaleString("fa-IR")}</td><td>{x.actor}</td><td dir="ltr">{x.action}</td><td>{x.entity_type} {x.entity_id && <small dir="ltr">{x.entity_id.slice(0, 8)}</small>}</td><td>{x.details || "—"}</td></tr>)}</tbody></table></div>{!rows.length && <div className="admin-empty">لاگ فعالیتی پیدا نشد.</div>}</section></div></main>;
-}

@@ -1,2 +1,0 @@
-import { env } from "@/lib/runtime";
-export async function recordAudit(request:Request,action:string,entityType:string,entityId:string|null,details=""){try{const actor=request.headers.get("cf-access-authenticated-user-email")||"admin";await env.DB.prepare("INSERT INTO audit_logs(id,actor,action,entity_type,entity_id,details) VALUES(?,?,?,?,?,?)").bind(crypto.randomUUID(),actor.slice(0,160),action.slice(0,100),entityType.slice(0,80),entityId,details.slice(0,1000)).run()}catch{}}
