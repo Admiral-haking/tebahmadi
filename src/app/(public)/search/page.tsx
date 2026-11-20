@@ -1,6 +1,7 @@
 import SearchView from "@/views/search";
 import { Metadata } from "next";
 import { Suspense } from "react";
+import { BRAND } from "@/config/brand";
 
 
 export async function generateMetadata({ searchParams }: any): Promise<Metadata> {
@@ -9,7 +10,9 @@ export async function generateMetadata({ searchParams }: any): Promise<Metadata>
 
     return {
         title: `${query ? `جستجو برای «${query}»` : "جستجوی محصولات"} | طب احمدی`,
-        description: "جستجو در محصولات طبیعی و گیاهی طب احمدی"
+        description: "جستجو در محصولات طبیعی و گیاهی طب احمدی",
+        alternates: { canonical: `${BRAND.url}/search` },
+        robots: { index: false, follow: true },
     }
 }
 

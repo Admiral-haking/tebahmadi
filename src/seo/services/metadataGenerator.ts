@@ -89,7 +89,13 @@ export async function generatePageMetadata({
   const rawTitle = coalesce(resolvedSeo.title, defaults?.title) ?? BRAND.title;
   const title = rawTitle.includes(BRAND.name) ? rawTitle : `${rawTitle} | ${BRAND.name}`;
   const description = coalesce(resolvedSeo.description, defaults?.description) ?? BRAND.description;
-  const canonical = normalizeCanonical(coalesce(resolvedSeo.canonical, defaults?.canonical));
+  // Every route gets its own canonical by default. Without this fallback,
+  // child pages inherit the root layout canonical and look like duplicates of
+  // the homepage to search engines.
+  const canonical = normalizeCanonical(
+    coalesce(resolvedSeo.canonical, defaults?.canonical, slug),
+    baseUrl,
+  );
   const noindex = coalesce(resolvedSeo.noindex, defaults?.noindex);
 
   const resolvedImageId = coalesce(toStringId(resolvedSeo.ogImageId), toStringId(defaults?.image?.id));
