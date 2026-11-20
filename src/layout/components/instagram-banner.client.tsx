@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getImageProps } from 'next/image';
 import Link from 'next/link';
 import useSWR from 'swr';
@@ -129,15 +129,6 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                 />
               </picture>
 
-              {!active && !isLoading && (
-                <Box
-                  component="img"
-                  src={FALLBACK_SRC}
-                  alt="home-banner"
-                  sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: "contain" }}
-                />
-              )}
-
               {isLoading && !active && (
                 <Skeleton
                   variant="rectangular"
@@ -150,19 +141,32 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
           {hasDots && (
             <Stack direction="row" spacing={1}>
               {items.map((item, idx) => (
-                <Box
+                <IconButton
                   key={item.id}
+                  type="button"
+                  aria-label={`نمایش بنر ${idx + 1}`}
+                  aria-current={idx === index ? 'true' : undefined}
                   onClick={() => setIndex(idx)}
                   sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: 'primary.main',
-                    cursor: 'pointer',
-                    transition: 'opacity 150ms ease',
-                    opacity: idx === index ? 1 : 0.35,
+                    width: 28,
+                    height: 28,
+                    p: 0.75,
+                    '&:hover': { bgcolor: 'action.hover' },
+                    '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
                   }}
-                />
+                >
+                  <Box
+                    aria-hidden="true"
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      transition: 'opacity 150ms ease',
+                      opacity: idx === index ? 1 : 0.35,
+                    }}
+                  />
+                </IconButton>
               ))}
             </Stack>
           )}

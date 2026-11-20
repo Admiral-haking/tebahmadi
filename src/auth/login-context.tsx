@@ -17,6 +17,7 @@ const LoginContext = createContext<LoginContextValue | undefined>(undefined);
 
 const GENERIC_REQUEST_ERROR = 'ارسال کد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
 const GENERIC_VERIFY_ERROR = 'تایید کد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
+const GENERIC_PROVIDER_ERROR = 'فعلاً امکان ورود نیست؛ لطفاً بعداً دوباره تلاش کنید.';
 
 function cleanServerMessage(raw: string | null | undefined): string | null {
   if (!raw) {
@@ -43,7 +44,7 @@ function cleanServerMessage(raw: string | null | undefined): string | null {
   return trimmed;
 }
 
-function translateError(raw: string | null | undefined, fallback: string): string {
+export function translateError(raw: string | null | undefined, fallback: string): string {
   const message = cleanServerMessage(raw);
   if (!message) {
     return fallback;
@@ -68,17 +69,8 @@ function translateError(raw: string | null | undefined, fallback: string): strin
   if (lower.includes('too many invalid attempts')) {
     return 'تعداد تلاش‌های ناموفق زیاد است. بعد از چند دقیقه دوباره تلاش کنید.';
   }
-  if (lower.includes('sms_provider_insufficient_credit')) {
-    return 'اعتبار ارسال پیامک کافی نیست. لطفاً حساب SMS.ir را شارژ کنید و دوباره تلاش کنید.';
-  }
-  if (lower.includes('sms_provider_auth_failed')) {
-    return 'اتصال سرویس پیامک معتبر نیست. لطفاً کلید SMS.ir را بررسی کنید.';
-  }
-  if (lower.includes('sms_provider_rate_limited')) {
-    return 'تعداد درخواست‌های پیامکی زیاد است. کمی بعد دوباره تلاش کنید.';
-  }
-  if (lower.includes('sms_provider_invalid_request')) {
-    return 'تنظیمات قالب پیامک صحیح نیست. لطفاً قالب OTP و نام پارامتر CODE را بررسی کنید.';
+  if (lower.startsWith('sms_provider_') || lower === 'login_unavailable') {
+    return GENERIC_PROVIDER_ERROR;
   }
 
   return message;

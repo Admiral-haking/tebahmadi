@@ -55,9 +55,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   try {
     await sendLoginCode(phone, code);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to send verification code';
-    return jsonError(502, message);
+  } catch {
+    // Provider/configuration details must never be exposed to customers.
+    return jsonError(502, 'login_unavailable');
   }
 
   return NextResponse.json({ ok: true });
