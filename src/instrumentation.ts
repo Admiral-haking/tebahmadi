@@ -6,13 +6,20 @@
  * and made it loop forever as "interrupted").
  */
 export async function register() {
-    if (process.env.NEXT_RUNTIME !== "nodejs") return;
+    // Access the Node process through globalThis so the instrumentation module
+    // remains valid when Next analyzes it for the Edge runtime as well.
+    type NodeProcessLike = {
+        env?: Record<string, string | undefined>;
+        on?: (event: string, listener: (reason: unknown) => void) => void;
+    };
+    const nodeProcess = (globalThis as typeof globalThis & { process?: NodeProcessLike }).process;
+    if (!nodeProcess || nodeProcess.env?.NEXT_RUNTIME === "edge" || typeof nodeProcess.on !== "function") return;
 
     const g = globalThis as typeof globalThis & { __syncRejectionGuard?: boolean };
     if (g.__syncRejectionGuard) return;
     g.__syncRejectionGuard = true;
 
-    process.on("unhandledRejection", (reason) => {
+    nodeProcess.on("unhandledRejection", (reason) => {
         console.error("[unhandledRejection]", reason instanceof Error ? reason.stack || reason.message : reason);
     });
 }
