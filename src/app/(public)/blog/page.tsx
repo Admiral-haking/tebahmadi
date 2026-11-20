@@ -8,8 +8,8 @@ export async function generateMetadata(): Promise<Metadata> {
     const { metadata } = await generatePageMetadata({
         slug: "/blog",
         defaults: {
-            title: "وبلاگ ",
-            description: "خبرها، نکات آموزشی و داستان‌های الهام‌بخش ورزشکاران ایران را در مجله دنبال کنید.",
+            title: "مجله طب احمدی",
+            description: "راهنمای انتخاب محصولات طبیعی، گیاهان دارویی و سبک زندگی سالم در مجله طب احمدی.",
         },
     });
     return metadata;

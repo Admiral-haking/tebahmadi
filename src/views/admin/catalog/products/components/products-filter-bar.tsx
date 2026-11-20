@@ -83,7 +83,6 @@ export default function ProductsFilterBar({
       if (term.trim() !== q.trim()) apply({ q: term });
     }, 450);
     return () => clearTimeout(handle);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [term]);
 
   function toggleStatus(value: string) {

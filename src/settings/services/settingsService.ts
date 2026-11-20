@@ -2,6 +2,7 @@ import { revalidatePath, revalidateTag, TAGS } from '@/lib/cache';
 import { SiteInfoModel, type SiteInfoDocument } from '@/settings/models/SiteInfo';
 import { SiteConfigModel, type SiteConfigDocument } from '@/settings/models/SiteConfig';
 import { connectMongoose } from '@/lib/mongoose';
+import { DEFAULT_SITE_INFO } from '@/config/brand';
 
 const SITE_REVALIDATE_PATHS = ['/', '/blog', '/store'];
 const CONFIG_REVALIDATE_PATHS = ['/', '/store', '/payments/verify'];
@@ -34,7 +35,8 @@ async function revalidateSiteConfigPaths(): Promise<void> {
 
 export async function getSiteInfo() {
   await connectMongoose()
-  return SiteInfoModel.findOne().lean<SiteInfoDocument | null>();
+  return (await SiteInfoModel.findOne().lean<SiteInfoDocument | null>())
+    ?? (DEFAULT_SITE_INFO as unknown as SiteInfoDocument);
 }
 
 export async function updateSiteInfo(payload: Partial<SiteInfoDocument>) {

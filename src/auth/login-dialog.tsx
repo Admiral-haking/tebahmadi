@@ -50,7 +50,6 @@ function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: 
     }, 60);
     return () => clearTimeout(t);
     // run once on mount (i.e. when the code step is shown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function clean(raw: string) { return toLatin(raw).replace(/\D/g, ""); }

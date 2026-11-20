@@ -6,9 +6,9 @@ import SearchBox from "@/components/search";
 
 import type { BlogCategoryItem } from "../data";
 
-const DEFAULT_HERO_TITLE = "الهام، دانش و تجربه برای مسیر ورزشی شما";
+const DEFAULT_HERO_TITLE = "دانش طبیعت برای انتخابی آگاهانه";
 const DEFAULT_HERO_SUBTITLE =
-    "تازه‌ترین مطالب آموزشی، الهام‌بخش و داستان‌های موفقیت ورزشکاران را کشف کنید.";
+    "مطالب کاربردی درباره گیاهان دارویی، فرآورده‌های طبیعی و سبک زندگی سالم را بخوانید.";
 
 type BlogHeroProps = {
     searchTerm: string;

@@ -1,4 +1,5 @@
 import { SiteInfoDocument } from '@/settings/models/SiteInfo';
+import { BRAND } from '@/config/brand';
 import { Box, Button, InputBase, Stack, Typography } from '@mui/material';
 
 export default function HomeSearch({ info, value }: { info?: SiteInfoDocument | null; value?: string }) {
@@ -14,11 +15,11 @@ export default function HomeSearch({ info, value }: { info?: SiteInfoDocument | 
           دنبال چی میگردی؟
         </Typography>
         <Typography variant="subtitle2" component="p" sx={{ fontSize: { xs: '0.9rem', md: '1rem' } }}>
-          هر چی میخوای رو در فروشگاه{' '}
+          محصول موردنظرتان را در فروشگاه{' '}
           <Typography variant="subtitle1" component="span" color="error.main" sx={{ fontSize: 'inherit', fontWeight: 700 }}>
-            {info?.appName || 'ما'}
+            {info?.appName || BRAND.name}
           </Typography>{' '}
-          جستجو کن
+          پیدا کنید
         </Typography>
       </Stack>
 

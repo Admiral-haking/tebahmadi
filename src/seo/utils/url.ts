@@ -1,3 +1,5 @@
+import { BRAND } from '@/config/brand';
+
 export function resolveSiteBaseUrl(): URL | undefined {
   const envUrl =
     process.env.APP_BASE_URL ||
@@ -5,15 +7,13 @@ export function resolveSiteBaseUrl(): URL | undefined {
     process.env.VERCEL_PROJECT_PRODUCTION_URL ||
     process.env.VERCEL_URL;
 
-  if (!envUrl) {
-    return undefined;
-  }
+  if (!envUrl) return new URL(BRAND.url);
 
   try {
     const normalized = envUrl.startsWith('http') ? envUrl : `https://${envUrl}`;
     return new URL(normalized);
   } catch {
-    return undefined;
+    return new URL(BRAND.url);
   }
 }
 

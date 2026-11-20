@@ -234,6 +234,10 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   if (!pathname.startsWith('/api')) {
     return NextResponse.next();
   }
+  // Monitoring endpoints are intentionally public and return no customer data.
+  if (pathname === '/api/health' || pathname === '/api/readiness') {
+    return NextResponse.next();
+  }
   if (pathname.startsWith('/api/torob')) {
     return NextResponse.next();
   }

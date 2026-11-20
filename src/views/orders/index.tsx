@@ -36,6 +36,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 
 import { useAuth, useLoginDialog } from '@/auth';
 import { useCart } from '@/components/cart/useCart';
+import { BRAND } from '@/config/brand';
 
 type InvoiceStatus = 'draft' | 'pending' | 'paid' | 'canceled' | 'refunded';
 
@@ -472,7 +473,7 @@ function EmptyState() {
         هنوز سفارشی ثبت نشده است
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 420, mx: 'auto', mb: 3 }}>
-        از فروشگاه ما بازدید کنید، محصول دلخواهتان را انتخاب کنید و اولین سفارش خود را ثبت نمایید. ارسال سریع و
+        از فروشگاه طب احمدی بازدید کنید، محصول دلخواهتان را انتخاب کنید و اولین سفارش خود را ثبت نمایید. ارسال پست پیشتاز و
         پشتیبانی همیشگی همراه شماست.
       </Typography>
       <Button
@@ -494,7 +495,7 @@ function EmptyState() {
 function PrintableInvoice({ order, siteInfo }: { order: Invoice | null; siteInfo: SiteInfo }) {
   if (!order) return null;
 
-  const appName = siteInfo?.appName || 'فروشگاه';
+  const appName = siteInfo?.appName || BRAND.name;
   const logoId = siteInfo?.logo?.thumbId ?? siteInfo?.logo?.mobileId ?? siteInfo?.logo?.originalId ?? '';
   const logoSrc = logoId ? `/api/media/${logoId}` : null;
   const customerName = [order.addressSnapshot?.fname, order.addressSnapshot?.lname].filter(Boolean).join(' ') || 'مشتری گرامی';

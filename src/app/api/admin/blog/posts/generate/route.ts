@@ -9,7 +9,7 @@ const requestSchema = z.object({
   provider: z.enum(["openai", "deepseek"]).optional(),
   title: z.string().trim().min(2),
   keywords: z.string().trim().optional().default(""),
-  tone: z.string().trim().optional().default("حرفه‌ای، روان و مناسب فروشگاه کفش"),
+  tone: z.string().trim().optional().default("حرفه‌ای، روان و مناسب فروشگاه محصولات طبیعی"),
 });
 
 function extractOpenAIText(payload: any): string {
@@ -25,7 +25,7 @@ function extractOpenAIText(payload: any): string {
 
 function buildPrompt(input: z.infer<typeof requestSchema>) {
   return [
-    "یک مقاله وبلاگ فارسی برای فروشگاه کفش بنویس.",
+    "یک مقاله وبلاگ فارسی برای فروشگاه طب احمدی بنویس که درباره محصولات طبیعی، گیاهان دارویی یا سبک زندگی سالم باشد.",
     `عنوان: ${input.title}`,
     input.keywords ? `کلمات کلیدی: ${input.keywords}` : "",
     `لحن: ${input.tone}`,

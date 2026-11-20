@@ -6,6 +6,7 @@ import type { StoreCategoryContext } from "./data";
 import StoreProductGridSkeleton from "./components/grid-skeleton";
 import { loadSiteInfo } from "@/lib/cache";
 import { buildMediaUrl, resolveSiteBaseUrl, toAbsoluteUrl } from "@/seo/utils/url";
+import { BRAND } from "@/config/brand";
 
 export type StoreViewSearchParams = Record<string, string | string[] | undefined>;
 
@@ -30,7 +31,7 @@ export default async function StoreView({
     const baseUrl = resolveSiteBaseUrl();
     const categoryPath = context.active.path;
     const storeUrl = toAbsoluteUrl(`/store/${categoryPath}`, baseUrl);
-    const storeName = context.active.name || siteInfo?.appName || "Store";
+    const storeName = context.active.name || siteInfo?.appName || BRAND.name;
 
     const logoId =
         (siteInfo?.logo?.thumbId ?? siteInfo?.logo?.mobileId ?? siteInfo?.logo?.originalId)?.toString();
@@ -98,7 +99,7 @@ export default async function StoreView({
                 <Hero
                     category={context}
                     searchParams={await searchParams}
-                    siteTitle={siteInfo?.appName}
+                    siteTitle={siteInfo?.appName || BRAND.name}
                 />
 
                 <Box sx={{ my: 4 }}>

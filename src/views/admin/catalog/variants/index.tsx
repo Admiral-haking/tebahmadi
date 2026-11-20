@@ -62,7 +62,6 @@ export function VariantsView({ onSelect, search }: Props) {
     useEffect(() => {
         const h = setTimeout(() => { if (searchText.trim() !== q.trim()) setQ(searchText); }, 450);
         return () => clearTimeout(h);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchText]);
 
     function handleLoadInventory() {

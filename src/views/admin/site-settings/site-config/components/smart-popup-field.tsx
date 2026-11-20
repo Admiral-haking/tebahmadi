@@ -58,7 +58,7 @@ export default function SmartPopupField({ disabled }: SmartPopupFieldProps) {
     const step = getValues(`smartPopup.steps.${index}`);
     const prompt =
       String(step?.aiTextPrompt ?? "").trim() ||
-      `برای پاپ‌آپ فروشگاه آنلاین، متن فارسی کوتاه و جذاب بساز. عنوان فعلی: ${step?.title || "-"} متن فعلی: ${step?.body || "-"}. خروجی فقط JSON با title و body و actionLabel باشد.`;
+      `برای پاپ‌آپ فروشگاه طب احمدی، متن فارسی کوتاه و جذاب درباره محصولات طبیعی بساز. عنوان فعلی: ${step?.title || "-"} متن فعلی: ${step?.body || "-"}. خروجی فقط JSON با title و body و actionLabel باشد.`;
 
     setAiTextIndex(index);
     try {

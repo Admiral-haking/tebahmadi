@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
     serverExternalPackages: ['node-fetch'],
 
+    // Keep Turbopack anchored to this project when another lockfile exists in the home directory.
+    turbopack: {
+        root: process.cwd(),
+    },
+
     typescript: {
         ignoreBuildErrors: true,
     },

@@ -1,11 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Script from 'next/script';
 import { Box, Button, Link, Stack, Typography } from '@mui/material';
 
 const CONSENT_COOKIE = 'cookie_consent';
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-WNZ132ZMZ9';
 
 function readConsentCookie(): 'accepted' | 'rejected' | null {
     const match = document.cookie.match(
@@ -39,17 +37,7 @@ export default function CookieConsent() {
     }
 
     if (state === 'accepted') {
-        return (
-            <>
-                <Script
-                    src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-                    strategy="lazyOnload"
-                />
-                <Script id="google-analytics" strategy="lazyOnload">
-                    {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","${GA_ID}",{page_path:window.location.pathname});`}
-                </Script>
-            </>
-        );
+        return null;
     }
 
     if (state !== 'pending') return null;
@@ -103,8 +91,7 @@ export default function CookieConsent() {
                             استفاده از کوکی‌ها
                         </Typography>
                         <Typography variant="body2" color="text.secondary" lineHeight={1.8}>
-                            برای بهبود تجربهٔ شما و تحلیل آماری بازدیدها از کوکی استفاده می‌کنیم.
-                            با «پذیرفتن»، رضایت خود را اعلام می‌کنید.{' '}
+                            برای حفظ ورود و سبد خرید، از کوکی‌های ضروری استفاده می‌کنیم.{' '}
                             <Link href="/page/privacy" underline="hover" sx={{ fontSize: 'inherit', fontWeight: 600 }}>
                                 سیاست حریم خصوصی
                             </Link>
@@ -134,7 +121,7 @@ export default function CookieConsent() {
                             '&:hover': { background: 'linear-gradient(135deg, var(--mui-palette-primary-dark), var(--mui-palette-secondary-dark))' },
                         }}
                     >
-                        پذیرفتن
+                        ادامه
                     </Button>
                 </Stack>
             </Stack>

@@ -113,7 +113,7 @@ async function resolveMerchantName(): Promise<string> {
   }
 
   const siteInfo = await SiteInfoModel.findOne({}, { appName: 1 }).lean().exec();
-  return cleanText(siteInfo?.appName) || 'فروشگاه';
+    return cleanText(siteInfo?.appName) || 'طب احمدی';
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {

@@ -10,13 +10,14 @@ import { resolveSiteBaseUrl, buildMediaUrl } from "@/seo/utils/url";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import JsonLd from "@/components/seo/json-ld";
 import CookieConsent from "@/components/cookie-consent";
+import { BRAND } from "@/config/brand";
 
 const ProgressBar = dynamic(() => import("@/components/progress"))
 
 export async function generateMetadata(): Promise<Metadata> {
   const info = await loadSiteInfo();
-  const title = info?.appName ?? 'Hippogriff';
-  const description = info?.description ?? 'فروشگاه آنلاین';
+  const title = info?.appName && info.appName !== BRAND.name ? info.appName : BRAND.title;
+  const description = info?.description ?? BRAND.description;
   const base = resolveSiteBaseUrl();
   const logoId = info?.logo?.thumbId ?? info?.logo?.mobileId ?? info?.logo?.originalId;
   const logoUrl = logoId ? buildMediaUrl(String(logoId), base ?? undefined) : undefined;
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const metadata: Metadata = {
     title: {
       default: title,
-      template: `%s | ${title}`,
+      template: '%s',
     },
     description,
     robots: {
@@ -56,6 +57,13 @@ export async function generateMetadata(): Promise<Metadata> {
     other: {
       'application-name': title,
     },
+    alternates: {
+      canonical: base?.toString() ?? BRAND.url,
+    },
+    icons: {
+      icon: '/tebahmadi-mark.svg',
+      apple: '/tebahmadi-mark.svg',
+    },
   };
 
   if (base) {
@@ -78,15 +86,13 @@ export default async function RootLayout({
     ? String(logoField.thumbId ?? logoField.mobileId ?? logoField.originalId ?? '')
     : '';
   const logoSrc = logoId ? `/api/media/${logoId}` : null;
-  const appName = info?.appName ?? 'فروشگاه آنلاین';
-  const description = info?.description ?? '';
+  const appName = info?.appName ?? BRAND.name;
+  const description = info?.description ?? BRAND.description;
 
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        {logoSrc && <link rel="icon" href={logoSrc} />}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="icon" href={logoSrc ?? '/tebahmadi-mark.svg'} />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
         {/* JSON-LD Structured Data for AI/SEO */}
@@ -97,6 +103,13 @@ export default async function RootLayout({
             name: appName,
             description: description,
             url: baseUrl,
+            inLanguage: 'fa-IR',
+            publisher: {
+              "@type": "Organization",
+              name: appName,
+              url: baseUrl,
+              telephone: BRAND.phone,
+            },
             potentialAction: {
               "@type": "SearchAction",
               target: {
@@ -126,7 +139,7 @@ export default async function RootLayout({
           </AppTheme>
         </AppRouterCacheProvider>
 
-        {/* Cookie consent banner — also conditionally loads Google Analytics */}
+        {/* Essential-cookie notice; no third-party analytics is loaded. */}
         <CookieConsent />
       </body>
     </html>

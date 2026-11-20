@@ -152,7 +152,7 @@ export default function SizeSelector({ storePath }: SizeSelectorProps) {
                         key={size}
                         component={Link}
                         href={buildStoreHref(storePath, size)}
-                        aria-label={`نمایش کفش‌های سایز ${size}`}
+                        aria-label={`نمایش محصولات با ویژگی سایز ${size}`}
                         sx={{
                           width: "100%",
                           minWidth: { xs: 0, sm: 40 },

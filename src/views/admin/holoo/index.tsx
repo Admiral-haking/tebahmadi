@@ -1067,7 +1067,7 @@ function ProductsTab() {
         load({ page: 0 });
     }
 
-    useEffect(() => { load(); }, [page, limit]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => { load(); }, [page, limit]);
 
     async function ensureGroups() {
         if (!sideGroups.length) {

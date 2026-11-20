@@ -2,20 +2,32 @@
 
 import Logo from "@/components/logo";
 import { loadSiteInfo } from "@/lib/cache";
-import { Box, Button, Container, Divider, Stack, Typography } from "@mui/material";
+import { Container, Divider, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import Link from "next/link";
 import Socials from "../components/socials";
-import Enamad, { ZarinPalIcon } from "@/components/e-namad";
+import { BRAND } from "@/config/brand";
 
 export default async function Footer() {
   const siteInfo = await loadSiteInfo();
-  const appName = siteInfo?.appName ?? 'برند شما';
+  const appName = siteInfo?.appName ?? BRAND.name;
   const addresses = siteInfo?.addresses ?? [];
   const phones = siteInfo?.phones ?? [];
   const bio = siteInfo?.bio ?? siteInfo?.description ?? '';
   const socials = siteInfo?.socials ?? [];
   const cd = siteInfo?.customData ?? {};
+  const enamadCode = typeof cd.enamad === 'string' ? cd.enamad.trim() : '';
+  const enamadLink = typeof cd.enamadLink === 'string' ? cd.enamadLink.trim() : '';
+  let enamadImageSrc: string | null = null;
+  try {
+    const parsed = new URL(enamadLink);
+    const id = parsed.hostname === 'trustseal.enamad.ir' ? parsed.searchParams.get('id') : null;
+    if (id && enamadCode) {
+      enamadImageSrc = `https://trustseal.enamad.ir/logo.aspx?id=${encodeURIComponent(id)}&Code=${encodeURIComponent(enamadCode)}`;
+    }
+  } catch {
+    enamadImageSrc = null;
+  }
 
   return (
     <>
@@ -34,11 +46,7 @@ export default async function Footer() {
                       {item.label ? `${item.label}: ${item.address}` : item.address}
                     </Typography>
                   ))
-                ) : (
-                  <Typography variant="caption" color="text.secondary" textAlign={{ xs: 'center', md: 'start' }}>
-                    آدرس‌های کسب‌وکار شما هنوز ثبت نشده‌اند.
-                  </Typography>
-                )}
+                ) : null}
               </Stack>
             </Stack>
           </Grid>
@@ -58,11 +66,7 @@ export default async function Footer() {
                     <Typography>{phone.label ? `${phone.label}: ${phone.number}` : phone.number}</Typography>
                   </Stack>
                 ))
-              ) : (
-                <Typography variant="caption" color="text.secondary" textAlign="center">
-                  شماره تماسی ثبت نشده است.
-                </Typography>
-              )}
+              ) : null}
             </Stack>
           </Grid>
         </Grid>
@@ -73,16 +77,23 @@ export default async function Footer() {
           <Grid size={{ xs: 12, md: 8 }}>
             <Typography variant="h6">{appName}</Typography>
             <Typography variant="caption" color="text.secondary">
-              {bio || 'توضیحات مربوط به برند خود را از بخش تنظیمات سایت تکمیل کنید.'}
+              {bio || BRAND.bio}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <Stack justifyContent="end" direction="row" gap={1} alignItems="center" flexWrap="wrap">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: `<a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=743873&Code=qT1cJNPoWRRU4sHKWqqTVBoAZjgLFJWC'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=743873&Code=qT1cJNPoWRRU4sHKWqqTVBoAZjgLFJWC' alt='' style='cursor:pointer' code='qT1cJNPoWRRU4sHKWqqTVBoAZjgLFJWC'></a>`
-                }}
-              />
+              {enamadImageSrc ? (
+                <Link href={enamadLink} target="_blank" referrerPolicy="origin" aria-label="نماد اعتماد الکترونیکی طب احمدی">
+                  <img
+                    src={enamadImageSrc}
+                    alt="نماد اعتماد الکترونیکی طب احمدی"
+                    width={90}
+                    height={90}
+                    loading="lazy"
+                    style={{ display: 'block', objectFit: 'contain' }}
+                  />
+                </Link>
+              ) : null}
             </Stack>
           </Grid>
         </Grid>
@@ -91,7 +102,7 @@ export default async function Footer() {
       <Divider sx={{ my: 2 }} />
       <Stack alignItems="center" justifyContent="center" sx={{ py: 2.25 }}>
         <Typography variant="caption" textAlign="center" component="div">
-          طراحی و توسعه در <Link href="https://hippogriff.ir/fa">هیپوگریف</Link>
+          © {new Date().getFullYear()} {BRAND.name} — اصالت طبیعت، عیار تندرستی
         </Typography>
       </Stack>
     </>

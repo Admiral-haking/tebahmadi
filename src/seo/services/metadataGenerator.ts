@@ -4,6 +4,7 @@ import type { Types } from 'mongoose';
 import { loadSiteInfo } from '@/lib/cache';
 import { resolveSeoForRoute, type Seo } from './metaResolve';
 import { buildMediaUrl, resolveSiteBaseUrl, toAbsoluteUrl } from '@/seo/utils/url';
+import { BRAND } from '@/config/brand';
 
 type MediaLike = {
   id?: Types.ObjectId | string | null;
@@ -85,8 +86,9 @@ export async function generatePageMetadata({
   const baseUrl = resolveSiteBaseUrl();
   const [siteInfo, resolvedSeo] = await Promise.all([siteInfoPromise, seoPromise]);
 
-  const title = coalesce(resolvedSeo.title, defaults?.title);
-  const description = coalesce(resolvedSeo.description, defaults?.description);
+  const rawTitle = coalesce(resolvedSeo.title, defaults?.title) ?? BRAND.title;
+  const title = rawTitle.includes(BRAND.name) ? rawTitle : `${rawTitle} | ${BRAND.name}`;
+  const description = coalesce(resolvedSeo.description, defaults?.description) ?? BRAND.description;
   const canonical = normalizeCanonical(coalesce(resolvedSeo.canonical, defaults?.canonical));
   const noindex = coalesce(resolvedSeo.noindex, defaults?.noindex);
 
@@ -122,7 +124,7 @@ export async function generatePageMetadata({
     title: title ?? undefined,
     description: description ?? undefined,
     url: canonical ?? baseUrl?.toString(),
-    siteName: siteInfo?.appName ?? title ?? undefined,
+    siteName: siteInfo?.appName ?? BRAND.name,
     images: resolvedImageUrl
       ? [
         {

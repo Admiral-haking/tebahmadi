@@ -14,6 +14,7 @@ import { SiteConfigModel, type SiteConfigDocument } from '@/settings/models/Site
 import { OfferModel, type OfferDocument } from '@/orders/models/Offer';
 import { TransportModel, type TransportDocument } from '@/orders/models/Transport';
 import { getDiscountProducts, getNewestProducts, getPopularProducts } from '@/catalog/services/productUtilService';
+import { DEFAULT_SITE_INFO } from '@/config/brand';
 
 export const TAGS = {
   SITE_INFO: 'site-info',
@@ -65,7 +66,7 @@ function createCachedFunction<Args extends unknown[], Result>(
 const loadSiteInfoCached = createCachedFunction(
   async () => {
     await connectMongoose();
-    return (await SiteInfoModel.findOne().lean()) ?? null;
+    return (await SiteInfoModel.findOne().lean()) ?? (DEFAULT_SITE_INFO as unknown as Lean<SiteInfoDocument>);
   },
   () => ['site-info'],
   () => [TAGS.SITE_INFO, TAGS.SETTINGS],

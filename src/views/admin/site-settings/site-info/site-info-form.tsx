@@ -398,7 +398,7 @@ export default function SiteInfoForm() {
                 <RHFTextField
                   name="blogTitle"
                   label="عنوان وبلاگ"
-                  placeholder="الهام، دانش و تجربه برای مسیر ورزشی شما"
+                  placeholder="دانش طبیعت برای انتخابی آگاهانه"
                   disabled={saving || !canEdit}
                 />
                 <RHFTextField
@@ -406,7 +406,7 @@ export default function SiteInfoForm() {
                   label="زیرعنوان وبلاگ"
                   multiline
                   minRows={2}
-                  placeholder="تازه‌ترین مطالب آموزشی، الهام‌بخش و داستان‌های موفقیت ورزشکاران را کشف کنید."
+                  placeholder="مطالب کاربردی درباره گیاهان دارویی، فرآورده‌های طبیعی و سبک زندگی سالم را بخوانید."
                   helperText="در صورت خالی بودن، متن پیش‌فرض نمایش داده می‌شود."
                   disabled={saving || !canEdit}
                 />
