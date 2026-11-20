@@ -68,6 +68,18 @@ function translateError(raw: string | null | undefined, fallback: string): strin
   if (lower.includes('too many invalid attempts')) {
     return 'تعداد تلاش‌های ناموفق زیاد است. بعد از چند دقیقه دوباره تلاش کنید.';
   }
+  if (lower.includes('sms_provider_insufficient_credit')) {
+    return 'اعتبار ارسال پیامک کافی نیست. لطفاً حساب SMS.ir را شارژ کنید و دوباره تلاش کنید.';
+  }
+  if (lower.includes('sms_provider_auth_failed')) {
+    return 'اتصال سرویس پیامک معتبر نیست. لطفاً کلید SMS.ir را بررسی کنید.';
+  }
+  if (lower.includes('sms_provider_rate_limited')) {
+    return 'تعداد درخواست‌های پیامکی زیاد است. کمی بعد دوباره تلاش کنید.';
+  }
+  if (lower.includes('sms_provider_invalid_request')) {
+    return 'تنظیمات قالب پیامک صحیح نیست. لطفاً قالب OTP و نام پارامتر CODE را بررسی کنید.';
+  }
 
   return message;
 }

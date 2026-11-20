@@ -1,51 +1,5 @@
 
-let fetcher: any = fetch;
-// Or use undici.fetch with custom configuration
-if (typeof window === 'undefined') {
-    const globals = globalThis as typeof globalThis & { File?: typeof File };
-    if (!globals.File) {
-        const nodeRequire = eval("require") as NodeRequire;
-        const { File: NodeFile } = nodeRequire("node:buffer") as typeof import("node:buffer");
-        globals.File = NodeFile as unknown as typeof File;
-    }
-
-    const nodeRequire = eval("require") as NodeRequire;
-    const { markAsUncloneable } = nodeRequire("node:worker_threads") as { markAsUncloneable?: unknown };
-
-    if (typeof markAsUncloneable === "function") {
-        import('undici').then(({ setGlobalDispatcher, fetch, ProxyAgent }) => {
-            const proxyUrl = process.env.HTTP_PROXY || process.env.http_proxy || '';
-            if (proxyUrl) {
-                console.log('[Fetch] Using proxy:', proxyUrl);
-                try {
-                    const proxyAgent = new ProxyAgent(proxyUrl);
-                    setGlobalDispatcher(proxyAgent);
-                    console.log('[Fetch] ProxyAgent mounted successfully!');
-                } catch (e) {
-                    console.warn('[Fetch] Failed to create ProxyAgent, falling back to direct:', e);
-                    import('undici').then(({ Agent }) => {
-                        const agent = new Agent({ keepAliveTimeout: 60000, connect: { timeout: 30000 } });
-                        setGlobalDispatcher(agent);
-                    }).catch(e2 => {
-                        console.error('[Fetch] Critical: Cannot load undici fallback:', e2);
-                    });
-                }
-            } else {
-                console.log('[Fetch] No proxy configured, using direct connection');
-                import('undici').then(({ Agent }) => {
-                    const agent = new Agent({ keepAliveTimeout: 60000, connect: { timeout: 30000 } });
-                    setGlobalDispatcher(agent);
-                }).catch(e2 => {
-                    console.error('[Fetch] Critical: Cannot load undici fallback:', e2);
-                });
-            }
-            fetcher = fetch;
-            console.log('undici mounted!');
-        })
-    } else if (process.env.HTTP_PROXY || process.env.http_proxy) {
-        console.warn('[Fetch] Skipping external undici dispatcher because this Node.js runtime lacks markAsUncloneable; using native fetch.');
-    }
-}
+const fetcher: typeof fetch = fetch;
 
 class FetchError extends Error {
     status: number = 500;

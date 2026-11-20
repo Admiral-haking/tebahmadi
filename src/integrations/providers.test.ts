@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSmsIrVerifyPayload } from './smsir';
+import { buildSmsIrVerifyPayload, mapSmsIrProviderError } from './smsir';
 import { mapTapinStatus, registerTapin } from './tapin';
 
 describe('SMS.ir integration contract', () => {
@@ -9,6 +9,10 @@ describe('SMS.ir integration contract', () => {
       templateId: 712555,
       parameters: [{ name: 'CODE', value: '2619' }],
     });
+  });
+
+  it('exposes an actionable error when SMS.ir has no credit', () => {
+    expect(mapSmsIrProviderError(400, 'اعتبار کافی نمیباشد')).toBe('sms_provider_insufficient_credit');
   });
 });
 

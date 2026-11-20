@@ -11,6 +11,23 @@ export interface SmsIrVerifyPayload {
   parameters: Array<{ name: string; value: string }>;
 }
 
+export function mapSmsIrProviderError(status: number, message?: string): string {
+  const normalized = (message ?? '').toLocaleLowerCase('fa-IR');
+  if (/(اعتبار|credit|balance)/i.test(normalized)) {
+    return 'sms_provider_insufficient_credit';
+  }
+  if (status === 401 || status === 403) {
+    return 'sms_provider_auth_failed';
+  }
+  if (status === 429) {
+    return 'sms_provider_rate_limited';
+  }
+  if (status === 400) {
+    return 'sms_provider_invalid_request';
+  }
+  return `sms_provider_failed_${status}`;
+}
+
 export function buildSmsIrVerifyPayload(
   mobile: string,
   templateId: number,
@@ -51,6 +68,6 @@ export async function sendSmsIrVerifyCode(
   });
   const body = await response.json().catch(() => null) as { status?: number; message?: string } | null;
   if (!response.ok || Number(body?.status) !== 1) {
-    throw new Error(`sms_provider_failed_${response.status}`);
+    throw new Error(mapSmsIrProviderError(response.status, body?.message));
   }
 }
