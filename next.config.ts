@@ -65,6 +65,8 @@ const nextConfig: NextConfig = {
 
     // Experimental features
     experimental: {
+        // The server has limited RAM; serial build workers avoid swap storms during deploys.
+        cpus: 1,
         optimizePackageImports: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
     },
 };
