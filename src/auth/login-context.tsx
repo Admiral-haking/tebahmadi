@@ -11,6 +11,7 @@ interface VerifyResponse {
 
 interface RequestCodeResponse {
   ok: boolean;
+  manual?: boolean;
 }
 
 const LoginContext = createContext<LoginContextValue | undefined>(undefined);
@@ -134,6 +135,7 @@ export function LoginProvider({ children }: ChildrenProps) {
   const [step, setStep] = useState<LoginStep>('idle');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [manualCode, setManualCode] = useState(false);
 
   const reset = useCallback(() => {
     setPhone('');
@@ -141,6 +143,7 @@ export function LoginProvider({ children }: ChildrenProps) {
     setStep('idle');
     setError(null);
     setIsSubmitting(false);
+    setManualCode(false);
   }, []);
 
   const requestCode = useCallback(async (inputPhone: string) => {
@@ -154,6 +157,7 @@ export function LoginProvider({ children }: ChildrenProps) {
 
     setIsSubmitting(true);
     setError(null);
+    setManualCode(false);
     setStep('requesting');
     try {
       const response = await fetch('/api/auth/request-code', {
@@ -175,6 +179,7 @@ export function LoginProvider({ children }: ChildrenProps) {
 
       setPhone(normalizedPhone);
       setCode('');
+      setManualCode(Boolean(data.manual));
       setStep('code-sent');
     } catch (err) {
       if (err instanceof Error) {
@@ -245,13 +250,14 @@ export function LoginProvider({ children }: ChildrenProps) {
       step,
       error,
       isSubmitting,
+      manualCode,
       requestCode,
       verifyCode,
       reset,
       setPhone,
       setCode,
     }),
-    [phone, code, step, error, isSubmitting, requestCode, verifyCode, reset],
+    [phone, code, step, error, isSubmitting, manualCode, requestCode, verifyCode, reset],
   );
 
   return <LoginContext.Provider value={value}>{children}</LoginContext.Provider>;

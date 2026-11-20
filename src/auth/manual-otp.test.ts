@@ -1,0 +1,11 @@
+import { describe, expect, it } from 'vitest';
+import { isManualOtpPhone } from './manual-otp';
+
+describe('manual OTP fallback', () => {
+  it('enables the fallback only for the configured normalized phone', () => {
+    expect(isManualOtpPhone('+989354395264', '+989354395264')).toBe(true);
+    expect(isManualOtpPhone('09354395264', '+989354395264')).toBe(false);
+    expect(isManualOtpPhone('+989123456789', '+989354395264')).toBe(false);
+    expect(isManualOtpPhone('+989354395264', undefined)).toBe(false);
+  });
+});

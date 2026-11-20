@@ -37,6 +37,7 @@ export interface LoginContextValue {
   step: LoginStep;
   error: string | null;
   isSubmitting: boolean;
+  manualCode: boolean;
   requestCode: (phone: string) => Promise<void>;
   verifyCode: (code: string) => Promise<void>;
   reset: () => void;

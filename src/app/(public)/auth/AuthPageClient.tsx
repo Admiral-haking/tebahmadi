@@ -192,7 +192,7 @@ export default function AuthPageClient() {
     const { user, status } = useAuth();
     const {
         phone, code, step, error, isSubmitting,
-        setPhone, setCode, requestCode, verifyCode, reset,
+        manualCode, setPhone, setCode, requestCode, verifyCode, reset,
     } = useLogin();
 
     const isCodeStep = step === "code-sent" || step === "verifying";
@@ -302,11 +302,11 @@ export default function AuthPageClient() {
                             <Typography variant="body2" color="text.secondary">
                                 {isCodeStep ? (
                                     <>
-                                        کد ۶ رقمی ارسال‌شده به{" "}
+                                        {manualCode ? "کد ورود ثبت‌شده را وارد کنید." : <>کد ۶ رقمی ارسال‌شده به{" "}
                                         <Box component="span" dir="ltr" sx={{ fontWeight: 700, fontFamily: "monospace" }}>
                                             {phone}
                                         </Box>{" "}
-                                        را وارد کنید.
+                                        را وارد کنید.</>}
                                     </>
                                 ) : (
                                     "برای ادامه، شماره موبایل خود را وارد کنید تا یک کد تایید برایتان ارسال شود."

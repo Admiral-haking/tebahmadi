@@ -5,6 +5,7 @@ import { jsonError } from '@/lib/http';
 import { requestCodeSchema } from '@/lib/schemas';
 import { sendLoginCode } from '@/lib/sms';
 import LoginCodeModel from '@/models/LoginCode';
+import { isManualOtpPhone } from '@/auth/manual-otp';
 
 const otp = customAlphabet('0123456789', 6);
 const CODE_TTL_MS = 5 * 60 * 1000;
@@ -57,6 +58,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await sendLoginCode(phone, code);
   } catch {
     // Provider/configuration details must never be exposed to customers.
+    if (isManualOtpPhone(phone, process.env.OTP_MANUAL_FALLBACK_PHONE)) {
+      return NextResponse.json({ ok: true, manual: true });
+    }
     return jsonError(502, 'login_unavailable');
   }
 
