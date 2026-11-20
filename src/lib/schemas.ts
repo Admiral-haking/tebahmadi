@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { OTP_LENGTH } from '../auth/otp';
 
 export const phoneSchema = z
   .string()
@@ -12,7 +13,7 @@ export const requestCodeSchema = z.object({
 
 export const verifyCodeSchema = z.object({
   phone: phoneSchema,
-  code: z.string().regex(/^\d{6}$/, 'Code must be a 6 digit string'),
+  code: z.string().regex(new RegExp(`^\\d{${OTP_LENGTH}}$`), `Code must be a ${OTP_LENGTH} digit string`),
 });
 
 const avatarSchema = z.object({

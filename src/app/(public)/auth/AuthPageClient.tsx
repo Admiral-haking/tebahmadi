@@ -16,6 +16,7 @@ import {
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
 import { useAuth, useLogin } from "@/auth";
+import { OTP_LENGTH, OTP_PATTERN } from "@/auth/otp";
 
 // ─── OTP Input ───────────────────────────────────────────────────────────────
 // The whole block is locked to LTR: a verification code reads left-to-right even
@@ -37,9 +38,9 @@ function OtpInput({
 }) {
     const refs = useRef<(HTMLInputElement | null)[]>([]);
     const [focused, setFocused] = useState<number | null>(null);
-    // `value` is a plain contiguous string of up to 6 ASCII digits. Box i shows
+    // `value` is a plain contiguous string of up to OTP_LENGTH ASCII digits. Box i shows
     // value[i]; the code always fills left-to-right.
-    const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? '');
+    const digits = Array.from({ length: OTP_LENGTH }, (_, i) => value[i] ?? '');
 
     /** Persian/Arabic-Indic digits → Latin, keep digits only. */
     function cleanDigits(raw: string): string {
@@ -50,7 +51,7 @@ function OtpInput({
     }
 
     function focusBox(i: number) {
-        refs.current[Math.max(0, Math.min(5, i))]?.focus();
+        refs.current[Math.max(0, Math.min(OTP_LENGTH - 1, i))]?.focus();
     }
 
     function handleChange(i: number, raw: string) {
@@ -58,15 +59,15 @@ function OtpInput({
         if (!cleaned) return;
         if (cleaned.length > 1) {
             // A whole code typed/autofilled into one box → spread from here.
-            const next = (value.slice(0, i) + cleaned).slice(0, 6);
+            const next = (value.slice(0, i) + cleaned).slice(0, OTP_LENGTH);
             onChange(next);
             focusBox(next.length);
             return;
         }
         // Replace this box's digit, keep the rest in place.
-        const next = (value.slice(0, i) + cleaned + value.slice(i + 1)).slice(0, 6);
+        const next = (value.slice(0, i) + cleaned + value.slice(i + 1)).slice(0, OTP_LENGTH);
         onChange(next);
-        if (i < 5) focusBox(i + 1);
+        if (i < OTP_LENGTH - 1) focusBox(i + 1);
     }
 
     function handleKeyDown(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
@@ -80,14 +81,14 @@ function OtpInput({
             }
         } else if (e.key === 'ArrowLeft' && i > 0) {
             focusBox(i - 1);
-        } else if (e.key === 'ArrowRight' && i < 5) {
+        } else if (e.key === 'ArrowRight' && i < OTP_LENGTH - 1) {
             focusBox(i + 1);
         }
     }
 
     function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
         e.preventDefault();
-        const pasted = cleanDigits(e.clipboardData.getData('text')).slice(0, 6);
+        const pasted = cleanDigits(e.clipboardData.getData('text')).slice(0, OTP_LENGTH);
         onChange(pasted);
         focusBox(pasted.length);
     }
@@ -219,12 +220,11 @@ export default function AuthPageClient() {
         return () => clearInterval(t);
     }, [resendIn]);
 
-    // Auto-submit once when all 6 digits are entered. Reset the guard whenever the
-    // code drops below 6 so a corrected code (even the same one) submits again,
-    // but a failed 6-digit code is never resubmitted on its own.
+    // Auto-submit once when all OTP digits are entered. Reset the guard whenever
+    // the code drops below OTP_LENGTH so a corrected code submits again.
     useEffect(() => {
-        if (code.length < 6) { lastTriedRef.current = ""; return; }
-        if (/^\d{6}$/.test(code) && step === "code-sent" && !isSubmitting && code !== lastTriedRef.current) {
+        if (code.length < OTP_LENGTH) { lastTriedRef.current = ""; return; }
+        if (OTP_PATTERN.test(code) && step === "code-sent" && !isSubmitting && code !== lastTriedRef.current) {
             lastTriedRef.current = code;
             void verifyCode(code);
         }
@@ -302,7 +302,7 @@ export default function AuthPageClient() {
                             <Typography variant="body2" color="text.secondary">
                                 {isCodeStep ? (
                                     <>
-                                        {manualCode ? "کد ورود ثبت‌شده را وارد کنید." : <>کد ۶ رقمی ارسال‌شده به{" "}
+                                        {manualCode ? "کد ورود ثبت‌شده را وارد کنید." : <>کد {OTP_LENGTH} رقمی ارسال‌شده به{" "}
                                         <Box component="span" dir="ltr" sx={{ fontWeight: 700, fontFamily: "monospace" }}>
                                             {phone}
                                         </Box>{" "}
@@ -379,7 +379,7 @@ export default function AuthPageClient() {
                                         type="submit"
                                         variant="contained"
                                         size="large"
-                                        disabled={isSubmitting || code.trim().length !== 6}
+                                        disabled={isSubmitting || code.trim().length !== OTP_LENGTH}
                                         color={isVerifying ? "success" : "primary"}
                                         fullWidth
                                         sx={{ borderRadius: 2, py: 1.25, fontWeight: 700 }}

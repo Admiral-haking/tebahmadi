@@ -6,8 +6,9 @@ import { requestCodeSchema } from '@/lib/schemas';
 import { sendLoginCode } from '@/lib/sms';
 import LoginCodeModel from '@/models/LoginCode';
 import { isManualOtpPhone } from '@/auth/manual-otp';
+import { OTP_LENGTH } from '@/auth/otp';
 
-const otp = customAlphabet('0123456789', 6);
+const otp = customAlphabet('0123456789', OTP_LENGTH);
 const CODE_TTL_MS = 5 * 60 * 1000;
 const REQUEST_COOLDOWN_MS = 60 * 1000;
 

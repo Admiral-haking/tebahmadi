@@ -11,6 +11,7 @@ import {
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import { useAuth, useLogin } from "@/auth";
+import { OTP_LENGTH, OTP_PATTERN } from "@/auth/otp";
 
 /** Persian/Arabic digits → Latin. */
 function toLatin(s: string): string {
@@ -34,18 +35,18 @@ export function useLoginDialog(): LoginDialogContextValue {
   return ctx;
 }
 
-// ─── 6-box OTP (clean, LTR, Persian-digit aware) ─────────────────────────────
+// ─── OTP (clean, LTR, Persian-digit aware) ───────────────────────────────────
 
 function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
   const refs = useRef<(HTMLInputElement | null)[]>([]);
-  const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? "");
+  const digits = Array.from({ length: OTP_LENGTH }, (_, i) => value[i] ?? "");
 
   // When the code step appears, put the cursor in the first empty box so the
   // user can type the code immediately. A short delay lets the dialog finish
   // mounting/animating so the focus reliably lands (no missed focus).
   useEffect(() => {
     const t = setTimeout(() => {
-      const firstEmpty = Math.min(value.replace(/\D/g, "").length, 5);
+      const firstEmpty = Math.min(value.replace(/\D/g, "").length, OTP_LENGTH - 1);
       refs.current[firstEmpty]?.focus();
     }, 60);
     return () => clearTimeout(t);
@@ -53,15 +54,15 @@ function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: 
   }, []);
 
   function clean(raw: string) { return toLatin(raw).replace(/\D/g, ""); }
-  function focus(i: number) { refs.current[Math.max(0, Math.min(5, i))]?.focus(); }
+  function focus(i: number) { refs.current[Math.max(0, Math.min(OTP_LENGTH - 1, i))]?.focus(); }
 
   function change(i: number, raw: string) {
     const c = clean(raw);
     if (!c) return;
-    if (c.length > 1) { const n = (value.slice(0, i) + c).slice(0, 6); onChange(n); focus(n.length); return; }
-    const n = (value.slice(0, i) + c + value.slice(i + 1)).slice(0, 6);
+    if (c.length > 1) { const n = (value.slice(0, i) + c).slice(0, OTP_LENGTH); onChange(n); focus(n.length); return; }
+    const n = (value.slice(0, i) + c + value.slice(i + 1)).slice(0, OTP_LENGTH);
     onChange(n);
-    if (i < 5) focus(i + 1);
+    if (i < OTP_LENGTH - 1) focus(i + 1);
   }
   function key(i: number, e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Backspace") {
@@ -69,11 +70,11 @@ function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: 
       if (value[i]) onChange(value.slice(0, i) + value.slice(i + 1));
       else if (i > 0) { onChange(value.slice(0, i - 1) + value.slice(i)); focus(i - 1); }
     } else if (e.key === "ArrowLeft" && i > 0) focus(i - 1);
-    else if (e.key === "ArrowRight" && i < 5) focus(i + 1);
+    else if (e.key === "ArrowRight" && i < OTP_LENGTH - 1) focus(i + 1);
   }
   function paste(e: ClipboardEvent<HTMLInputElement>) {
     e.preventDefault();
-    const p = clean(e.clipboardData.getData("text")).slice(0, 6);
+    const p = clean(e.clipboardData.getData("text")).slice(0, OTP_LENGTH);
     onChange(p); focus(p.length);
   }
 
@@ -140,10 +141,10 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
     }
   }, [status, open, reset]);
 
-  // Auto-submit the 6-digit code once (no resubmit loop on a wrong code).
+  // Auto-submit the four-digit code once (no resubmit loop on a wrong code).
   useEffect(() => {
-    if (code.length < 6) { lastTriedRef.current = ""; return; }
-    if (/^\d{6}$/.test(code) && step === "code-sent" && !isSubmitting && code !== lastTriedRef.current) {
+    if (code.length < OTP_LENGTH) { lastTriedRef.current = ""; return; }
+    if (OTP_PATTERN.test(code) && step === "code-sent" && !isSubmitting && code !== lastTriedRef.current) {
       lastTriedRef.current = code;
       void verifyCode(code);
     }
@@ -172,7 +173,7 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {isCodeStep
-                  ? <>کد ۶ رقمی ارسال‌شده به <Box component="span" dir="ltr" sx={{ fontWeight: 700 }}>{phone}</Box> را وارد کنید.</>
+                  ? <>کد {OTP_LENGTH} رقمی ارسال‌شده به <Box component="span" dir="ltr" sx={{ fontWeight: 700 }}>{phone}</Box> را وارد کنید.</>
                   : "برای ادامه، شماره موبایل خود را وارد کنید."}
               </Typography>
             </Stack>
@@ -206,7 +207,7 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
               <Stack spacing={2}>
                 <OtpBoxes value={code} onChange={setCode} disabled={isSubmitting} />
                 <Button variant="contained" size="large" onClick={() => verifyCode(code)}
-                  disabled={isSubmitting || !/^\d{6}$/.test(code)}
+                  disabled={isSubmitting || !OTP_PATTERN.test(code)}
                   sx={{ borderRadius: 2, py: 1.25, fontWeight: 700 }}>
                   {isSubmitting ? <CircularProgress size={22} color="inherit" /> : "تأیید و ورود"}
                 </Button>
