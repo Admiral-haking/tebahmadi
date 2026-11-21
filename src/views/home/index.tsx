@@ -6,6 +6,7 @@ import Categories from "./components/categories";
 import { loadSiteConfig, loadSiteInfo } from "@/lib/cache";
 import DiscountProducts from "./components/discount";
 import PopularProducts from "./components/popular";
+import NewestProducts from "./components/newest";
 import ConfigurableBanner from "./components/configurable-banner";
 import TrustBar from "./components/trust-bar";
 import InstagramBanner from "@/layout/components/instagram-banner";
@@ -124,6 +125,12 @@ export default async function HomeView() {
       <Suspense fallback={<ProductSectionFallback />}>
         <PopularProducts />
       </Suspense>
+
+      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
+        <Suspense fallback={<ProductSectionFallback />}>
+          <NewestProducts />
+        </Suspense>
+      </Container>
 
       <ConfigurableBanner
         imageUrl={homeBannerImageUrl}
