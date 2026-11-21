@@ -69,7 +69,7 @@ export default function Hero({
         >
           <Image
             alt={category.active.name}
-            src={category.mediaId ? '/api/media/' + category.mediaId : '/category.png'}
+            src="/tebahmadi-mark.svg"
             fill
             sizes="(max-width: 600px) 62px, 76px"
             style={{ objectFit: 'cover' }}

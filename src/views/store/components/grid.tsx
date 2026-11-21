@@ -98,7 +98,7 @@ function SubcategoryNav({ category }: { category: StoreCategoryContext }) {
                         },
                     }}>
                         <OptimizedImage
-                            src={parent.mediaId ? `/api/media/${parent.mediaId}` : '/category.png'}
+                            src="/tebahmadi-mark.svg"
                             alt={parent.name}
                             fill
                             loading="lazy"
@@ -160,7 +160,7 @@ function SubcategoryNav({ category }: { category: StoreCategoryContext }) {
                         },
                     }}>
                         <OptimizedImage
-                            src={child.mediaId ? `/api/media/${child.mediaId}` : '/category.png'}
+                            src="/tebahmadi-mark.svg"
                             alt={child.name}
                             fill
                             loading="lazy"
