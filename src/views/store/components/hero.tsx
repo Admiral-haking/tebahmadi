@@ -35,7 +35,19 @@ export default function Hero({
   const searchUrl = '/store/' + category.active.path;
 
   return (
-    <Stack gap={{ xs: 1.5, md: 2 }} alignItems={{ xs: 'stretch', md: 'center' }} direction={{ xs: 'column', md: 'row' }}>
+    <Stack
+      gap={{ xs: 2, md: 3 }}
+      alignItems={{ xs: 'stretch', md: 'center' }}
+      direction={{ xs: 'column', md: 'row' }}
+      sx={{
+        p: { xs: 2, sm: 2.5, md: 3 },
+        borderRadius: { xs: 4, md: 6 },
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
+        boxShadow: '0 14px 40px rgba(42, 90, 68, .07)',
+      }}
+    >
       <Stack
         direction="row"
         gap={{ xs: 1.25, md: 2 }}
@@ -47,12 +59,12 @@ export default function Hero({
             position: 'relative',
             width: { xs: 62, sm: 76 },
             height: { xs: 62, sm: 76 },
-            borderRadius: '50%',
+            borderRadius: 3,
             overflow: 'hidden',
             border: '1px solid',
             borderColor: 'divider',
             flexShrink: 0,
-            bgcolor: 'background.paper',
+            bgcolor: 'rgba(42, 90, 68, .06)',
           }}
         >
           <Image
@@ -66,11 +78,11 @@ export default function Hero({
 
         <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
           {siteTitle && (
-            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
               {siteTitle}
             </Typography>
           )}
-          <Typography variant="h4" sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}>
+          <Typography variant="h2" sx={{ fontSize: { xs: '1.35rem', sm: '1.65rem', md: '2rem' } }}>
             {category.active.name}
           </Typography>
           {breadcrumb && (

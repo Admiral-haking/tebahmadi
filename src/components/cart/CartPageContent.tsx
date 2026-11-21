@@ -337,7 +337,7 @@ export default function CartPageContent() {
   return (
     <>
 
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
 
         <Box sx={{ position: "relative", py: { xs: 3, md: 5 } }}>
           {/* Header */}
@@ -351,7 +351,7 @@ export default function CartPageContent() {
           </Stack>
 
           {/* Stepper (default styling; no custom colors) */}
-          <Paper elevation={0} sx={{ mb: 3, px: { xs: 2, md: 3 }, py: { xs: 1.5, md: 2 }, borderRadius: 2, border: 1, borderColor: "divider" }}>
+          <Paper elevation={0} sx={{ mb: 3, px: { xs: 1.5, md: 3 }, py: { xs: 1.5, md: 2 }, borderRadius: 4, border: 1, borderColor: "divider" }}>
             <Stepper alternativeLabel activeStep={activeStep}>
               {steps.map((label) => (
                 <Step key={label}>
@@ -366,11 +366,11 @@ export default function CartPageContent() {
           </Paper>
 
           {/* Main Content */}
-          <Grid container spacing={1}>
+          <Grid container spacing={{ xs: 2, md: 3 }} alignItems="flex-start">
             {showCart && (
               <Grid size={{ xs: 12, md: 8 }}>
                 <Stack spacing={2}>
-                  <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, border: 1, borderColor: "divider", boxShadow: "0 1px 3px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.04), 0 4px 12px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.04)" }}>
+                  <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, borderRadius: 4, border: 1, borderColor: "divider" }}>
                     <Stack spacing={2}>
                       <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Stack direction="row" spacing={1.2} alignItems="center">
@@ -414,7 +414,7 @@ export default function CartPageContent() {
                     </Stack>
                   </Paper>
                   {(isUpsellLoading || upsellProducts.length > 0) && (
-                    <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, border: 1, borderColor: "divider", boxShadow: "0 1px 3px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.04), 0 4px 12px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.04)" }}>
+                    <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, borderRadius: 4, border: 1, borderColor: "divider" }}>
                       <Stack spacing={2}>
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
                           <Typography variant="subtitle1" fontWeight={700}>
@@ -603,7 +603,7 @@ export default function CartPageContent() {
             {/* Middle: Progressive Details (Address + Shipping) */}
             {
               showAddress && <Grid size={{ xs: 12, md: 8 }}>
-                <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: 1, borderColor: "divider" }}>
+                <Paper elevation={0} sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 4, border: 1, borderColor: "divider" }}>
                   <Stack spacing={2}>
                     <Typography variant="subtitle1" fontWeight={700}>آدرس تحویل</Typography>
                     <AddressForm />
@@ -620,7 +620,7 @@ export default function CartPageContent() {
             <Grid size={{ xs: 12, md: 4 }}>
               <Box sx={{ position: { md: "sticky" }, top: { md: 88 }, zIndex: 1 }}>
 
-                <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: 1, borderColor: "divider" }}>
+                <Paper elevation={0} sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 4, border: 1, borderColor: "divider", position: { md: 'sticky' }, top: { md: 110 } }}>
                   {
                     activeStep === 1 && <Stack spacing={1}>
                       <Typography variant="subtitle1" fontWeight={700}>کد تخفیف</Typography>

@@ -154,8 +154,8 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
     <LoginDialogContext.Provider value={{ openLogin }}>
       {children}
       <Dialog open={open} onClose={() => !isSubmitting && close()} maxWidth="xs" fullWidth
-        slotProps={{ paper: { sx: { borderRadius: 4, overflow: "hidden" } } }}>
-        <Box sx={{ height: 5, background: "linear-gradient(90deg,var(--mui-palette-primary-main),var(--mui-palette-secondary-main),var(--mui-palette-error-main))" }} />
+        slotProps={{ paper: { sx: { borderRadius: 5, overflow: "hidden", boxShadow: "0 28px 80px -40px rgba(31,70,53,.65)" } } }}>
+        <Box sx={{ height: 4, bgcolor: "primary.main" }} />
         <DialogContent sx={{ p: { xs: 2.5, sm: 3 } }}>
           <IconButton size="small" onClick={close} disabled={isSubmitting}
             sx={{ position: "absolute", insetInlineEnd: 8, top: 8 }} aria-label="بستن">
@@ -164,8 +164,8 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
 
           <Stack spacing={2.5}>
             <Stack spacing={1} alignItems="center" textAlign="center">
-              <Box sx={{ width: 52, height: 52, borderRadius: "50%", display: "grid", placeItems: "center",
-                background: "linear-gradient(135deg,rgba(var(--mui-palette-primary-mainChannel) / 0.16),rgba(var(--mui-palette-error-mainChannel) / 0.16))" }}>
+              <Box sx={{ width: 52, height: 52, borderRadius: 3, display: "grid", placeItems: "center",
+                bgcolor: "primary.50", border: "1px solid", borderColor: "primary.100" }}>
                 <LockRoundedIcon color="primary" />
               </Box>
               <Typography variant="h6" fontWeight={800}>
@@ -198,7 +198,7 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
                     inputProps={{ inputMode: "numeric", dir: "ltr", style: { direction: "ltr", textAlign: "left", letterSpacing: 1, unicodeBidi: "plaintext" } }}
                   />
                   <Button type="submit" variant="contained" size="large" disabled={isSubmitting || !phone.trim()}
-                    sx={{ borderRadius: 2, py: 1.25, fontWeight: 700 }}>
+                    sx={{ borderRadius: 99, py: 1.3, fontWeight: 700 }}>
                     {isSubmitting ? <CircularProgress size={22} color="inherit" /> : "ارسال کد تأیید"}
                   </Button>
                 </Stack>
@@ -208,7 +208,7 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
                 <OtpBoxes value={code} onChange={setCode} disabled={isSubmitting} />
                 <Button variant="contained" size="large" onClick={() => verifyCode(code)}
                   disabled={isSubmitting || !OTP_PATTERN.test(code)}
-                  sx={{ borderRadius: 2, py: 1.25, fontWeight: 700 }}>
+                  sx={{ borderRadius: 99, py: 1.3, fontWeight: 700 }}>
                   {isSubmitting ? <CircularProgress size={22} color="inherit" /> : "تأیید و ورود"}
                 </Button>
                 <Button size="small" color="inherit" onClick={() => { setCode(""); reset(); }} disabled={isSubmitting}>

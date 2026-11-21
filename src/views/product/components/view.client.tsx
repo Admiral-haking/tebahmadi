@@ -817,8 +817,17 @@ export default function ProductDetailClient({
 
     return (
         <>
-            <Grid container spacing={2}>
-                <Grid size={{ xs: 12, md: 6 }}>
+            <Grid container spacing={{ xs: 2, md: 3 }} alignItems="flex-start">
+                <Grid
+                    size={{ xs: 12, md: 6 }}
+                    sx={{
+                        p: { xs: 1.5, sm: 2 },
+                        borderRadius: { xs: 4, md: 6 },
+                        bgcolor: "background.paper",
+                        border: "1px solid",
+                        borderColor: "divider",
+                    }}
+                >
                     {
                         isMobile && <>
                             <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap" aria-label="دسته بندی">
@@ -828,7 +837,7 @@ export default function ProductDetailClient({
                             </Stack>
 
                             <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-                                <Typography variant="h1" fontSize={28} fontWeight={600}>
+                                <Typography variant="h1" sx={{ fontSize: 26, fontWeight: 700 }}>
                                     {product.title}
                                 </Typography>
                                 <IconButton aria-label="اشتراک گذاری">
@@ -850,8 +859,9 @@ export default function ProductDetailClient({
                                 width: "100%",
                                 height: "100%",
                                 minHeight: { xs: 360, sm: 520, md: 420, lg: 480 },
-                                borderRadius: 2,
+                                borderRadius: { xs: 3, md: 5 },
                                 overflow: "hidden",
+                                bgcolor: "rgba(42, 90, 68, .045)",
                                 '&  *': {
                                     backgroundColor: 'transparent !important'
                                 }
@@ -888,9 +898,11 @@ export default function ProductDetailClient({
                                             sx={{
                                                 width: 72,
                                                 height: 72,
-                                                borderRadius: 1,
+                                                borderRadius: 2.5,
                                                 overflow: "hidden",
                                                 bgcolor: isActive ? "background.paper" : "background.default",
+                                                border: "2px solid",
+                                                borderColor: isActive ? "primary.main" : "divider",
                                                 cursor: "pointer",
                                             }}
                                         >
@@ -909,8 +921,18 @@ export default function ProductDetailClient({
                     </Stack>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Stack gap={2} sx={{ height: "100%" }}>
+                <Grid
+                    size={{ xs: 12, md: 6 }}
+                    sx={{
+                        p: { xs: 2, sm: 2.5, md: 3 },
+                        borderRadius: { xs: 4, md: 6 },
+                        bgcolor: "background.paper",
+                        border: "1px solid",
+                        borderColor: "divider",
+                        boxShadow: "0 14px 44px rgba(42, 90, 68, .07)",
+                    }}
+                >
+                    <Stack gap={2.25} sx={{ height: "100%" }}>
                         {
                             !isMobile && <>
                                 <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap" aria-label="دسته بندی">
@@ -920,7 +942,7 @@ export default function ProductDetailClient({
                                 </Stack>
 
                                 <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-                                    <Typography variant="h1" fontSize={28} fontWeight={600}>
+                                    <Typography variant="h1" sx={{ fontSize: { xs: 26, md: 32 }, fontWeight: 700 }}>
                                         {product.title}
                                     </Typography>
                                     <IconButton aria-label="اشتراک گذاری">
@@ -1017,7 +1039,22 @@ export default function ProductDetailClient({
                                 موجودی این گزینه به پایان رسیده است
                             </Typography>
                         ) : null}
-                        <Stack direction="row" gap={2} alignItems={{ xs: "stretch", sm: "center" }} sx={{ mt: 2 }}>
+                        <Stack
+                            direction={{ xs: "column", sm: "row" }}
+                            gap={1.5}
+                            alignItems={{ xs: "stretch", sm: "center" }}
+                            sx={{
+                                mt: 2,
+                                position: { xs: "sticky", md: "static" },
+                                bottom: { xs: 82, md: "auto" },
+                                zIndex: 10,
+                                p: { xs: 1, md: 0 },
+                                mx: { xs: -1, md: 0 },
+                                borderRadius: 3,
+                                bgcolor: { xs: "rgba(255,255,255,.94)", md: "transparent" },
+                                backdropFilter: { xs: "blur(12px)", md: "none" },
+                            }}
+                        >
                             <Stack spacing={0.5}>
                                 <Stack direction="row" alignItems="center">
                                     <IconButton
@@ -1071,7 +1108,7 @@ export default function ProductDetailClient({
                                             setSelectionErrors((prev) => prev.filter((error) => error.key !== "qty"));
                                         }}
                                         sx={{
-                                            p: 1,
+                                    p: 0.5,
                                             minWidth: 50,
                                             width: 60,
                                             textAlign: 'center',
@@ -1153,22 +1190,11 @@ export default function ProductDetailClient({
                                     position: "relative",
                                     mt: 2.5,
                                     p: { xs: 1.75, sm: 2.25 },
-                                    borderRadius: 1.5,
+                                    borderRadius: 3,
                                     overflow: "hidden",
                                     border: "1px solid",
-                                    borderColor: "rgba(var(--mui-palette-info-mainChannel) / 0.62)",
-                                    background:
-                                        "linear-gradient(135deg, rgba(var(--mui-palette-info-mainChannel) / 0.12), rgba(var(--mui-palette-background-paperChannel) / 0.96) 54%, rgba(var(--mui-palette-secondary-mainChannel) / 0.12))",
-                                    boxShadow:
-                                        "0 0 0 1px rgba(var(--mui-palette-info-mainChannel) / 0.14), 0 12px 30px rgba(var(--mui-palette-info-mainChannel) / 0.16), 0 0 34px rgba(var(--mui-palette-secondary-mainChannel) / 0.12)",
-                                    "&:before": {
-                                        content: '""',
-                                        position: "absolute",
-                                        inset: 0,
-                                        pointerEvents: "none",
-                                        background:
-                                            "linear-gradient(90deg, rgba(var(--mui-palette-info-mainChannel) / 0.16), transparent 34%, rgba(var(--mui-palette-secondary-mainChannel) / 0.16) 76%, transparent)",
-                                    },
+                                    borderColor: "divider",
+                                    background: "rgba(42, 90, 68, .045)",
                                 }}
                             >
                                 <Typography
@@ -1177,8 +1203,7 @@ export default function ProductDetailClient({
                                     mb={1}
                                     sx={{
                                         position: "relative",
-                                        color: "var(--mui-palette-info-main)",
-                                        textShadow: "0 0 14px rgba(var(--mui-palette-info-mainChannel) / 0.25)",
+                                        color: "primary.main",
                                     }}
                                 >
                                     توضیحات محصول
@@ -1308,7 +1333,7 @@ export default function ProductDetailClient({
                     <Stack gap={2} alignItems="center" justifyContent="center">
                         <svg xmlns="http://www.w3.org/2000/svg" width={100} height={100} viewBox="0 0 40 40">
                             <g fill="none" strokeMiterlimit={10}>
-                                <path fill="#ff52a1" stroke="#231f20" d="M.5 20a19.5 19.5 0 1 0 39 0a19.5 19.5 0 0 0-39 0Z" strokeWidth={1}></path>
+                                <path fill="#A54A4C" stroke="#7D383A" d="M.5 20a19.5 19.5 0 1 0 39 0a19.5 19.5 0 0 0-39 0Z" strokeWidth={1}></path>
                                 <path fill="#fff" stroke="#231f20" d="M30.08 25.41c-.16-.77-2.31-3.15-4.48-5.41c2.17-2.26 4.32-4.64 4.48-5.41c.46-.89-.63-2.11-1.59-3.08s-2.19-2-3.08-1.59c-.77.16-3.15 2.31-5.41 4.48c-2.26-2.17-4.64-4.32-5.41-4.48c-.89-.46-2.11.63-3.07 1.59s-2.06 2.19-1.6 3.08c.16.77 2.31 3.15 4.48 5.41c-2.17 2.26-4.32 4.64-4.48 5.41c-.46.89.63 2.11 1.59 3.08s2.19 2.05 3.08 1.59c.77-.16 3.15-2.31 5.41-4.48c2.26 2.17 4.64 4.32 5.41 4.48c.89.46 2.11-.63 3.08-1.59s2.05-2.19 1.59-3.08Z" strokeWidth={1}></path>
                                 <path stroke="#fff" strokeLinecap="round" d="M27.56 5a15.4 15.4 0 0 1 5.26 3.73" strokeWidth={1}></path>
                             </g>
@@ -1320,7 +1345,7 @@ export default function ProductDetailClient({
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setSelectionErrors([])} variant="contained">
-                        اوکی!
+                        متوجه شدم
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -1335,7 +1360,7 @@ export default function ProductDetailClient({
                         <svg xmlns="http://www.w3.org/2000/svg" width={150} height={150} viewBox="0 0 40 40">
                             <g fill="none" stroke="#00034a" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit={10} strokeWidth={1}>
                                 <path fill="#00034a" d="M28.875 4.312c2.42-2.258 4.85-1.367 6.643 0c2.39 1.871 4.626 4.889 3.076 7.949c-.522 1.604-3.273 6.35-7.592 12.044c-.925 1.22-1.77 2.344-2.544 3.373c-3.118 4.15-5.098 6.784-6.633 8.199c-1.676 1.546-3.384 1.467-5.283.445c-1.584-.853-3.67-2.442-6.238-4.399l-1.13-.861c-2.49-1.898-6.543-4.515-7.822-7.617c-1.252-1.68.312-4.213 1.68-6.007c1.366-1.795 3.492-3.93 5.456-3.17c1.159.141 3.958 2.05 7.507 4.745c.97-1.328 2.034-2.739 3.153-4.226l.026-.035c4.32-5.695 8.258-9.49 9.7-10.44"></path>
-                                <path fill="#9bff00" d="M35.518 4.312c-1.795-1.367-4.224-2.258-6.643 0c-1.443.95-5.382 4.745-9.7 10.44a380 380 0 0 0-3.18 4.26c-3.55-2.694-6.348-4.602-7.507-4.745c-1.964-.759-4.09 1.377-5.457 3.17c-1.366 1.794-2.932 4.327-1.68 6.008c.447 1.082 2.97 3.35 6.52 6.055c4.262 3.236 7.337 5.694 9.14 5.922c2.761 1.072 4.745-2.192 12.689-12.68c4.319-5.694 7.07-10.439 7.593-12.043c1.479-2.923-.03-5.02-1.775-6.387"></path>
+                                <path fill="#C5A059" d="M35.518 4.312c-1.795-1.367-4.224-2.258-6.643 0c-1.443.95-5.382 4.745-9.7 10.44a380 380 0 0 0-3.18 4.26c-3.55-2.694-6.348-4.602-7.507-4.745c-1.964-.759-4.09 1.377-5.457 3.17c-1.366 1.794-2.932 4.327-1.68 6.008c.447 1.082 2.97 3.35 6.52 6.055c4.262 3.236 7.337 5.694 9.14 5.922c2.761 1.072 4.745-2.192 12.689-12.68c4.319-5.694 7.07-10.439 7.593-12.043c1.479-2.923-.03-5.02-1.775-6.387"></path>
                             </g>
                         </svg>
                         <Typography variant="subtitle1">

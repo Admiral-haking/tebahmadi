@@ -3,16 +3,9 @@
 import { Box, Fab, IconButton, Stack } from "@mui/material";
 import { menu } from "../components/admin-menu";
 import Link from "next/link";
-import BarcodeFinder from "../components/barcode";
 
-const drawerOnlyMenuHrefs = new Set([
-    "/admin/marketplace-health",
-    "/admin/error-logs",
-    "/admin/payment-quality",
-    "/admin/inventory-comparison",
-]);
-
-const mobileQuickMenu = menu.filter((item) => !drawerOnlyMenuHrefs.has(item.href));
+const quickHrefs = new Set(["/admin", "/admin/orders", "/admin/catalog/products", "/admin/tracking"]);
+const mobileQuickMenu = menu.filter((item) => quickHrefs.has(item.href));
 
 export default function AdminHeaderMobile() {
     return <Stack
@@ -21,18 +14,23 @@ export default function AdminHeaderMobile() {
         alignItems="center"
         justifyContent="space-between"
         sx={{
-            p: 1,
+            px: 1.5,
+            py: 0.75,
             zIndex: 99,
             position: 'fixed',
             bottom: 0,
             right: 0,
             left: 0,
             display: { xs: 'flex', md: 'none' },
-            bgcolor: 'background.default'
+            bgcolor: 'rgba(255,255,255,.92)',
+            backdropFilter: 'blur(12px)',
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            pb: 'calc(6px + env(safe-area-inset-bottom))',
         }}
     >
         {
-            mobileQuickMenu.slice(2, 5).map(x => <IconButton
+            mobileQuickMenu.slice(0, 2).map(x => <IconButton
                 key={x.title}
                 LinkComponent={Link}
                 href={x.href}
@@ -41,8 +39,6 @@ export default function AdminHeaderMobile() {
             </IconButton>)
         }
 
-
-        <BarcodeFinder />
 
         <Box sx={{ minWidth: 56 }} />
         <Fab
@@ -53,7 +49,7 @@ export default function AdminHeaderMobile() {
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                top: 0,
+                top: 2,
                 mx: 'auto'
             }}
         >
@@ -63,7 +59,7 @@ export default function AdminHeaderMobile() {
         </Fab>
 
         {
-            mobileQuickMenu.slice(7, 11).map(x => <IconButton
+            mobileQuickMenu.slice(2, 4).map(x => <IconButton
                 key={x.title}
                 LinkComponent={Link}
                 href={x.href}

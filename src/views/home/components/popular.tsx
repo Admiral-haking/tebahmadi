@@ -9,21 +9,22 @@ export default async function PopularProducts() {
   const products = await loadPopular();
 
   return (
-    <Box
+    <Box component="section"
       sx={{
         width: '100%',
-        my: { xs: 3, md: 4 },
-        py: { xs: 2, md: 2.5 },
+        my: { xs: 3, md: 5 },
+        py: { xs: 2.5, md: 4 },
         minHeight: 250,
+        bgcolor: 'rgba(42, 90, 68, .055)',
       }}
     >
-      <Container maxWidth="md" sx={{ px: { xs: 1.5, sm: 2 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
         <Stack
-          direction={{ xs: 'column', sm: 'row' }}
+          direction="row"
           gap={{ xs: 1.5, sm: 2 }}
           alignItems={{ xs: 'stretch', sm: 'center' }}
         >
-          <Box component="svg" sx={{ width: { xs: 42, sm: 56, md: 64 }, height: { xs: 42, sm: 56, md: 64 } }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <Box component="svg" sx={{ color: 'secondary.main', width: { xs: 36, sm: 48 }, height: { xs: 36, sm: 48 }, flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}>
               <path d="M3 20h18"></path>
               <rect width={13} height={4} x={6} y={17} fill="currentColor" rx={2} transform="rotate(-90 6 17)"></rect>
@@ -31,14 +32,14 @@ export default async function PopularProducts() {
             </g>
           </Box>
           <Stack flex="1 1 auto">
-            <Typography variant="h4" sx={{ fontSize: { xs: '1.2rem', md: '2rem' } }}>
-              پرفروش ترین
+            <Typography variant="h3" sx={{ fontSize: { xs: '1.25rem', md: '2rem' } }}>
+              پرفروش‌ترین محصولات
             </Typography>
-            <Typography variant="subtitle1" sx={{ fontSize: { xs: '0.85rem', md: '1rem' } }}>
-              از بازار جا نمونی!
+            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+              انتخاب‌های محبوب مشتریان طب احمدی
             </Typography>
           </Stack>
-          <MegaButton color="primary" sx={{ width: { xs: '100%', sm: 'auto' } }} />
+          <MegaButton color="primary" sx={{ flexShrink: 0 }} />
         </Stack>
       </Container>
       <DiscountClient products={products} />

@@ -9,24 +9,17 @@ export default async function DiscountProducts() {
   const products = await loadDiscount();
 
   return (
-    <Box
-      sx={{
-        bgcolor: 'secondary.main',
-        width: '100%',
-        my: { xs: 3, md: 4 },
-        py: { xs: 2, md: 2.5 },
-        minHeight: 250,
-      }}
-    >
-      <Container maxWidth="md" sx={{ px: { xs: 1.5, sm: 2 } }}>
+    <Container component="section" maxWidth="lg" sx={{ my: { xs: 3, md: 5 }, px: { xs: 1.5, sm: 2 } }}>
+      <Box sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', borderRadius: { xs: 5, md: 8 }, py: { xs: 2.5, md: 4 }, overflow: 'hidden' }}>
+      <Box sx={{ px: { xs: 2, md: 4 } }}>
         <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          gap={{ xs: 1.5, sm: 2 }}
-          alignItems={{ xs: 'stretch', sm: 'center' }}
+          direction="row"
+          gap={{ xs: 1.25, sm: 2 }}
+          alignItems="center"
         >
           <Box
             component="svg"
-            sx={{ color: 'secondary.contrastText', width: { xs: 42, sm: 56, md: 64 }, height: { xs: 42, sm: 56, md: 64 } }}
+            sx={{ color: 'secondary.main', width: { xs: 36, sm: 48 }, height: { xs: 36, sm: 48 }, flexShrink: 0 }}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
           >
@@ -36,18 +29,19 @@ export default async function DiscountProducts() {
               <circle cx={7.5} cy={7.5} r={2.5}></circle>
             </g>
           </Box>
-          <Stack flex="1 1 auto" sx={{ color: 'secondary.contrastText' }}>
-            <Typography variant="h4" sx={{ fontSize: { xs: '1.2rem', md: '2rem' } }}>
+          <Stack flex="1 1 auto">
+            <Typography variant="h3" sx={{ fontSize: { xs: '1.25rem', md: '2rem' } }}>
               فروش ویژه
             </Typography>
-            <Typography variant="subtitle1" sx={{ fontSize: { xs: '0.85rem', md: '1rem' } }}>
-              فرصت رو از دست نده! از تخفیف های ما استفاده کن.
+            <Typography variant="body2" sx={{ opacity: .78, display: { xs: 'none', sm: 'block' } }}>
+              پیشنهادهای محدود با قیمت بهتر
             </Typography>
           </Stack>
-          <MegaButton color="primary" sx={{ width: { xs: '100%', sm: 'auto' } }} />
+          <MegaButton color="secondary" sx={{ flexShrink: 0 }} />
         </Stack>
-      </Container>
+      </Box>
       <DiscountClient products={products} />
-    </Box>
+      </Box>
+    </Container>
   );
 }

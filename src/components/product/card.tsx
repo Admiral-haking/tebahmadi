@@ -22,7 +22,8 @@
 
 import { Box, Card, CardContent, Chip, Stack, Typography } from "@mui/material";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import React from "react";
+import { useEffect, useState } from "react";
 import OptimizedImage from "../image";
 
 export type ProductCardProps = {
@@ -44,7 +45,7 @@ export type ProductCardProps = {
 
 const CURRENCY_LABEL = "تومان";
 const FALLBACK_IMAGE = "/sample.jpg";
-const ACCENT = "var(--mui-palette-error-main)";
+const ACCENT = "var(--mui-palette-primary-main)";
 const LOW_STOCK_THRESHOLD = 5;
 const WISHLIST_KEY = "app:wishlist:v1";
 
@@ -90,33 +91,6 @@ function useWishlist(id: string): [boolean, (e: React.MouseEvent) => void] {
         setSaved(set.has(id));
     };
     return [saved, toggle];
-}
-
-// ─── fade-in on scroll ────────────────────────────────────────────────────────
-
-function useInView<T extends HTMLElement>() {
-    const ref = useRef<T | null>(null);
-    const [inView, setInView] = useState(false);
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        if (typeof IntersectionObserver === "undefined") {
-            setInView(true);
-            return;
-        }
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0]?.isIntersecting) {
-                    setInView(true);
-                    observer.disconnect();
-                }
-            },
-            { rootMargin: "80px" },
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
-    return { ref, inView };
 }
 
 // ─── star rating (static-friendly) ────────────────────────────────────────────
@@ -172,37 +146,33 @@ export function ProductCard({
     const sizeCount = sizes.length;
     const lowStock = inStock && typeof stockCount === "number" && stockCount > 0 && stockCount < LOW_STOCK_THRESHOLD;
     const [saved, toggleWishlist] = useWishlist(id);
-    const { ref, inView } = useInView<HTMLDivElement>();
-
     const href = `/product/${slug}`;
 
     return (
         <Card
-            ref={ref}
             component="div"
             suppressHydrationWarning
             sx={{
                 position: "relative",
                 bgcolor: "var(--mui-palette-background-paper)",
-                borderRadius: 2.5,
+                borderRadius: { xs: 3, md: 4 },
                 border: "1px solid",
                 borderColor: "divider",
-                boxShadow: "none",
+                boxShadow: "0 6px 24px rgba(42, 90, 68, .055)",
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
-                opacity: inView ? 1 : 0,
-                transform: inView ? "translateY(0)" : "translateY(12px)",
-                transition: "opacity .45s ease, transform .45s ease, border-color .2s ease, box-shadow .2s ease",
+                transition: "transform .2s ease, border-color .2s ease, box-shadow .2s ease",
                 filter: inStock ? "none" : "grayscale(60%)",
                 "@media (hover: hover)": {
                     "&:hover": {
+                        transform: inStock ? "translateY(-3px)" : "none",
                         borderColor: inStock ? ACCENT : "divider",
-                        boxShadow: inStock ? `0 6px 22px -10px ${ACCENT}` : "none",
+                        boxShadow: inStock ? "0 16px 38px rgba(42, 90, 68, .12)" : "none",
                     },
                 },
-                "&:active": { transform: inView ? "translateY(0) scale(.997)" : undefined },
+                "&:active": { transform: "scale(.997)" },
             }}
         >
             {/* Wishlist heart */}
@@ -220,10 +190,10 @@ export function ProductCard({
                     borderRadius: "50%",
                     display: "grid",
                     placeItems: "center",
-                    bgcolor: "rgba(var(--mui-palette-common-onBackgroundChannel) / 0.45)",
-                    backdropFilter: "blur(4px)",
+                    bgcolor: "rgba(255,255,255,.9)",
+                    backdropFilter: "blur(8px)",
                     cursor: "pointer",
-                    color: saved ? ACCENT : "rgba(var(--mui-palette-common-backgroundChannel) / 0.85)",
+                    color: saved ? "error.main" : "primary.main",
                     transition: "color .2s ease, transform .15s ease",
                     "&:active": { transform: "scale(.9)" },
                 }}
@@ -239,7 +209,7 @@ export function ProductCard({
             </Box>
 
             <Link href={href} style={{ display: "block", pointerEvents: inStock ? "auto" : "none" }} tabIndex={inStock ? 0 : -1}>
-                <Box sx={{ position: "relative", width: "100%", aspectRatio: "1 / 1", overflow: "hidden", bgcolor: "var(--mui-palette-grey-900)" }}>
+                <Box sx={{ position: "relative", width: "100%", aspectRatio: "1 / 1", overflow: "hidden", bgcolor: "rgba(42, 90, 68, .06)" }}>
                     <OptimizedImage
                         alt={title}
                         src={imageUrl ?? FALLBACK_IMAGE}
@@ -259,9 +229,9 @@ export function ProductCard({
                                 position: "absolute",
                                 top: 8,
                                 right: 8,
-                                bgcolor: ACCENT,
+                                bgcolor: "error.main",
                                 color: "var(--mui-palette-common-white)",
-                                borderRadius: 1.5,
+                                borderRadius: 999,
                                 px: 0.9,
                                 py: 0.3,
                                 fontSize: 12,
@@ -308,8 +278,8 @@ export function ProductCard({
 
             <CardContent
                 sx={{
-                    p: 1.25,
-                    pb: "10px !important",
+                    p: { xs: 1.25, sm: 1.5 },
+                    pb: { xs: "12px !important", sm: "16px !important" },
                     display: "flex",
                     flexDirection: "column",
                     gap: 0.75,
@@ -323,7 +293,7 @@ export function ProductCard({
                     title={title}
                     sx={{
                         color: "text.primary",
-                        fontSize: 14,
+                        fontSize: { xs: 13, sm: 14.5 },
                         fontWeight: 600,
                         lineHeight: 1.6,
                         display: "-webkit-box",
@@ -337,7 +307,7 @@ export function ProductCard({
                     {title}
                 </Typography>
 
-                <StarRow rating={rating} reviewCount={reviewCount} />
+                {rating > 0 ? <StarRow rating={rating} reviewCount={reviewCount} /> : null}
 
                 {/* Meta: color count + size count */}
                 <Stack direction="row" alignItems="center" gap={0.75} flexWrap="wrap">
@@ -406,7 +376,7 @@ export function ProductCard({
                     sx={{
                         mt: 0.5,
                         minHeight: 44,
-                        borderRadius: 2,
+                        borderRadius: 999,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",

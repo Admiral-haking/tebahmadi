@@ -137,7 +137,7 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
                         </g>
                     </svg>
                 }
-                variant="text"
+                variant="outlined"
                 size="large"
                 onClick={handleOpen}
                 sx={{
@@ -146,6 +146,8 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
                     display: "flex",
                     gap: 1,
                     alignItems: "center",
+                    borderColor: "divider",
+                    minWidth: 112,
                 }}
             >
                 فیلتر

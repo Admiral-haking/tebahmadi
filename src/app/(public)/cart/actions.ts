@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { AUTH_COOKIE_NAME, verifyJwt } from '@/lib/auth';
 import { connectMongoose } from '@/lib/mongoose';
 import { previewInvoice, createInvoice, updateInvoiceStatus, type InvoicePricingInput } from '@/orders/services/invoiceService';
+import { normalizeAndValidateShippingAddress } from '@/orders/validation/shipping-address';
 import {
   checkSnappPayEligibilityForAmount,
   createPaymentForInvoice,
@@ -251,34 +252,6 @@ function normalizeLines(lines: CartStateInput['lines']) {
     .filter(Boolean) as Array<{ productId: string; variantId: string; qty?: number; requestedQty?: number; requestedUnit?: string }>;
 }
 
-function isAddressComplete(address: CartStateInput['address']): address is {
-  fname: string;
-  lname: string;
-  phone: string;
-  state?: string;
-  city?: string;
-  address?: string;
-  postalCode?: string;
-} {
-  if (!address) return false;
-  const { fname, lname, phone } = address;
-  return Boolean(fname && fname.trim() && lname && lname.trim() && phone && phone.trim());
-}
-
-function normalizeAddress(address: CartStateInput['address']) {
-  if (!address) return undefined;
-  const { fname, lname, phone, state, city, address: addr, postalCode } = address;
-  return {
-    fname: fname?.trim() ?? '',
-    lname: lname?.trim() ?? '',
-    phone: phone?.trim() ?? '',
-    state: state?.trim() || undefined,
-    city: city?.trim() || undefined,
-    address: addr?.trim() || undefined,
-    postalCode: postalCode?.trim() || undefined,
-  };
-}
-
 async function getAuthUserId(): Promise<string | null> {
   const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
   if (!token) return null;
@@ -312,12 +285,17 @@ export async function priceCartAction(rawState: CartStateInput): Promise<PriceCa
     return { status: 'empty', estimate };
   }
 
-  const addressComplete = isAddressComplete(parsed.address);
-  if (!parsed.transportId || !addressComplete) {
+  const normalizedAddress = normalizeAndValidateShippingAddress(parsed.address);
+  if (!parsed.transportId || !normalizedAddress.success) {
+    const message = !parsed.transportId
+      ? 'برای محاسبه هزینه ارسال، روش ارسال را انتخاب کنید.'
+      : normalizedAddress.success
+        ? 'اطلاعات گیرنده را کامل کنید.'
+        : normalizedAddress.error;
     return {
       status: 'incomplete',
       estimate,
-      message: 'برای محاسبه هزینه ارسال، روش ارسال و آدرس را تکمیل کنید.',
+      message,
     };
   }
 
@@ -334,7 +312,7 @@ export async function priceCartAction(rawState: CartStateInput): Promise<PriceCa
     userId,
     lines: normalizedLines,
     transportId: parsed.transportId,
-    address: normalizeAddress(parsed.address)!,
+    address: normalizedAddress.data,
     offerCode: parsed.offerCode?.trim() ? parsed.offerCode.trim().toUpperCase() : undefined,
     shippingPaymentMethod: parsed.shippingPaymentMethod,
   };
@@ -421,8 +399,9 @@ export async function checkoutAndPayAction(
     return { ok: false, error: 'لطفاً روش ارسال را انتخاب کنید.' };
   }
 
-  if (!isAddressComplete(parsed.address)) {
-    return { ok: false, error: 'لطفاً اطلاعات آدرس را تکمیل کنید.' };
+  const normalizedAddress = normalizeAndValidateShippingAddress(parsed.address);
+  if (!normalizedAddress.success) {
+    return { ok: false, error: normalizedAddress.error };
   }
 
   let userId: string;
@@ -436,7 +415,7 @@ export async function checkoutAndPayAction(
     userId,
     lines: normalizedLines,
     transportId: parsed.transportId,
-    address: normalizeAddress(parsed.address)!,
+    address: normalizedAddress.data,
     offerCode: parsed.offerCode?.trim() ? parsed.offerCode.trim().toUpperCase() : undefined,
     shippingPaymentMethod: parsed.shippingPaymentMethod,
   };

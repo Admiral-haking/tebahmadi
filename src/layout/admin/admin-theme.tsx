@@ -2,6 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
+import { brandTokens } from "@/theme/design-system";
 
 /**
  * Scoped visual polish for the admin panel only.
@@ -32,8 +33,9 @@ export default function AdminTheme({ children }: { children: ReactNode }) {
                         defaultProps: { elevation: 0 },
                         styleOverrides: {
                             root: {
-                                borderRadius: 12,
-                                boxShadow: "0 1px 2px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.04), 0 6px 18px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.06)",
+                                borderRadius: brandTokens.radius.card,
+                                border: `1px solid ${brandTokens.color.border}`,
+                                boxShadow: brandTokens.shadow.subtle,
                             },
                         },
                     },
@@ -41,7 +43,7 @@ export default function AdminTheme({ children }: { children: ReactNode }) {
                         defaultProps: { disableElevation: true },
                         styleOverrides: {
                             root: {
-                                borderRadius: 10,
+                                borderRadius: brandTokens.radius.control,
                                 textTransform: "none",
                                 fontWeight: 600,
                                 transition: "transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease",
@@ -53,12 +55,17 @@ export default function AdminTheme({ children }: { children: ReactNode }) {
                     },
                     MuiChip: {
                         styleOverrides: {
-                            root: { borderRadius: 8, fontWeight: 500 },
+                            root: { borderRadius: brandTokens.radius.pill, fontWeight: 600 },
                         },
                     },
                     MuiTableHead: {
                         styleOverrides: {
                             root: { "& th": { fontWeight: 700 } },
+                        },
+                    },
+                    MuiTableContainer: {
+                        styleOverrides: {
+                            root: { borderRadius: brandTokens.radius.control, border: `1px solid ${brandTokens.color.border}` },
                         },
                     },
                 },

@@ -42,10 +42,10 @@ export const addressSchema = z.object({
   fname: zStringNonEmpty,
   lname: zStringNonEmpty,
   phone: zStringNonEmpty,
-  state: zStringNonEmpty.optional(),
-  city: zStringNonEmpty.optional(),
-  address: zStringNonEmpty.optional(),
-  postalCode: zStringNonEmpty.optional(),
+  state: zStringNonEmpty,
+  city: zStringNonEmpty,
+  address: zStringNonEmpty,
+  postalCode: z.string().trim().regex(/^\d{10}$/, 'postal_code_invalid'),
 });
 
 export const invoicePricingSchema = z.object({
