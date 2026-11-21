@@ -46,6 +46,7 @@ export default async function Logo({ size = 40, showName = false }: { size?: num
               background: 'transparent',
             }}
             priority={false}
+            transparentBackground
           />
         </Box>
       ) : (

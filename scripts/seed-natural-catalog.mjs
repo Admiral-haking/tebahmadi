@@ -21,6 +21,7 @@ await mongoose.connect(uri);
 const db = mongoose.connection;
 const productTypes = db.collection('producttypes');
 const categories = db.collection('categories');
+const products = db.collection('products');
 
 const types = [
   {
@@ -81,5 +82,34 @@ for (const [name, slug, typeName] of categoryRows) {
   );
 }
 
-console.log(`کاتالوگ آزمایشی آماده شد: ${types.length} نوع محصول و ${categoryRows.length} دسته‌بندی`);
+const categoryIds = new Map();
+for (const [, slug] of categoryRows) {
+  const category = await categories.findOne({ path: slug }, { projection: { _id: 1 } });
+  if (category) categoryIds.set(slug, category._id);
+}
+
+const sampleProducts = [
+  { slug: 'gol-gavzaban', title: 'گل گاوزبان ممتاز', type: 'گیاه دارویی و ادویه', category: 'herbal-plants', price: 185000, weight: 100, attrs: { origin: 'دامنه‌های البرز', form: 'خشک', ingredients: 'گل گاوزبان خالص', usage: 'یک قاشق غذاخوری در یک لیوان آب جوش؛ ۱۵ دقیقه دم بکشد.', warning: 'در صورت بارداری یا مصرف دارو با پزشک مشورت شود.' } },
+  { slug: 'herbal-tea-relax', title: 'دمنوش آرامش شب', type: 'دمنوش و ترکیب گیاهی', category: 'herbal-teas', price: 240000, weight: 80, attrs: { ingredients: 'گل محمدی، به‌لیمو و اسطوخودوس', brewing: 'یک قاشق در آب جوش، ۱۰ دقیقه دم‌آوری', usage: 'روزانه یک تا دو فنجان', warning: 'حساسیت به ترکیبات را بررسی کنید.' } },
+  { slug: 'honey-mountain', title: 'عسل کوهستان طبیعی', type: 'عسل و فرآورده طبیعی', category: 'honey-natural', price: 420000, weight: 500, attrs: { source: 'کوهستان', ingredients: 'عسل خالص', storage: 'در جای خشک و خنک، دور از نور مستقیم', warning: 'برای کودکان زیر یک سال توصیه نمی‌شود.' } },
+];
+for (const item of sampleProducts) {
+  const type = typeIds.get(item.type);
+  const categoryId = categoryIds.get(item.category);
+  const now = new Date();
+  await products.updateOne(
+    { slug: item.slug },
+    { $set: {
+      productTypeId: type, typeVersion: 1, title: item.title, slug: item.slug,
+      description: `محصول طبیعی ${item.title} با اطلاعات روشن برای خرید آگاهانه.`, brand: 'طب احمدی',
+      attributeValues: [{ key: 'weightGrams', value: item.weight }], attrs: { ...item.attrs, weightGrams: item.weight },
+      categories: categoryId ? [categoryId] : [], searchableText: `${item.title} ${Object.values(item.attrs).join(' ')}`,
+      status: 'active', showInCart: true, seoTitle: `${item.title} | طب احمدی`, seoDescription: `خرید ${item.title} از فروشگاه طب احمدی.`,
+      variants: [{ sku: `TA-${item.slug.toUpperCase()}`, attributeValues: [{ key: 'weightGrams', value: item.weight }], price: { model: 'fixed', amount: item.price, unitOfMeasure: 'unit' }, inventory: { trackingUnit: 'unit', quantity: 25, lowStockThreshold: 5 }, active: true, updatedAt: now, createdAt: now }], updatedAt: now,
+    }, $setOnInsert: { createdAt: now } },
+    { upsert: true },
+  );
+}
+
+console.log(`کاتالوگ آزمایشی آماده شد: ${types.length} نوع محصول، ${categoryRows.length} دسته‌بندی و ${sampleProducts.length} محصول`);
 await mongoose.disconnect();
