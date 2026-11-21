@@ -74,6 +74,7 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
           >
             <OptimizedImage
               src={category.mediaId ? '/api/media/' + category.mediaId : '/tebahmadi-mark.svg'}
+              fallbackSrc="/tebahmadi-mark.svg"
               alt={category.name || 'category'}
               fill
               priority={index < 5}
