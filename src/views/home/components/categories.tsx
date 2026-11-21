@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Box, Container, Stack, Typography } from "@mui/material";
 import { Coffee, Droplets, Flame, FlaskConical, Leaf, Sparkles } from "lucide-react";
@@ -41,7 +42,7 @@ export default async function Categories({
                     gap: { xs: 1.5, sm: 2 },
                 }}
             >
-                {categories.slice(0, 6).map((category) => {
+                {categories.slice(0, 12).map((category) => {
                     const Icon = resolveCategoryIcon(category.slug, category.name);
                     return (
                         <Stack
@@ -69,6 +70,8 @@ export default async function Categories({
                                     width: { xs: 56, sm: 68 },
                                     height: { xs: 56, sm: 68 },
                                     borderRadius: "50%",
+                                    overflow: "hidden",
+                                    position: "relative",
                                     display: "grid",
                                     placeItems: "center",
                                     bgcolor: TEB_COLORS.softSurface,
@@ -76,7 +79,17 @@ export default async function Categories({
                                     color: TEB_COLORS.primary,
                                 }}
                             >
-                                <Icon size={26} strokeWidth={1.7} />
+                                {category.mediaId ? (
+                                    <Image
+                                        src={`/api/media/${category.mediaId}`}
+                                        alt={category.name}
+                                        fill
+                                        sizes="68px"
+                                        style={{ objectFit: "cover" }}
+                                    />
+                                ) : (
+                                    <Icon size={26} strokeWidth={1.7} />
+                                )}
                             </Box>
                             <Typography
                                 variant="body2"

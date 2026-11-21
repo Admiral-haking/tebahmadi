@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { Box, Card, CardContent, Divider, Stack, Typography } from "@mui/material";
 import { ShoppingBag } from "lucide-react";

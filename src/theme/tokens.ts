@@ -4,6 +4,7 @@ export const TEB_COLORS = {
     primaryLight: "#3D7359",
     background: "#F9F8F6",
     softSurface: "#F4F3E5",
+    surfaceSoft: "#F4F3E5",
     surface: "#FFFFFF",
     gold: "#C5A059",
     goldSoft: "#EFE7D6",

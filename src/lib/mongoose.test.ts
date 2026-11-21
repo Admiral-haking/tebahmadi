@@ -9,7 +9,7 @@ describe('connectMongoose and isMongoConfigured', () => {
   };
 
   beforeEach(() => {
-    delete process.env.MONGO_URI;
+    delete (process.env as Record<string, string | undefined>).MONGO_URI;
     globalWithMongoose.__mongooseConnection = undefined;
     Object.defineProperty(mongoose.connection, 'readyState', {
       value: 0,
@@ -22,7 +22,7 @@ describe('connectMongoose and isMongoConfigured', () => {
     vi.restoreAllMocks();
     globalWithMongoose.__mongooseConnection = undefined;
     if (originalMongoUri === undefined) {
-      delete process.env.MONGO_URI;
+      delete (process.env as Record<string, string | undefined>).MONGO_URI;
     } else {
       process.env.MONGO_URI = originalMongoUri;
     }

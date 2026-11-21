@@ -72,12 +72,16 @@ export async function GET(
   const params = await context.params;
   if (!isMongoConfigured()) {
     const match = PREVIEW_PRODUCTS.find(
-      (item) => item.id === params.id || item._id === params.id || item.slug === params.id,
+      (item) =>
+        item.card.id === params.id ||
+        item.card.slug === params.id ||
+        item.detail.id === params.id ||
+        item.detail.slug === params.id,
     );
     if (!match) {
       return jsonError(404, 'Product not found');
     }
-    return NextResponse.json({ product: match });
+    return NextResponse.json({ product: match.detail });
   }
   await connectMongoose();
   const product = await getProduct(params.id);
