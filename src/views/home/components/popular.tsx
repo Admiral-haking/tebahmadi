@@ -7,6 +7,9 @@ import MegaButton from './mega-button';
 
 export default async function PopularProducts() {
   const products = await loadPopular();
+  if (!products || products.length === 0) {
+    return null;
+  }
 
   return (
     <Box component="section"

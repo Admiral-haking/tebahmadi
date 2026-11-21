@@ -2,6 +2,7 @@
 
 import { Box, Container, Grid, Skeleton, Stack } from "@mui/material";
 import { Suspense } from "react";
+import InstagramBanner from "@/layout/components/instagram-banner";
 import Categories from "./components/categories";
 import { loadSiteConfig, loadSiteInfo } from "@/lib/cache";
 import DiscountProducts from "./components/discount";
@@ -9,6 +10,25 @@ import NewestProducts from "./components/newest";
 import PopularProducts from "./components/popular";
 import ConfigurableBanner from "./components/configurable-banner";
 import TrustBar from "./components/trust-bar";
+
+function HeroBannerFallback() {
+  return (
+    <Box sx={{ width: "100%", py: { xs: 1.5, md: 2 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
+        <Skeleton
+          variant="rounded"
+          sx={{
+            width: "100%",
+            aspectRatio: { xs: "16 / 9", sm: "16 / 7.5", md: "21 / 9", lg: "2.4 / 1" },
+            minHeight: { xs: 180, sm: 220, md: 280, lg: 320 },
+            maxHeight: { xs: 280, sm: 360, md: 440, lg: 480 },
+            borderRadius: { xs: 3, sm: 4, md: 5 },
+          }}
+        />
+      </Container>
+    </Box>
+  );
+}
 
 function CategoriesFallback() {
   return (
@@ -107,6 +127,10 @@ export default async function HomeView() {
 
   return (
     <>
+      <Suspense fallback={<HeroBannerFallback />}>
+        <InstagramBanner />
+      </Suspense>
+
       <Container
         maxWidth="lg"
         sx={{ position: "relative", px: { xs: 1.5, sm: 2 } }}

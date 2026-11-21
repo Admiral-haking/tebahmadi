@@ -8,6 +8,7 @@ import ProductTypeModel from "@/catalog/models/ProductType";
 import type { AttributeDef } from "@/catalog/models/ProductType";
 import { connectMongoose, isMongoConfigured } from "@/lib/mongoose";
 import MediaModel from "@/models/Media";
+import { PREVIEW_CATEGORIES, getPreviewStoreCategoryContext } from "@/lib/preview-fallback";
 
 export type StoreFilterAttributeOption = {
     value: string;
@@ -194,6 +195,8 @@ export async function loadStoreCategoryContext(slugSegments: string[]): Promise<
         .lean()
         .exec();
     if (!rootCategory) {
+        const previewContext = getPreviewStoreCategoryContext(segments);
+        if (previewContext) return previewContext;
         throw new Error("Category not found");
     }
 
@@ -382,13 +385,16 @@ const loadRootCategoriesCached = unstable_cache(
 );
 
 export async function loadRootCategories(): Promise<StoreCategorySummary[]> {
-    if (!isMongoConfigured()) {
-        return [];
+    let categories: StoreCategorySummary[] = [];
+    if (isMongoConfigured()) {
+        try {
+            categories = await loadRootCategoriesCached();
+        } catch (error) {
+            console.warn("loadRootCategories failed; returning empty list", error);
+        }
     }
-    try {
-        return await loadRootCategoriesCached();
-    } catch (error) {
-        console.warn("loadRootCategories failed; returning empty list", error);
-        return [];
+    if (categories.length === 0) {
+        return PREVIEW_CATEGORIES;
     }
+    return categories;
 }

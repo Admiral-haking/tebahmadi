@@ -5,6 +5,9 @@ import MegaButton from './mega-button';
 
 export default async function NewestProducts() {
   const products = await loadNewest();
+  if (!products || products.length === 0) {
+    return null;
+  }
 
   return (
     <Box component="section" sx={{ my: { xs: 4, md: 7 } }}>

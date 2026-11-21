@@ -124,10 +124,10 @@ function isPublic(pathname: string, method: string): boolean {
     return true;
   }
 
-  if (pathname.startsWith('/api/media/') && upper === 'GET') {
+  if (pathname.startsWith('/api/media/') && (upper === 'GET' || upper === 'HEAD')) {
     return true;
   }
-  if (pathname.startsWith('/api/slides') && upper === 'GET') {
+  if (pathname.startsWith('/api/slides') && (upper === 'GET' || upper === 'HEAD')) {
     return true;
   }
 

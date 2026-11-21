@@ -7,6 +7,9 @@ import MegaButton from './mega-button';
 
 export default async function DiscountProducts() {
   const products = await loadDiscount();
+  if (!products || products.length === 0) {
+    return null;
+  }
 
   return (
     <Container component="section" maxWidth="lg" sx={{ my: { xs: 3, md: 5 }, px: { xs: 1.5, sm: 2 } }}>

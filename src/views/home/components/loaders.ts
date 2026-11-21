@@ -5,6 +5,11 @@ import { loadDiscountProducts, loadNewestProducts, loadPopularProducts } from "@
 import MediaModel from "@/models/Media";
 import { formatFinalProduct } from "@/views/store/components/product-loader";
 import { Types } from "mongoose";
+import {
+    getPreviewDiscountProducts,
+    getPreviewNewestProducts,
+    getPreviewPopularProducts,
+} from "@/lib/preview-fallback";
 
 export async function loadPopular() {
     const { items } = await loadPopularProducts();
@@ -44,6 +49,10 @@ export async function loadPopular() {
     }
 
     const products: ProductCardProps[] = (await Promise.all(items.map(async (product) => await formatFinalProduct(product, mediaMap)))).filter((product) => product.inStock);
+
+    if (products.length === 0) {
+        return getPreviewPopularProducts().items;
+    }
 
     return products;
 }
@@ -87,6 +96,10 @@ export async function loadDiscount() {
 
     const products: ProductCardProps[] = (await Promise.all(items.map(async (product) => await formatFinalProduct(product, mediaMap)))).filter((product) => product.inStock);
 
+    if (products.length === 0) {
+        return getPreviewDiscountProducts().items;
+    }
+
     return products;
 }
 export async function loadNewest() {
@@ -127,6 +140,10 @@ export async function loadNewest() {
     }
 
     const products: ProductCardProps[] = (await Promise.all(items.map(async (product) => await formatFinalProduct(product, mediaMap)))).filter((product) => product.inStock);
+
+    if (products.length === 0) {
+        return getPreviewNewestProducts().items;
+    }
 
     return products;
 }

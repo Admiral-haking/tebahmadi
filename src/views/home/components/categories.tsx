@@ -6,6 +6,9 @@ import Link from 'next/link';
 
 export default async function Categories({ siteInfo }: { siteInfo: SiteInfoDocument }) {
   const categories = await loadRootCategories();
+  if (!categories || categories.length === 0) {
+    return null;
+  }
 
   return (
     <Box sx={{ my: { xs: 3, md: 5 } }}>
@@ -85,7 +88,11 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
             }}
           >
             <OptimizedImage
-              src={category.mediaId ? '/api/media/' + category.mediaId : '/category.png'}
+              src={
+                category.mediaId
+                  ? '/api/media/' + category.mediaId
+                  : (category as unknown as { imageUrl?: string }).imageUrl || '/category.png'
+              }
               alt={category.name || 'category'}
               fill
               priority={index < 5}

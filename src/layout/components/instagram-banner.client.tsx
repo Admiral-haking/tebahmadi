@@ -95,22 +95,25 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
   const hasDots = items.length > 1;
 
   return (
-    <Box sx={{ width: '100%', py: { xs: 1, md: 1.5 } }}>
-      <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 2 } }}>
-        <Stack alignItems="center" gap={1.25} sx={{ width: '100%', position: 'relative', overflow: 'hidden' }}>
-          <Link href={href} style={{ textDecoration: 'none', display: 'block', width: '100%' }}>
-            <Box
-              sx={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: { xs: '16 / 9', sm: '16 / 6.2', md: '16 / 6', lg: '16 / 5.8' },
-                minHeight: { xs: 168, sm: 188, md: 250, lg: 285 },
-                maxHeight: { xs: 260, sm: 320, md: 420, lg: 460 },
-                borderRadius: 0,
-                overflow: 'hidden',
-                bgcolor: 'background.default',
-              }}
-            >
+    <Box sx={{ width: '100%', py: { xs: 1.5, md: 2 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
+        <Stack alignItems="center" sx={{ width: '100%', position: 'relative' }}>
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              aspectRatio: { xs: '16 / 9', sm: '16 / 7.5', md: '21 / 9', lg: '2.4 / 1' },
+              minHeight: { xs: 180, sm: 220, md: 280, lg: 320 },
+              maxHeight: { xs: 280, sm: 360, md: 440, lg: 480 },
+              borderRadius: { xs: 3, sm: 4, md: 5 },
+              overflow: 'hidden',
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              boxShadow: '0 10px 32px rgba(42, 90, 68, 0.08)',
+            }}
+          >
+            <Link href={href} style={{ textDecoration: 'none', display: 'block', width: '100%', height: '100%' }}>
               <picture>
                 <source media={DESKTOP_BREAKPOINT} srcSet={desktopSrcSet} />
                 <source media="(max-width: 899px)" srcSet={mobileSrcSet} />
@@ -122,108 +125,128 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                   style={{
                     width: '100%',
                     height: '100%',
-                    objectFit: "contain",
+                    objectFit: "cover",
                     display: 'block',
                     backgroundColor: 'transparent',
                   }}
                 />
               </picture>
+            </Link>
 
-              {isLoading && !active && (
-                <Skeleton
-                  variant="rectangular"
-                  sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(var(--mui-palette-common-backgroundChannel) / 0.2)' }}
-                />
-              )}
-            </Box>
-          </Link>
+            {isLoading && !active && (
+              <Skeleton
+                variant="rectangular"
+                sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(var(--mui-palette-common-backgroundChannel) / 0.2)' }}
+              />
+            )}
 
-          {hasDots && (
-            <Stack direction="row" spacing={1}>
-              {items.map((item, idx) => (
-                <IconButton
-                  key={item.id}
-                  type="button"
-                  aria-label={`نمایش بنر ${idx + 1}`}
-                  aria-current={idx === index ? 'true' : undefined}
-                  onClick={() => setIndex(idx)}
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    p: 0.75,
-                    '&:hover': { bgcolor: 'action.hover' },
-                    '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
-                  }}
-                >
-                  <Box
-                    aria-hidden="true"
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      bgcolor: 'primary.main',
-                      transition: 'opacity 150ms ease',
-                      opacity: idx === index ? 1 : 0.35,
-                    }}
-                  />
-                </IconButton>
-              ))}
-            </Stack>
-          )}
-
-          {items.length > 1 && (
-            <>
+            {hasDots && (
               <Stack
+                direction="row"
+                spacing={0.75}
                 alignItems="center"
-                justifyContent="center"
                 sx={{
                   position: 'absolute',
-                  right: 0,
-                  top: 0,
-                  bottom: 18,
+                  bottom: { xs: 10, sm: 14 },
+                  left: '50%',
+                  transform: 'translateX(-50%)',
                   zIndex: 2,
+                  bgcolor: 'rgba(0, 0, 0, 0.3)',
+                  backdropFilter: 'blur(8px)',
+                  px: 1.25,
+                  py: 0.5,
+                  borderRadius: '9999px',
                 }}
               >
+                {items.map((item, idx) => (
+                  <Box
+                    key={item.id}
+                    component="button"
+                    type="button"
+                    aria-label={`نمایش بنر ${idx + 1}`}
+                    aria-current={idx === index ? 'true' : undefined}
+                    onClick={() => setIndex(idx)}
+                    sx={{
+                      width: idx === index ? 22 : 8,
+                      height: 8,
+                      p: 0,
+                      border: 'none',
+                      cursor: 'pointer',
+                      borderRadius: '9999px',
+                      bgcolor: idx === index ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)',
+                      transition: 'all 200ms ease',
+                      '&:hover': { bgcolor: '#FFFFFF' },
+                      '&:focus-visible': { outline: '2px solid', outlineColor: '#FFFFFF', outlineOffset: 2 },
+                    }}
+                  />
+                ))}
+              </Stack>
+            )}
+
+            {items.length > 1 && (
+              <>
                 <IconButton
                   aria-label="banner-prev"
-                  sx={{ bgcolor: 'background.paper' }}
                   onClick={() => setIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1))}
+                  sx={{
+                    position: 'absolute',
+                    right: { xs: 8, sm: 14 },
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    zIndex: 2,
+                    bgcolor: 'rgba(255, 255, 255, 0.88)',
+                    backdropFilter: 'blur(8px)',
+                    color: 'primary.main',
+                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
+                    width: { xs: 34, sm: 40 },
+                    height: { xs: 34, sm: 40 },
+                    transition: 'all 160ms ease',
+                    '&:hover': {
+                      bgcolor: '#FFFFFF',
+                      transform: 'translateY(-50%) scale(1.08)',
+                    },
+                  }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={28} height={28} viewBox="0 0 16 16">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 16 16">
                     <path fill="currentColor" fillRule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5"></path>
                   </svg>
                 </IconButton>
-              </Stack>
 
-              <Stack
-                alignItems="center"
-                justifyContent="center"
-                sx={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 18,
-                  zIndex: 2,
-                }}
-              >
                 <IconButton
                   aria-label="banner-next"
-                  sx={{ bgcolor: 'background.paper' }}
                   onClick={() => setIndex((prev) => (prev + 1) % items.length)}
+                  sx={{
+                    position: 'absolute',
+                    left: { xs: 8, sm: 14 },
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    zIndex: 2,
+                    bgcolor: 'rgba(255, 255, 255, 0.88)',
+                    backdropFilter: 'blur(8px)',
+                    color: 'primary.main',
+                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
+                    width: { xs: 34, sm: 40 },
+                    height: { xs: 34, sm: 40 },
+                    transition: 'all 160ms ease',
+                    '&:hover': {
+                      bgcolor: '#FFFFFF',
+                      transform: 'translateY(-50%) scale(1.08)',
+                    },
+                  }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={28} height={28} viewBox="0 0 16 16">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 16 16">
                     <path fill="currentColor" fillRule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8"></path>
                   </svg>
                 </IconButton>
-              </Stack>
-            </>
-          )}
+              </>
+            )}
+          </Box>
 
           {error && (
             <Skeleton
               variant="text"
               width={180}
-              sx={{ bgcolor: 'rgba(var(--mui-palette-common-backgroundChannel) / 0.5)', fontSize: 12, textAlign: 'center' }}
+              sx={{ bgcolor: 'rgba(var(--mui-palette-common-backgroundChannel) / 0.5)', fontSize: 12, textAlign: 'center', mt: 1 }}
             />
           )}
         </Stack>

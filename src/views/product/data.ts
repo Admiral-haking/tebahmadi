@@ -245,7 +245,7 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
 
     const product = await ProductModel.findOne({ slug, status: "active" }).lean();
     if (!product) {
-        return null;
+        return getPreviewProductDetail(slug);
     }
 
     const productTypeId = toStringId(product.productTypeId);
