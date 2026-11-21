@@ -26,18 +26,20 @@ export default function AdminDrawer() {
         }
     }, [])
     return <Drawer
+        anchor="right"
         open={open}
         onClose={() => setOpen(false)}
         onClick={() => setOpen(false)}
     >
         <Box sx={{
             maxHeight: '100vh',
-            overflowY: 'scroll',
-            minWidth: 300,
+            overflowY: 'auto',
+            width: { xs: 'min(88vw, 360px)', sm: 360 },
             height: '100%',
             p: 2,
             bgcolor: 'background.paper',
-            py: 10
+            pt: 9,
+            pb: 3,
         }}>
             <AdminMenu />
         </Box>

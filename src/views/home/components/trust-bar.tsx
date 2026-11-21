@@ -51,18 +51,19 @@ const ITEMS: TrustItem[] = [
 
 export default function TrustBar() {
   return (
-    <Container maxWidth="md" sx={{ px: { xs: 1, sm: 2 }, mt: { xs: 1, md: 1.5 } }}>
+    <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 }, my: { xs: 4, md: 7 } }}>
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "repeat(4, 1fr)", sm: "repeat(4, 1fr)" },
-          gap: { xs: 0.5, sm: 1.5 },
+          gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },
+          gap: { xs: 0, md: 1.5 },
           border: 1,
           borderColor: "divider",
-          borderRadius: 2,
+          borderRadius: 6,
           bgcolor: "background.paper",
-          py: { xs: 1, sm: 1.25 },
+          py: { xs: 1.5, sm: 2 },
           px: { xs: 0.5, sm: 1.5 },
+          boxShadow: "0 14px 44px rgba(42, 90, 68, .07)",
         }}
       >
         {ITEMS.map((item) => (
@@ -70,10 +71,10 @@ export default function TrustBar() {
             key={item.label}
             alignItems="center"
             spacing={0.25}
-            sx={{ textAlign: "center", color: "text.primary" }}
+            sx={{ textAlign: "center", color: "text.primary", p: 1.25 }}
           >
-            <Box sx={{ color: "primary.main", display: "flex" }}>{item.icon}</Box>
-            <Typography sx={{ fontSize: { xs: 11, sm: 13 }, fontWeight: 700, lineHeight: 1.2 }}>
+            <Box sx={{ color: "primary.main", display: "flex", mb: 0.5 }}>{item.icon}</Box>
+            <Typography sx={{ fontSize: { xs: 12, sm: 14 }, fontWeight: 700, lineHeight: 1.3 }}>
               {item.label}
             </Typography>
             <Typography

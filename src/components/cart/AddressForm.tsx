@@ -123,16 +123,17 @@ export default function AddressForm() {
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField label="نام" value={values.fname} onChange={handleChange('fname')} fullWidth />
+        <TextField required label="نام" value={values.fname} onChange={handleChange('fname')} fullWidth />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField label="نام خانوادگی" value={values.lname} onChange={handleChange('lname')} fullWidth />
+        <TextField required label="نام خانوادگی" value={values.lname} onChange={handleChange('lname')} fullWidth />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           label="شماره تماس"
+          required
           value={values.phone}
           onChange={handleChange('phone')}
           fullWidth
@@ -145,7 +146,7 @@ export default function AddressForm() {
           options={PROVINCE_NAMES}
           value={values.state || null}
           onChange={handleStateSelect}
-          renderInput={(params) => <TextField {...params} label="استان" fullWidth />}
+          renderInput={(params) => <TextField {...params} required label="استان" fullWidth />}
         />
       </Grid>
 
@@ -155,23 +156,25 @@ export default function AddressForm() {
           value={values.city || null}
           onChange={handleCitySelect}
           disabled={!values.state}
-          renderInput={(params) => <TextField {...params} label="شهر" fullWidth />}
+          renderInput={(params) => <TextField {...params} required label="شهر" fullWidth />}
         />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
-          label="کد پستی (اختیاری)"
+          label="کد پستی"
+          required
           value={values.postalCode ?? ''}
           onChange={handleChange('postalCode')}
           fullWidth
-          helperText="اختیاری"
+          helperText="کد پستی ۱۰ رقمی محل تحویل"
           inputProps={{ dir: 'ltr', inputMode: 'numeric' }}
         />
       </Grid>
       <Grid size={{ xs: 12 }}>
         <TextField
           label="آدرس کامل"
+          required
           value={values.address ?? ''}
           onChange={handleChange('address')}
           fullWidth

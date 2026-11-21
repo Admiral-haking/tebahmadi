@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { useEffect } from "react";
 import z from "zod";
+import { brandTokens } from "@/theme/design-system";
 
 type Props = InputProps & {
     boxSx?: SxProps;
@@ -68,10 +69,6 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
     });
 
 
-    useEffect(() => {
-        methods.setValue("q", initialQuery || "")
-    }, [initialQuery])
-
     return <Box
         sx={{
             position: 'relative',
@@ -82,23 +79,29 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
     >
         <FormProvider  {...methods}>
 
-            <form onSubmit={onSubmit} noValidate autoComplete="off">
+            <form onSubmit={onSubmit} noValidate autoComplete="off" role="search">
 
                 <Stack
                     direction="row"
                     alignItems="center"
                     gap={2}
                     sx={{
-                        p: .5,
+                        minHeight: 48,
                         overflow: 'hidden',
-                        transition: 'all .2s ease',
-                        px: 2,
-                        borderRadius: 3,
-                        bgcolor: 'background.default'
+                        transition: 'border-color .2s ease, box-shadow .2s ease, background-color .2s ease',
+                        px: 1.5,
+                        borderRadius: brandTokens.radius.pill,
+                        bgcolor: 'background.paper',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        '&:focus-within': {
+                            borderColor: 'primary.main',
+                            boxShadow: '0 0 0 3px rgba(42, 90, 68, .1)',
+                        },
                     }}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M20.313 11.157a9.157 9.157 0 1 1-18.313 0a9.157 9.157 0 0 1 18.313 0" opacity={0.5}></path>
+                        <path fill="currentColor" d="M20.313 11.157a9.157 9.157 0 1 1-18.313 0a9.157 9.157 0 0 1 18.313 0" opacity={0.18}></path>
                         <path fill="currentColor" d="m17.1 18.122l3.666 3.666a.723.723 0 0 0 1.023-1.022L18.122 17.1a9 9 0 0 1-1.022 1.022"></path>
                     </svg>
                     <Controller
@@ -107,17 +110,19 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
                         render={({ field }) => <>
                             <InputBase
                                 {...props}
-                                placeholder="جستجو..."
+                                placeholder="جست‌وجوی محصول..."
                                 sx={{
-                                    p: 1
+                                    p: 0,
+                                    fontSize: 14,
                                 }}
+                                inputProps={{ 'aria-label': 'جست‌وجوی محصول' }}
                                 fullWidth
                                 value={field.value}
                                 onChange={e => field.onChange(e.target.value)}
                             />
 
                             <Fade in={!!alwaysShowSearch || !!field.value}>
-                                <Button size="small" type="submit">
+                                <Button size="small" type="submit" sx={{ minHeight: 36, px: 2 }}>
                                     جستجو
                                 </Button>
                             </Fade>

@@ -1,15 +1,16 @@
 import { ColorSystemOptions } from "@mui/material";
+import { brandTokens } from "../design-system";
 
 export const light: ColorSystemOptions = {
     palette: {
         mode: "light",
         primary: {
-            main: "#111111",
+            main: brandTokens.color.primary,
             contrastText: "#FFFFFF"
         },
         secondary: {
-            main: "#7A763F",
-            contrastText: "#FFFFFF"
+            main: brandTokens.color.accent,
+            contrastText: brandTokens.color.primaryDeep
         },
         info: {
             main: "#5da8e6ff",
@@ -20,21 +21,21 @@ export const light: ColorSystemOptions = {
             contrastText: "#111111"
         },
         success: {
-            main: "#4ee967ff",
+            main: brandTokens.color.success,
             contrastText: "#ffffff"
         },
         error: {
-            main: "#f05050ff",
+            main: brandTokens.color.danger,
             contrastText: "#ffffff"
         },
         text: {
-            primary: "#232323",
-            secondary: "#232323d0"
+            primary: brandTokens.color.text,
+            secondary: brandTokens.color.textMuted
         },
         background: {
-            default: "#FFFFFF",
-            paper: "#FFFFFF"
+            default: brandTokens.color.canvas,
+            paper: brandTokens.color.surface
         },
-        divider: "#1d1c1c5b",
+        divider: brandTokens.color.border,
     }
 }

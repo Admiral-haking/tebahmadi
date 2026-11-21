@@ -95,14 +95,14 @@ export default async function StoreView({
 
     return (
         <>
-            <Container maxWidth="lg" sx={{ position: "relative", my: 4 }}>
+            <Container maxWidth="lg" sx={{ position: "relative", my: { xs: 2, md: 5 }, px: { xs: 1.5, sm: 2 } }}>
                 <Hero
                     category={context}
                     searchParams={await searchParams}
                     siteTitle={siteInfo?.appName || BRAND.name}
                 />
 
-                <Box sx={{ my: 4 }}>
+                <Box sx={{ my: { xs: 3, md: 5 } }}>
                     <Suspense fallback={<StoreProductGridSkeleton />}>
                         <StoreProductGrid
                             searchParams={await searchParams}

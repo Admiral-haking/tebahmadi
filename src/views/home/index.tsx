@@ -4,8 +4,6 @@ import { Box, Container, Grid, Skeleton, Stack } from "@mui/material";
 import { Suspense } from "react";
 import Categories from "./components/categories";
 import { loadSiteConfig, loadSiteInfo } from "@/lib/cache";
-import InstagramBanner from "@/layout/components/instagram-banner";
-import { Welcome } from "@/components/welcome";
 import DiscountProducts from "./components/discount";
 import NewestProducts from "./components/newest";
 import PopularProducts from "./components/popular";
@@ -109,12 +107,8 @@ export default async function HomeView() {
 
   return (
     <>
-      <TrustBar />
-
-      <InstagramBanner />
-
       <Container
-        maxWidth="md"
+        maxWidth="lg"
         sx={{ position: "relative", px: { xs: 1.5, sm: 2 } }}
       >
         <Suspense fallback={<CategoriesFallback />}>
@@ -126,7 +120,7 @@ export default async function HomeView() {
         <DiscountProducts />
       </Suspense>
 
-      <Container maxWidth="md" sx={{ px: { xs: 1.5, sm: 2 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
         <Suspense fallback={<ProductSectionFallback />}>
           <NewestProducts />
         </Suspense>
@@ -141,10 +135,7 @@ export default async function HomeView() {
         href={homeBannerHref}
         alt={homeBannerAlt}
       />
-
-      <Suspense>
-        <Welcome />
-      </Suspense>
+      <TrustBar />
     </>
   );
 }

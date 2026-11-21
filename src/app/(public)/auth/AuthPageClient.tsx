@@ -264,18 +264,18 @@ export default function AuthPageClient() {
                 // light/dark palette), instead of hard-coded colors.
                 bgcolor: "background.default",
                 backgroundImage:
-                    "radial-gradient(1200px 600px at 50% -10%, rgba(var(--mui-palette-primary-mainChannel) / 0.12) 0%, rgba(var(--mui-palette-primary-mainChannel) / 0) 55%)",
+                    "radial-gradient(900px 520px at 50% 0%, rgba(var(--mui-palette-primary-mainChannel) / 0.10), transparent 62%)",
             }}
         >
             <Container maxWidth="xs" sx={{ py: { xs: 5, md: 8 } }}>
                 <Paper
                     elevation={0}
                     sx={{
-                        borderRadius: 4,
+                        borderRadius: 5,
                         p: { xs: 3, sm: 4 },
                         border: "1px solid",
                         borderColor: "divider",
-                        boxShadow: "0 12px 40px -12px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.4)",
+                        boxShadow: "0 24px 70px -42px rgba(31, 70, 53, 0.52)",
                         backgroundColor: "background.paper",
                     }}
                 >
@@ -286,17 +286,18 @@ export default function AuthPageClient() {
                                 sx={{
                                     width: 60,
                                     height: 60,
-                                    borderRadius: "50%",
+                                    borderRadius: 3.5,
                                     display: "grid",
                                     placeItems: "center",
-                                    color: "var(--mui-palette-common-white)",
-                                    background: "linear-gradient(135deg, var(--mui-palette-primary-main), var(--mui-palette-secondary-main))",
-                                    boxShadow: "0 8px 20px -6px rgba(var(--mui-palette-primary-mainChannel) / 0.6)",
+                                    color: "primary.main",
+                                    bgcolor: "primary.50",
+                                    border: "1px solid",
+                                    borderColor: "primary.100",
                                 }}
                             >
                                 {isCodeStep ? <SmsOutlinedIcon /> : <LockOutlinedIcon />}
                             </Box>
-                            <Typography variant="h5" component="h1" fontWeight={800}>
+                            <Typography variant="h5" component="h1" fontWeight={800} sx={{ letterSpacing: "-0.03em" }}>
                                 {isCodeStep ? "تایید شماره موبایل" : "ورود یا ثبت‌نام"}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
@@ -357,7 +358,7 @@ export default function AuthPageClient() {
                                         variant="contained"
                                         size="large"
                                         disabled={isSubmitting || !phone.trim()}
-                                        sx={{ borderRadius: 2, py: 1.25, fontWeight: 700 }}
+                                        sx={{ borderRadius: 99, py: 1.35, fontWeight: 700 }}
                                     >
                                         {step === "requesting" ? "در حال ارسال..." : "ارسال کد تایید"}
                                     </Button>
@@ -382,7 +383,7 @@ export default function AuthPageClient() {
                                         disabled={isSubmitting || code.trim().length !== OTP_LENGTH}
                                         color={isVerifying ? "success" : "primary"}
                                         fullWidth
-                                        sx={{ borderRadius: 2, py: 1.25, fontWeight: 700 }}
+                                        sx={{ borderRadius: 99, py: 1.35, fontWeight: 700 }}
                                     >
                                         {step === "verifying" ? "در حال ورود..." : "تایید و ورود"}
                                     </Button>
