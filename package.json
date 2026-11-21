@@ -13,7 +13,8 @@
     "clear:carts": "node scripts/clear-carts.js",
     "digikala:fetch": "node scripts/fetch-dgk.js",
     "digikala:import": "node scripts/import-from-digikala.js",
-    "digikala:sync-daily": "node scripts/sync-dgk-daily.js"
+    "digikala:sync-daily": "node scripts/sync-dgk-daily.js",
+    "catalog:seed:local": "node scripts/seed-natural-catalog.mjs"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

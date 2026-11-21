@@ -1221,6 +1221,30 @@ export default function ProductDetailClient({
                                 </Typography>
                             </Box>
                         ) : null}
+
+                        {product.productFacts.length > 0 ? (
+                            <Box sx={{ mt: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 1.25 }}>
+                                {product.productFacts.map((fact) => (
+                                    <Box
+                                        key={fact.key}
+                                        sx={{
+                                            p: 1.5,
+                                            borderRadius: 2.5,
+                                            border: '1px solid',
+                                            borderColor: fact.key === 'warning' ? 'warning.light' : 'divider',
+                                            bgcolor: fact.key === 'warning' ? 'rgba(194, 139, 47, .08)' : 'background.default',
+                                        }}
+                                    >
+                                        <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">
+                                            {fact.label}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ mt: .5, lineHeight: 1.8 }}>
+                                            {fact.value}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Box>
+                        ) : null}
                     </Stack>
                 </Grid>
             </Grid>

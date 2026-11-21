@@ -72,7 +72,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
 
   return (
     <Box component="section" aria-label="پیشنهادهای ویژه" sx={{ py: { xs: 2, md: 4 }, overflow: 'hidden' }}>
-      <Box ref={emblaRef} sx={{ overflow: 'visible' }}>
+      <Box ref={emblaRef} sx={{ overflow: 'visible', maxWidth: 1440, mx: 'auto', px: { xs: 0, md: 1 } }}>
         <Box sx={{ display: 'flex', touchAction: 'pan-y pinch-zoom', direction: 'rtl' }}>
           {items.map((slide, index) => {
             const desktopId = slide.mediaDesktopId || slide.mediaId || slide.mediaMobileId;
@@ -82,7 +82,12 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
               <Box
                 key={slide.id}
                 sx={{
-                  flex: { xs: '0 0 92%', sm: '0 0 78%', md: '0 0 66%' },
+                  // A single fallback/managed banner is the primary hero and must
+                  // use the full available width. The narrower basis is only useful
+                  // when there are multiple slides and we intentionally show peeks.
+                  flex: items.length === 1
+                    ? '0 0 100%'
+                    : { xs: '0 0 92%', sm: '0 0 78%', md: '0 0 66%' },
                   minWidth: 0,
                   px: { xs: 0.75, md: 1.25 },
                   opacity: selected === index ? 1 : 0.5,

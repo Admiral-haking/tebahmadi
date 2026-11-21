@@ -30,9 +30,9 @@ export default async function Logo({ size = 40, showName = false }: { size?: num
     <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: showName ? 12 : 0 }}>
       {logoSrc ? (
         <Box sx={{
-          bgcolor: 'white',
-          p: .5,
-          borderRadius: 1,
+          bgcolor: 'transparent',
+          p: 0,
+          borderRadius: 0,
           width: size,
           height: size,
           position: 'relative'
@@ -43,6 +43,7 @@ export default async function Logo({ size = 40, showName = false }: { size?: num
             fill
             style={{
               objectFit: 'contain',
+              background: 'transparent',
             }}
             priority={false}
           />

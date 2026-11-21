@@ -110,6 +110,7 @@ export type ProductDetailData = {
     categories: ProductCategoryInfo[];
     productTypeId?: string;
     productTypeName?: string;
+    productFacts: { key: string; label: string; value: string }[];
     variants: ProductVariantDetail[];
     activeVariantCount: number;
     hasInventory: boolean;
@@ -126,6 +127,17 @@ function toStringId(value: unknown): string | undefined {
     if (value instanceof Types.ObjectId) return value.toString();
     return undefined;
 }
+
+const PRODUCT_FACT_LABELS: Record<string, string> = {
+    ingredients: 'ترکیبات',
+    usage: 'روش مصرف',
+    brewing: 'روش دم‌آوری',
+    origin: 'خاستگاه',
+    source: 'منبع محصول',
+    storage: 'شرایط نگهداری',
+    warning: 'هشدار مصرف',
+    expiry: 'مدت ماندگاری',
+};
 
 function formatAttributeValue(value: unknown): string | undefined {
     if (value === null || value === undefined) return undefined;
@@ -258,6 +270,14 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
             attributeLabelMap.set(attribute.key, attribute.label ?? attribute.key);
         }
     });
+
+    const rawProductAttrs = product.attrs instanceof Map
+        ? Object.fromEntries(product.attrs.entries())
+        : (product.attrs && typeof product.attrs === 'object' ? product.attrs as Record<string, unknown> : {});
+    const productFacts = Object.entries(rawProductAttrs)
+        .filter(([key, value]) => key in PRODUCT_FACT_LABELS && value !== null && value !== undefined && String(value).trim())
+        .map(([key, value]) => ({ key, label: PRODUCT_FACT_LABELS[key], value: formatAttributeValue(value) ?? '' }))
+        .filter((item) => item.value.length > 0);
 
     const colorAttribute = (productType?.attributes ?? []).find((attr) => attr?.kind === 'color' && attr.variant);
     const sizeAttribute = (productType?.attributes ?? []).find((attr) => attr?.key?.toLowerCase() === 'size');
@@ -525,6 +545,7 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
         categories: categoryInfos,
         productTypeId,
         productTypeName: productType?.name ?? undefined,
+        productFacts,
         variants,
         activeVariantCount: variants.length,
         hasInventory,
