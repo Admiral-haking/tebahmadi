@@ -8,4 +8,8 @@ describe('manual OTP fallback', () => {
     expect(isManualOtpPhone('+989123456789', '+989354395264')).toBe(false);
     expect(isManualOtpPhone('+989354395264', undefined)).toBe(false);
   });
+
+  it('accepts a phone from a comma-separated test fallback list', () => {
+    expect(isManualOtpPhone('+989153685965', '+989354395264,+989153685965')).toBe(true);
+  });
 });
