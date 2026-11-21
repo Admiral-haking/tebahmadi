@@ -12,10 +12,11 @@ import {
   InputBase,
 } from '@mui/material';
 
+import { Minus, Plus, X } from 'lucide-react';
+import { TEB_COLORS, TEB_RADII } from '@/theme/tokens';
 import { useCart, type CartLine } from './useCart';
 
-const FALLBACK_IMAGE =
-  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2296%22 height=%2296%22 viewBox=%220 0 96 96%22%3E%3Crect width=%2296%22 height=%2296%22 rx=%2212%22 fill=%22%23f0f0f0%22/%3E%3Cpath d=%22M24 68h48a4 4 0 0 0 3.2-6.4l-16-21.333a4 4 0 0 0-6.4 0L36 60l-6.4-8.533a4 4 0 0 0-6.4 0L20 62a4 4 0 0 0 4 6Z%22 fill=%22%23d0d0d0%22/%3E%3Ccircle cx=%2236%22 cy=%2230%22 r=%228%22 fill=%22%23d0d0d0%22/%3E%3C/svg%3E';
+const FALLBACK_IMAGE = '/images/tebahmadi/herbal-tea.jpg';
 
 const formatToman = (value: number) =>
   `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.max(0, Math.floor(value)))} تومان`;
@@ -161,51 +162,64 @@ export default function CartLineItem({ line }: CartLineItemProps) {
   const qtyStep = line.priceModel === 'per_unit' ? 0.5 : 1;
   const unitLabel = line.priceModel === 'per_unit' ? (line.requestedUnit ?? line.unitOfMeasure ?? '') : '';
 
+  const thumbSrc = line.mediaThumbId
+    ? line.mediaThumbId.startsWith('/') || line.mediaThumbId.startsWith('http')
+      ? line.mediaThumbId
+      : `/api/media/${line.mediaThumbId}`
+    : FALLBACK_IMAGE;
+
   return (
     <Stack
       direction="row"
-      spacing={{ xs: 1.5, sm: 2 }}
+      flexWrap="wrap"
+      spacing={2}
       sx={{
-        p: { xs: 1.5, sm: 2 },
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 3,
-        bgcolor: 'background.paper',
+        p: 2,
+        border: `1px solid ${TEB_COLORS.border}`,
+        borderRadius: `${TEB_RADII.md}px`,
+        bgcolor: TEB_COLORS.background,
       }}
     >
       <Box
         component="img"
-        src={line.mediaThumbId ? `/api/media/${line.mediaThumbId}` : FALLBACK_IMAGE}
+        src={thumbSrc}
         alt={line.title}
         sx={{
-          width: { xs: 72, sm: 88, md: 96 },
-          height: { xs: 72, sm: 88, md: 96 },
-          aspectRatio: "1 / 1",
-          borderRadius: 2,
+          width: 92,
+          height: 92,
+          borderRadius: `${TEB_RADII.md}px`,
           objectFit: 'cover',
-          border: '1px solid',
-          borderColor: 'divider',
-          flexShrink: 0,
+          border: `1px solid ${TEB_COLORS.border}`,
+          bgcolor: TEB_COLORS.surfaceSoft,
         }}
       />
-      <Stack flex={1} minWidth={0}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} flexWrap="wrap" gap={2}>
-          <Stack gap={1} flex={1} minWidth={0}>
-            <Typography variant="subtitle1" fontWeight={600}>
+      <Stack flex={1} spacing={1.25} minWidth={0}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1.25}>
+          <Stack gap={0.5} flex={1} minWidth={0}>
+            <Typography variant="subtitle1" fontWeight={700} color={TEB_COLORS.textPrimary}>
               {line.title}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {(line.attributesSummary ?? '').replace(/\| weightGrams: [0-9]+/g, "")}
+              {(line.attributesSummary ?? '').replace(/\| weightGrams: [0-9]+/g, '')}
             </Typography>
           </Stack>
 
-          <Stack gap={0.5} alignItems="flex-end" minWidth={140}>
+          <Stack gap={0.25} alignItems={{ xs: 'flex-start', sm: 'flex-end' }} minWidth={128}>
             {line.variantOfferAmount ? (
-              <Typography variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ textDecoration: 'line-through', fontVariantNumeric: 'tabular-nums' }}
+              >
                 {formatToman(baseSubtotal)}
               </Typography>
             ) : null}
-            <Typography variant="subtitle1" fontWeight={600}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={800}
+              color={TEB_COLORS.primaryDark}
+              sx={{ fontVariantNumeric: 'tabular-nums' }}
+            >
               {formatToman(subtotal)}
             </Typography>
           </Stack>
@@ -213,11 +227,23 @@ export default function CartLineItem({ line }: CartLineItemProps) {
 
         <Stack direction="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={1} sx={{ width: '100%' }}>
           <Stack>
-            <Stack direction="row" alignItems="center" flexWrap="wrap">
-              <IconButton size="small" aria-label="کاهش" onClick={handleDecrease} sx={{ fontSize: '1.1rem' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M19 12.998H5v-2h14z"></path>
-                </svg>
+            <Stack
+              direction="row"
+              alignItems="center"
+              sx={{
+                border: `1px solid ${TEB_COLORS.border}`,
+                borderRadius: `${TEB_RADII.pill}px`,
+                bgcolor: '#FFFFFF',
+                px: 0.5,
+              }}
+            >
+              <IconButton
+                size="small"
+                aria-label={`کاهش تعداد ${line.title}`}
+                onClick={handleDecrease}
+                sx={{ width: 38, height: 38, color: TEB_COLORS.primary }}
+              >
+                <Minus size={16} />
               </IconButton>
               <InputBase
                 value={qtyDisplay}
@@ -229,18 +255,20 @@ export default function CartLineItem({ line }: CartLineItemProps) {
                     step: qtyStep,
                     inputMode: 'decimal',
                     dir: 'ltr',
+                    'aria-label': `تعداد ${line.title}`,
                     style: {
                       textAlign: 'center',
+                      fontWeight: 700,
                     },
                   },
                 }}
                 onChange={(event) => handleManualChange(event.target.value)}
                 sx={{
-                  p: 1,
-                  minWidth: 50,
-                  width: 60,
+                  px: 0.5,
+                  minWidth: 44,
+                  width: 52,
                   textAlign: 'center',
-
+                  fontVariantNumeric: 'tabular-nums',
                   '& input[type=number]': {
                     MozAppearance: 'textfield',
                   },
@@ -256,10 +284,13 @@ export default function CartLineItem({ line }: CartLineItemProps) {
               />
               {!!unitLabel && <InputAdornment position="end">{unitLabel}</InputAdornment>}
 
-              <IconButton size="small" aria-label="افزایش" onClick={handleIncrease} sx={{ fontSize: '1.1rem' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M18 12.998h-5v5a1 1 0 0 1-2 0v-5H6a1 1 0 0 1 0-2h5v-5a1 1 0 0 1 2 0v5h5a1 1 0 0 1 0 2"></path>
-                </svg>
+              <IconButton
+                size="small"
+                aria-label={`افزایش تعداد ${line.title}`}
+                onClick={handleIncrease}
+                sx={{ width: 38, height: 38, color: TEB_COLORS.primary }}
+              >
+                <Plus size={16} />
               </IconButton>
             </Stack>
             {quantityConstraintLabel ? (
@@ -269,13 +300,21 @@ export default function CartLineItem({ line }: CartLineItemProps) {
             ) : null}
           </Stack>
 
-          <IconButton aria-label="حذف" onClick={() => removeLine(line.variantId)} sx={{ fontSize: '1.2rem' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
-              <path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z"></path>
-            </svg>
+          <IconButton
+            aria-label={`حذف ${line.title}`}
+            onClick={() => removeLine(line.variantId)}
+            sx={{
+              width: 40,
+              height: 40,
+              color: 'text.secondary',
+              '&:hover': { color: TEB_COLORS.error, bgcolor: 'rgba(165, 74, 76, 0.08)' },
+            }}
+          >
+            <X size={18} />
           </IconButton>
         </Stack>
       </Stack>
     </Stack>
   );
 }
+

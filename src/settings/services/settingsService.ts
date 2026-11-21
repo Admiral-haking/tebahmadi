@@ -1,7 +1,7 @@
 import { revalidatePath, revalidateTag, TAGS } from '@/lib/cache';
 import { SiteInfoModel, type SiteInfoDocument } from '@/settings/models/SiteInfo';
 import { SiteConfigModel, type SiteConfigDocument } from '@/settings/models/SiteConfig';
-import { connectMongoose } from '@/lib/mongoose';
+import { connectMongoose, isMongoConfigured } from '@/lib/mongoose';
 import { DEFAULT_SITE_INFO } from '@/config/brand';
 
 const SITE_REVALIDATE_PATHS = ['/', '/blog', '/store'];
@@ -34,9 +34,17 @@ async function revalidateSiteConfigPaths(): Promise<void> {
 }
 
 export async function getSiteInfo() {
-  await connectMongoose()
-  return (await SiteInfoModel.findOne().lean<SiteInfoDocument | null>())
-    ?? (DEFAULT_SITE_INFO as unknown as SiteInfoDocument);
+  if (!isMongoConfigured()) {
+    return DEFAULT_SITE_INFO as unknown as SiteInfoDocument;
+  }
+  try {
+    await connectMongoose();
+    return (await SiteInfoModel.findOne().lean<SiteInfoDocument | null>())
+      ?? (DEFAULT_SITE_INFO as unknown as SiteInfoDocument);
+  } catch (error) {
+    console.warn('getSiteInfo failed; using default site info', error);
+    return DEFAULT_SITE_INFO as unknown as SiteInfoDocument;
+  }
 }
 
 export async function updateSiteInfo(payload: Partial<SiteInfoDocument>) {
@@ -49,8 +57,16 @@ export async function updateSiteInfo(payload: Partial<SiteInfoDocument>) {
 }
 
 export async function getSiteConfig() {
-  await connectMongoose()
-  return SiteConfigModel.findOne().lean<SiteConfigDocument | null>();
+  if (!isMongoConfigured()) {
+    return null;
+  }
+  try {
+    await connectMongoose();
+    return await SiteConfigModel.findOne().lean<SiteConfigDocument | null>();
+  } catch (error) {
+    console.warn('getSiteConfig failed; returning null', error);
+    return null;
+  }
 }
 
 export async function updateSiteConfig(payload: Partial<SiteConfigDocument>) {

@@ -1,184 +1,219 @@
 "use client";
-import { CategoryDocument } from "@/catalog/models/Category";
-import { Box, Button, Dialog, DialogContent, Grid, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
 
+import { useState } from "react";
+import Link from "next/link";
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogContent,
+    Grid,
+    IconButton,
+    List,
+    ListItemButton,
+    ListItemText,
+    Stack,
+    Typography,
+} from "@mui/material";
+import { ArrowLeft, LayoutGrid, Leaf, X } from "lucide-react";
+import type { CategoryDocument } from "@/catalog/models/Category";
+import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 
 type Props = {
-    categories: CategoryDocument[]
-}
+    categories: CategoryDocument[];
+};
+
 export default function MegaMenu({ categories }: Props) {
     const [open, setOpen] = useState(false);
 
-    const roots = categories.filter(x => x.parentId === null)
-
+    const roots = categories.filter((x) => !x.parentId);
     const [selected, setSelected] = useState(`${roots[0]?._id || ""}`);
+    const activeRoot = roots.find((r) => `${r._id}` === selected) ?? roots[0];
+    const subs = categories.filter((x) => `${x.parentId}` === `${activeRoot?._id ?? ""}`);
 
-    const subs = categories.filter(x => `${x.parentId}` === selected);
-
-    const middle = Math.ceil(subs.length / 3);
-
-    const col1 = subs.slice(0, middle);
-    const col2 = subs.slice(middle, middle * 2)
-    const col3 = subs.slice(middle * 2, subs.length)
-
-    return <>
-        <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setOpen(true)}
-            id="mega-btn-md"
-            startIcon={<svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
-                <path fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} d="M4 7h3m13 0h-9m9 10h-3M4 17h9m-9-5h16"></path>
-            </svg>}>
-            محصولات
-        </Button>
-
-        <Dialog
-            open={open}
-            onClose={() => setOpen(false)}
-            maxWidth="md"
-            fullWidth
-            slotProps={{
-                paper: {
-                    sx: {
-                        bgcolor: 'background.paper',
-                        borderRadius: 4,
-                        overflow: 'hidden',
-                    }
-                }
-            }}
-        >
-            <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                gap={2}
+    return (
+        <>
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setOpen(true)}
+                id="mega-btn-md"
+                startIcon={<LayoutGrid size={17} strokeWidth={2} />}
                 sx={{
-                    p: 2.5,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
+                    minHeight: 44,
+                    px: 2.25,
+                    borderRadius: "9999px",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
                 }}
             >
-                <Typography variant="h6" fontWeight={800}>دسته‌بندی‌های محصولات</Typography>
+                محصولات
+            </Button>
 
-                <IconButton onClick={() => setOpen(false)} sx={{ width: 40, height: 40 }} aria-label="بستن">
-                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
-                        <path
-                            fill="currentColor"
-                            d="m6.4 19l-1.4-1.4l5.6-5.6l-5.6-5.6l1.4-1.4l5.6 5.6l5.6-5.6l1.4 1.4l-5.6 5.6l5.6 5.6l-1.4 1.4l-5.6-5.6z"
-                        />
-                    </svg>
-                </IconButton>
-            </Stack>
-            <DialogContent sx={{ p: 2.5 }}>
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 3 }}>
-                        <List sx={{ p: 0 }}>
-                            {
-                                roots.map(item => <ListItem key={`${item._id}`} disablePadding sx={{ mb: 0.5 }}>
-                                    <ListItemButton
-                                        onClick={() => setSelected(`${item._id}`)}
-                                        selected={selected === `${item._id}`}
-                                        sx={{ borderRadius: 2 }}
-                                    >
-                                        <ListItemIcon sx={{ minWidth: 42 }}>
-                                            <Box sx={{
-                                                width: 32,
-                                                height: 32,
-                                                position: 'relative',
-                                                borderRadius: '50%',
-                                                overflow: 'hidden',
-                                                border: '1px solid',
-                                                borderColor: 'divider',
-                                                flexShrink: 0,
-                                            }}>
-                                                <Image
-                                                    src={item.mediaId ? `/api/media/${item.mediaId}` : '/category.png'}
-                                                    alt={item.name}
-                                                    fill
-                                                    loading="lazy"
-                                                    style={{ objectFit: 'contain', padding: '15%' }}
-                                                />
-                                            </Box>
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={item.name}
-                                            primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }}
-                                        />
-                                    </ListItemButton>
-                                </ListItem>)
-                            }
-                        </List>
-                    </Grid>
-                    {[col1, col2, col3].map((col, colIndex) => (
-                        <Grid key={colIndex} size={{ xs: 3 }}>
-                            <Stack spacing={2}>
-                                {col.map((item) => {
-                                    const childCategories = categories.filter((x) => `${x.parentId}` === `${item._id}`);
+            <Dialog
+                open={open}
+                onClose={() => setOpen(false)}
+                maxWidth="md"
+                fullWidth
+                slotProps={{
+                    paper: {
+                        sx: {
+                            bgcolor: TEB_COLORS.background,
+                            borderRadius: `${TEB_RADII.lg}px`,
+                            border: `1px solid ${TEB_COLORS.border}`,
+                            overflow: "hidden",
+                        },
+                    },
+                }}
+            >
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{
+                        px: 3,
+                        py: 2,
+                        bgcolor: TEB_COLORS.surface,
+                        borderBottom: `1px solid ${TEB_COLORS.border}`,
+                    }}
+                >
+                    <Stack direction="row" alignItems="center" gap={1}>
+                        <Leaf size={20} color={TEB_COLORS.primary} />
+                        <Typography variant="h5" fontWeight={700}>
+                            دسته‌بندی محصولات طب احمدی
+                        </Typography>
+                    </Stack>
+
+                    <IconButton onClick={() => setOpen(false)} aria-label="بستن منوی محصولات">
+                        <X size={20} />
+                    </IconButton>
+                </Stack>
+
+                <DialogContent sx={{ p: 3 }}>
+                    <Grid container spacing={2.5}>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <List
+                                disablePadding
+                                sx={{
+                                    bgcolor: TEB_COLORS.surface,
+                                    borderRadius: `${TEB_RADII.md}px`,
+                                    border: `1px solid ${TEB_COLORS.border}`,
+                                    p: 1,
+                                }}
+                            >
+                                {roots.map((item) => {
+                                    const id = `${item._id}`;
+                                    const isActive = id === `${activeRoot?._id ?? ""}`;
                                     return (
-                                        <Box key={item.path}>
-                                            <Button
-                                                size="small"
-                                                startIcon={
-                                                    <Box sx={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        position: 'relative',
-                                                        borderRadius: '50%',
-                                                        overflow: 'hidden',
-                                                        border: '1px solid',
-                                                        borderColor: 'divider',
-                                                        flexShrink: 0,
-                                                    }}>
-                                                        <Image
-                                                            src={item.mediaId ? `/api/media/${item.mediaId}` : '/category.png'}
-                                                            alt={item.name}
-                                                            fill
-                                                            loading="lazy"
-                                                            style={{ objectFit: 'contain', padding: '15%' }}
-                                                        />
-                                                    </Box>
-                                                }
-                                                LinkComponent={Link}
-                                                onClick={() => setOpen(false)}
-                                                href={`/store/${item.path}`}
-                                                sx={{ fontWeight: 700, justifyContent: 'flex-start', width: '100%' }}
-                                            >
-                                                {item.name}
-                                            </Button>
-                                            {childCategories.length > 0 && (
-                                                <Stack spacing={0.25} sx={{ pr: 4.5, mt: 0.5 }}>
-                                                    {childCategories.map((x) => (
-                                                        <Button
-                                                            key={x.path}
-                                                            size="small"
-                                                            LinkComponent={Link}
-                                                            onClick={() => setOpen(false)}
-                                                            href={`/store/${x.path}`}
-                                                            sx={{
-                                                                color: 'text.secondary',
-                                                                justifyContent: 'flex-start',
-                                                                fontSize: '0.825rem',
-                                                                py: 0.25,
-                                                                '&:hover': { color: 'primary.main' },
-                                                            }}
-                                                        >
-                                                            {x.name}
-                                                        </Button>
-                                                    ))}
-                                                </Stack>
-                                            )}
-                                        </Box>
+                                        <ListItemButton
+                                            key={id}
+                                            selected={isActive}
+                                            onClick={() => setSelected(id)}
+                                            sx={{
+                                                borderRadius: "12px",
+                                                mb: 0.5,
+                                                "&.Mui-selected": {
+                                                    bgcolor: TEB_COLORS.softSurface,
+                                                    color: TEB_COLORS.primary,
+                                                    fontWeight: 700,
+                                                },
+                                            }}
+                                        >
+                                            <ListItemText
+                                                primary={item.name}
+                                                primaryTypographyProps={{
+                                                    fontSize: "14px",
+                                                    fontWeight: isActive ? 700 : 500,
+                                                }}
+                                            />
+                                        </ListItemButton>
                                     );
                                 })}
+                            </List>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 8 }}>
+                            <Stack
+                                spacing={2}
+                                sx={{
+                                    height: "100%",
+                                    p: 2.5,
+                                    bgcolor: TEB_COLORS.surface,
+                                    borderRadius: `${TEB_RADII.md}px`,
+                                    border: `1px solid ${TEB_COLORS.border}`,
+                                }}
+                            >
+                                {activeRoot && (
+                                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                        <Typography variant="h6" fontWeight={700} color={TEB_COLORS.primary}>
+                                            {activeRoot.name}
+                                        </Typography>
+                                        <Button
+                                            component={Link}
+                                            href={`/store/${activeRoot.path}`}
+                                            onClick={() => setOpen(false)}
+                                            size="small"
+                                            endIcon={<ArrowLeft size={15} />}
+                                        >
+                                            مشاهده همه در این دسته
+                                        </Button>
+                                    </Stack>
+                                )}
+
+                                {subs.length > 0 ? (
+                                    <Grid container spacing={1.5}>
+                                        {subs.map((sub) => (
+                                            <Grid key={sub.path} size={{ xs: 12, sm: 6 }}>
+                                                <Box
+                                                    component={Link}
+                                                    href={`/store/${sub.path}`}
+                                                    onClick={() => setOpen(false)}
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        p: 1.5,
+                                                        borderRadius: "12px",
+                                                        bgcolor: TEB_COLORS.background,
+                                                        border: `1px solid ${TEB_COLORS.border}`,
+                                                        color: TEB_COLORS.textPrimary,
+                                                        fontWeight: 600,
+                                                        fontSize: "13.5px",
+                                                        "&:hover": {
+                                                            borderColor: TEB_COLORS.primary,
+                                                            color: TEB_COLORS.primary,
+                                                        },
+                                                    }}
+                                                >
+                                                    <span>{sub.name}</span>
+                                                    <ArrowLeft size={15} />
+                                                </Box>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                ) : (
+                                    <Stack spacing={1.5} justifyContent="center" sx={{ py: 2 }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            تمامی محصولات طبیعی و دست‌چین این دسته‌بندی آماده بررسی و سفارش آنلاین هستند.
+                                        </Typography>
+                                        <Box>
+                                            <Button
+                                                component={Link}
+                                                href={activeRoot ? `/store/${activeRoot.path}` : "/store"}
+                                                onClick={() => setOpen(false)}
+                                                variant="contained"
+                                                endIcon={<ArrowLeft size={16} />}
+                                            >
+                                                ورود به {activeRoot?.name ?? "فروشگاه"}
+                                            </Button>
+                                        </Box>
+                                    </Stack>
+                                )}
                             </Stack>
                         </Grid>
-                    ))}
-                </Grid>
-            </DialogContent>
-        </Dialog>
-    </>
+                    </Grid>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
 }

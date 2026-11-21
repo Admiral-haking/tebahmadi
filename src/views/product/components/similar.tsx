@@ -6,6 +6,7 @@ import { connectMongoose } from "@/lib/mongoose";
 import { Grid, Stack, Typography } from "@mui/material";
 import { Types } from "mongoose";
 import type { ProductDetailData } from "../data";
+import { isMongoConfigured, getPreviewSimilarProducts } from "@/lib/preview-fallback";
 
 const SIMILAR_LIMIT = 8;
 
@@ -131,6 +132,9 @@ function formatSimilarProduct(
 }
 
 async function loadSimilarProducts(product: ProductDetailData): Promise<ProductCardProps[]> {
+    if (!isMongoConfigured()) {
+        return getPreviewSimilarProducts(product.slug);
+    }
     const categoryIds = (product.categories ?? [])
         .map((category) => (Types.ObjectId.isValid(category.id) ? new Types.ObjectId(category.id) : undefined))
         .filter((id): id is Types.ObjectId => Boolean(id));

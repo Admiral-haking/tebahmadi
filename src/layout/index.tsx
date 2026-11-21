@@ -1,28 +1,22 @@
 "use server";
 
-import { Box, Divider } from "@mui/material";
 import HeaderDesktop from "./core/desktop-header";
 import HeaderMobile from "./core/mobile-header";
 import Footer from "./core/footer";
+import { AppShell } from "@/components/ui/AppShell";
 import { loadSiteInfo } from "@/lib/cache";
-import { AnnouncementBar, MobileBottomNav } from "./components/storefront-chrome";
+import { BRAND } from "@/config/brand";
 
 export default async function Layout({ children }: ChildrenProps) {
-    const site_info = await loadSiteInfo();
+    const siteInfo = await loadSiteInfo();
 
-    return <Box sx={{ width: '100%', pb: { xs: 10, md: 0 } }}>
-        <AnnouncementBar />
-        <HeaderDesktop />
-        <HeaderMobile title={site_info?.appName || ""} />
-        <Box
-            sx={{
-                position: 'relative'
-            }}
-            component="main">
+    return (
+        <AppShell
+            desktopHeader={<HeaderDesktop />}
+            mobileHeader={<HeaderMobile title={siteInfo?.appName || BRAND.name} />}
+            footer={<Footer />}
+        >
             {children}
-
-            <Footer />
-        </Box>
-        <MobileBottomNav />
-    </Box>
+        </AppShell>
+    );
 }

@@ -6,12 +6,11 @@ export default function StoreProductGridSkeleton() {
         {new Array(PAGE_SIZE).fill(0).map((_, key) => (
             <Grid key={key} size={{ xs: 6, sm: 4, md: 3 }}>
                 <Skeleton
-                    variant="rounded"
+                    variant="rectangular"
                     sx={{
                         width: "100%",
                         height: "100%",
                         minHeight: 321,
-                        borderRadius: { xs: 3, md: 4 },
                     }}
                 />
             </Grid>

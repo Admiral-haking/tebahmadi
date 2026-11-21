@@ -113,7 +113,7 @@ export default function StoreProductGridClient({
     const renderedProducts = products.slice(0, visibleCount);
 
     return <Stack spacing={4}>
-        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+        <Grid container spacing={2}>
             {renderedProducts.map((product) => (
                 <Grid key={product.id} size={{ xs: 6, sm: 4, md: 3 }}>
                     <ProductCard {...product} />

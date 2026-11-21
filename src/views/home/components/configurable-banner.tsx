@@ -29,7 +29,7 @@ export default function ConfigurableBanner({
 
   return (
     <Container
-      maxWidth="lg"
+      maxWidth="md"
       sx={{
         px: { xs: 1.5, sm: 2 },
         mt: { xs: 1.5, md: 2 },
@@ -45,17 +45,34 @@ export default function ConfigurableBanner({
           overflow: "hidden",
           // Reserve the exact height up-front so the banner image never pushes
           // the rest of the page down when it loads (was a major CLS source).
-          aspectRatio: { xs: '16 / 9', md: '3 / 1' },
-          maxHeight: 380,
-          borderRadius: { xs: 4, md: 7 },
+          height: { xs: 220, sm: 280, md: 340 },
+          borderRadius: 2,
           border: "1px solid",
           borderColor: "divider",
           bgcolor: "background.default",
-          boxShadow: "0 14px 40px rgba(42, 90, 68, .1)",
-          animation: "homeBannerReveal .35s ease-out both",
+          boxShadow: "0 10px 28px rgba(var(--mui-palette-text-primaryChannel) / 0.12)",
+          animation:
+            "homeBannerReveal .45s ease-out both, homeBannerFloat 5.8s ease-in-out .45s infinite",
           "@keyframes homeBannerReveal": {
             "0%": { opacity: 0, transform: "translateY(10px) scale(.985)" },
             "100%": { opacity: 1, transform: "translateY(0) scale(1)" },
+          },
+          "@keyframes homeBannerFloat": {
+            "0%, 100%": { transform: "translateY(0) scale(1)" },
+            "50%": { transform: "translateY(-4px) scale(1.003)" },
+          },
+          "&:after": {
+            content: '""',
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(105deg, transparent 0%, rgba(var(--mui-palette-common-backgroundChannel) / 0.28) 42%, transparent 58%)",
+            transform: "translateX(120%)",
+            animation: "homeBannerShine 5.5s ease-in-out infinite",
+          },
+          "@keyframes homeBannerShine": {
+            "0%, 55%": { transform: "translateX(120%)" },
+            "75%, 100%": { transform: "translateX(-120%)" },
           },
         }}
       >
@@ -70,7 +87,7 @@ export default function ConfigurableBanner({
             display: "block",
             width: "100%",
             height: "100%",
-            objectFit: "cover",
+            objectFit: "contain",
             bgcolor: "background.default",
           }}
         />

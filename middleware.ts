@@ -45,12 +45,13 @@ const rolePerms: Record<Role, Perm[]> = {
   customer: ['media:read', 'orders:read', 'orders:write'],
 };
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not set');
+function getSecretKey(): Uint8Array | null {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    return null;
+  }
+  return new TextEncoder().encode(secret);
 }
-
-const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 interface AuthPayload extends JWTPayload {
   sub?: string;
@@ -155,6 +156,11 @@ function isPublic(pathname: string, method: string): boolean {
 }
 
 async function verifyToken(token: string): Promise<AuthPayload | null> {
+  const secretKey = getSecretKey();
+  if (!secretKey) {
+    console.warn('JWT_SECRET is not set; rejecting authenticated request');
+    return null;
+  }
   try {
     const { payload } = await jwtVerify<AuthPayload>(token, secretKey, {
       algorithms: ['HS256'],

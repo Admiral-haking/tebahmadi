@@ -84,35 +84,13 @@ export default function SmartPopup({ config }: SmartPopupProps) {
       onClose={closePopup}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 4,
-          overflow: "hidden",
-          m: { xs: 2, sm: "auto" },
-          maxWidth: { xs: "calc(100% - 32px)", sm: 520 },
-        },
-      }}
+      PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
     >
       <Box sx={{ position: "relative", bgcolor: "background.paper" }}>
         <IconButton
           aria-label="بستن"
           onClick={closePopup}
-          sx={{
-            position: "absolute",
-            top: 12,
-            left: 12,
-            zIndex: 2,
-            bgcolor: "rgba(var(--mui-palette-common-backgroundChannel) / 0.82)",
-            backdropFilter: "blur(8px)",
-            width: 40,
-            height: 40,
-            border: "1px solid",
-            borderColor: "divider",
-            boxShadow: 2,
-            "&:hover": {
-              bgcolor: "background.paper",
-            },
-          }}
+          sx={{ position: "absolute", top: 10, left: 10, zIndex: 2, bgcolor: "rgba(var(--mui-palette-common-backgroundChannel) / 0.86)" }}
         >
           <CloseRoundedIcon />
         </IconButton>
@@ -125,8 +103,7 @@ export default function SmartPopup({ config }: SmartPopupProps) {
             sx={{
               display: "block",
               width: "100%",
-              aspectRatio: { xs: "16 / 9", sm: "16 / 8.5" },
-              maxHeight: { xs: 240, sm: 320 },
+              height: { xs: 220, sm: 300 },
               objectFit: "cover",
               bgcolor: "grey.100",
             }}

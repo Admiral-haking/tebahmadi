@@ -19,11 +19,8 @@ import {
   Skeleton,
   ButtonBase
 } from "@mui/material";
-import ShoppingBagRoundedIcon from "@mui/icons-material/ShoppingBagRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import Image from "next/image";
+import { ShoppingBag, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 import { useCart, type CartLine } from "./useCart";
 import CartLineItem from "./CartLineItem";
@@ -32,6 +29,8 @@ import CarrierSelect from "./CarrierSelect";
 import AddressForm from "./AddressForm";
 import CartSummary from "./CartSummary";
 import { usePaymentCleanup } from "./usePaymentCleanup";
+import { EmptyState } from "@/components/ui";
+import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 
 type UpsellProduct = {
   id: string;
@@ -49,7 +48,7 @@ type UpsellProductResponse = {
   products: UpsellProduct[];
 };
 
-const UPSELL_FALLBACK_IMAGE = "/sample.jpg";
+const UPSELL_FALLBACK_IMAGE = "/images/tebahmadi/herbal-tea.jpg";
 const PRICE_FORMATTER = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 });
 
 const formatPrice = (value: number) => `${PRICE_FORMATTER.format(Math.max(0, Math.floor(value)))} تومان`;
@@ -75,16 +74,13 @@ const collectVariantIdentityKeys = (variant: Record<string, unknown>): string[] 
   return Array.from(keys);
 };
 
-// -----------------------------------------
-// Page Component (neutral layout-only updates)
-// -----------------------------------------
 export default function CartPageContent() {
   usePaymentCleanup();
   const { lines, clear, addFixedLine, addPerUnitLine, syncLineConstraints } = useCart();
   const [upsellProducts, setUpsellProducts] = React.useState<UpsellProduct[]>([]);
   const [isUpsellLoading, setIsUpsellLoading] = React.useState(false);
   const carouselRef = React.useRef<HTMLDivElement | null>(null);
-  const [carouselControls, setCarouselControls] = React.useState({ canScrollPrev: false, canScrollNext: false });
+  const [, setCarouselControls] = React.useState({ canScrollPrev: false, canScrollNext: false });
   const recentlyAddedTimer = React.useRef<number | null>(null);
   const [recentlyAddedId, setRecentlyAddedId] = React.useState<string | null>(null);
   const variantConstraintsCache = React.useRef<Map<string, VariantConstraint | null>>(new Map());
@@ -313,328 +309,437 @@ export default function CartPageContent() {
     container.scrollBy({ left: distance * direction, behavior: "smooth" });
   }, []);
 
-  // Steps: 0 Cart, 1 Address + Shipping
-  const steps = ["سبد خرید", "آدرس تحویل"];
-  const [activeStep, setActiveStep] = React.useState(lines.length ? 0 : 0);
+  const steps = ["سبد خرید", "آدرس و ارسال"];
+  const [activeStep, setActiveStep] = React.useState(0);
 
   const handleNext = () => setActiveStep((s) => Math.min(s + 1, steps.length - 1));
   const handleBack = () => setActiveStep((s) => Math.max(s - 1, 0));
 
-  // Progressive visibility helpers
   const showCart = activeStep === 0;
   const showAddress = activeStep === 1;
 
-
-  const renderStepper = <Stack direction="row" gap={1} alignItems="center" sx={{ flex: '1 1 auto' }}>
-    {activeStep !== 0 && <Button sx={{ flex: '1 1 auto' }} variant="outlined" onClick={handleBack}>
-      مرحله قبل
-    </Button>}
-    {activeStep !== 1 && <Button sx={{ flex: '1 1 auto' }} variant="contained" onClick={handleNext}>
-      مرحله بعد
-    </Button>}
-  </Stack>;
+  const renderStepper = (
+    <Stack direction="row" gap={1.25} alignItems="center" sx={{ flex: "1 1 auto" }}>
+      {activeStep !== 0 && (
+        <Button
+          sx={{
+            flex: "1 1 auto",
+            minHeight: 46,
+            borderRadius: `${TEB_RADII.pill}px`,
+            fontWeight: 700,
+          }}
+          variant="outlined"
+          onClick={handleBack}
+        >
+          مرحله قبل
+        </Button>
+      )}
+      {activeStep !== 1 && (
+        <Button
+          sx={{
+            flex: "1 1 auto",
+            minHeight: 46,
+            borderRadius: `${TEB_RADII.pill}px`,
+            fontWeight: 700,
+            bgcolor: TEB_COLORS.primary,
+            "&:hover": { bgcolor: TEB_COLORS.primaryDark },
+          }}
+          variant="contained"
+          disabled={lines.length === 0}
+          onClick={handleNext}
+        >
+          ادامه و ثبت آدرس
+        </Button>
+      )}
+    </Stack>
+  );
 
   return (
-    <>
+    <Container maxWidth="lg">
+      <Box sx={{ position: "relative", py: { xs: 3, md: 5 } }}>
+        {/* Header */}
+        <Stack spacing={0.75} sx={{ mb: 3 }}>
+          <Typography variant="h4" component="h1" fontWeight={800} color={TEB_COLORS.textPrimary}>
+            سبد خرید
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            اقلام انتخابی خود را بررسی کنید و سپس آدرس تحویل و روش ارسال را انتخاب نمایید.
+          </Typography>
+        </Stack>
 
-      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
+        {/* Stepper */}
+        <Paper
+          elevation={0}
+          sx={{
+            mb: 3,
+            px: { xs: 2, md: 3 },
+            py: { xs: 1.75, md: 2.25 },
+            borderRadius: `${TEB_RADII.lg}px`,
+            border: `1px solid ${TEB_COLORS.border}`,
+            bgcolor: "#FFFFFF",
+          }}
+        >
+          <Stepper alternativeLabel activeStep={activeStep}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>
+                  <Tooltip title={label}>
+                    <span>{label}</span>
+                  </Tooltip>
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Paper>
 
-        <Box sx={{ position: "relative", py: { xs: 3, md: 5 } }}>
-          {/* Header */}
-          <Stack spacing={1} sx={{ mb: 2 }}>
-            <Typography variant="h4" fontWeight={800}>
-              سبد خرید
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              هر مرحله را کامل کنید و روی «مرحله بعد» بزنید.
-            </Typography>
-          </Stack>
-
-          {/* Stepper (default styling; no custom colors) */}
-          <Paper elevation={0} sx={{ mb: 3, px: { xs: 1.5, md: 3 }, py: { xs: 1.5, md: 2 }, borderRadius: 4, border: 1, borderColor: "divider" }}>
-            <Stepper alternativeLabel activeStep={activeStep}>
-              {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>
-                    <Tooltip title={label}>
-                      <span>{label}</span>
-                    </Tooltip>
-                  </StepLabel>
-                </Step>
-              ))}
-            </Stepper>
-          </Paper>
-
-          {/* Main Content */}
-          <Grid container spacing={{ xs: 2, md: 3 }} alignItems="flex-start">
-            {showCart && (
-              <Grid size={{ xs: 12, md: 8 }}>
-                <Stack spacing={2}>
-                  <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, borderRadius: 4, border: 1, borderColor: "divider" }}>
-                    <Stack spacing={2}>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Stack direction="row" spacing={1.2} alignItems="center">
-                          <ShoppingBagRoundedIcon fontSize="small" />
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            اقلام سبد
-                          </Typography>
-                          {!!lines.length && (
-                            <Chip label={`${lines.length} مورد`} size="small" sx={{ borderRadius: 1.5 }} />
-                          )}
-                        </Stack>
+        {/* Main Content */}
+        <Grid container spacing={2.5}>
+          {showCart && (
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Stack spacing={2.5}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 2, md: 2.75 },
+                    borderRadius: `${TEB_RADII.lg}px`,
+                    border: `1px solid ${TEB_COLORS.border}`,
+                    bgcolor: "#FFFFFF",
+                  }}
+                >
+                  <Stack spacing={2}>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                      <Stack direction="row" spacing={1.25} alignItems="center">
+                        <ShoppingBag size={20} color={TEB_COLORS.primary} />
+                        <Typography variant="subtitle1" fontWeight={800} color={TEB_COLORS.textPrimary}>
+                          اقلام سبد خرید
+                        </Typography>
                         {!!lines.length && (
-                          <Tooltip title="خالی کردن سبد">
-                            <span>
-                              <IconButton size="small" color="error" onClick={() => clear()}>
-                                <DeleteOutlineRoundedIcon />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
+                          <Chip
+                            label={`${lines.length.toLocaleString("fa-IR")} مورد`}
+                            size="small"
+                            sx={{
+                              borderRadius: `${TEB_RADII.pill}px`,
+                              bgcolor: TEB_COLORS.surfaceSoft,
+                              color: TEB_COLORS.primary,
+                              fontWeight: 700,
+                            }}
+                          />
                         )}
                       </Stack>
-
-                      <Divider variant="fullWidth" sx={{ borderStyle: "dashed" }} />
-
-                      {lines.length === 0 ? (
-                        <Box sx={{ p: { xs: 3, md: 4 }, border: "1px dashed", borderColor: "divider", borderRadius: 2, textAlign: "center" }}>
-                          <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 1 }}>
-                            سبد خرید شما خالی است.
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            محصولات مورد نظر خود را به سبد اضافه کنید.
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Stack spacing={1.5}>
-                          {lines.map((line: any) => (
-                            <CartLineItem key={line.variantId} line={line} />
-                          ))}
-                        </Stack>
+                      {!!lines.length && (
+                        <Tooltip title="خالی کردن سبد">
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              aria-label="خالی کردن سبد"
+                              onClick={() => clear()}
+                              sx={{ width: 40, height: 40 }}
+                            >
+                              <Trash2 size={18} />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                       )}
                     </Stack>
-                  </Paper>
-                  {(isUpsellLoading || upsellProducts.length > 0) && (
-                    <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, borderRadius: 4, border: 1, borderColor: "divider" }}>
-                      <Stack spacing={2}>
-                        <Stack direction="row" alignItems="center" justifyContent="space-between">
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            پیشنهادهای ویژه برای شما
-                          </Typography>
-                          <Stack direction="row" spacing={0.5}>
-                            <IconButton
-                              size="small"
-                              onClick={() => scrollCarousel(-1)}
-                              aria-label="اسکرول به عقب"
-                            >
-                              <ChevronRightRoundedIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => scrollCarousel(1)}
-                              aria-label="اسکرول به جلو"
-                            >
-                              <ChevronLeftRoundedIcon fontSize="small" />
-                            </IconButton>
-                          </Stack>
-                        </Stack>
-                        <Box sx={{ position: "relative" }}>
-                          <Box
-                            ref={carouselRef}
-                            sx={{
-                              display: "flex",
-                              gap: 1.5,
-                              overflowX: "auto",
-                              scrollSnapType: "x mandatory",
-                              scrollBehavior: "smooth",
-                              direction: "ltr",
-                              px: 0.5,
-                              py: 0.5,
-                              "&::-webkit-scrollbar": { display: "none" },
-                              scrollbarWidth: "none",
-                            }}
-                          >
-                            {isUpsellLoading && upsellProducts.length === 0 ? (
-                              <>
-                                {[...Array(4)].map((_, index) => (
-                                  <Skeleton
-                                    key={`upsell-skeleton-${index}`}
-                                    variant="rounded"
-                                    width={180}
-                                    height={220}
-                                    sx={{ flex: "0 0 auto", borderRadius: 2 }}
-                                  />
-                                ))}
-                              </>
-                            ) : (
-                              upsellProducts.map((product) => {
-                                const isRecentlyAdded = recentlyAddedId === product.line.variantId;
-                                return (
-                                  <ButtonBase
-                                    key={product.line.variantId}
-                                    focusRipple
-                                    disabled={!product.inStock}
-                                    onClick={() => handleUpsellClick(product)}
-                                    sx={{
-                                      flex: "0 0 auto",
-                                      width: 180,
-                                      borderRadius: 2,
-                                      overflow: "hidden",
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "stretch",
-                                      border: "1px solid",
-                                      borderColor: isRecentlyAdded ? "primary.main" : "divider",
-                                      bgcolor: "background.paper",
-                                      p: 0,
-                                      textAlign: "right",
-                                      direction: "rtl",
-                                      position: "relative",
-                                      transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                                      "&:hover": product.inStock
-                                        ? {
-                                          transform: "translateY(-4px)",
-                                          boxShadow: 3,
-                                        }
-                                        : undefined,
-                                      "&.Mui-disabled": {
-                                        opacity: 1,
-                                        bgcolor: "action.disabledBackground",
-                                      },
-                                      scrollSnapAlign: "start",
-                                    }}
-                                  >
-                                    {isRecentlyAdded && (
-                                      <Chip
-                                        label="افزوده شد"
-                                        color="primary"
-                                        size="small"
-                                        sx={{ position: "absolute", top: 8, left: 8, zIndex: 1 }}
-                                      />
-                                    )}
-                                    <Box
-                                      sx={{
-                                        position: "relative",
-                                        width: "100%",
-                                        aspectRatio: "1 / 1",
-                                        overflow: "hidden",
-                                      }}
-                                    >
-                                      <Box
-                                        component="img"
-                                        alt={product.title}
-                                        src={product.imageUrl ?? UPSELL_FALLBACK_IMAGE}
-                                        style={{
-                                          objectFit: "cover",
-                                          filter: product.inStock ? "none" : "grayscale(100%)",
-                                          transform: product.inStock ? "none" : "scale(1.05)",
-                                          transition: "transform 0.3s ease",
-                                          position: 'absolute',
-                                          left: 0,
-                                          top: 0,
-                                          right: 0,
-                                          bottom: 0,
-                                          width: '100%',
-                                          height: '100%'
-                                        }}
-                                      />
-                                      {!product.inStock && (
-                                        <Box
-                                          sx={{
-                                            position: "absolute",
-                                            inset: 0,
-                                            bgcolor: "rgba(var(--mui-palette-common-onBackgroundChannel) / 0.35)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                          }}
-                                        >
-                                          <Typography variant="caption" color="common.white">
-                                            ناموجود
-                                          </Typography>
-                                        </Box>
-                                      )}
-                                    </Box>
-                                    <Stack spacing={0.75} sx={{ p: 1.5, width: "100%" }}>
-                                      <Typography variant="body2" color="text.primary" noWrap>
-                                        {product.title}
-                                      </Typography>
-                                      <Stack direction="row" spacing={1} alignItems="baseline">
-                                        {typeof product.originalPrice === "number" && product.originalPrice > product.finalPrice && (
-                                          <Typography
-                                            variant="caption"
-                                            color="text.secondary"
-                                            sx={{ textDecoration: "line-through" }}
-                                          >
-                                            {formatPrice(product.originalPrice)}
-                                          </Typography>
-                                        )}
-                                        <Typography variant="subtitle2" color="text.primary">
-                                          {formatPrice(product.finalPrice)}
-                                        </Typography>
-                                      </Stack>
-                                      {typeof product.discountPercent === "number" && product.discountPercent > 0 ? (
-                                        <Typography variant="caption" color="success.main">
-                                          {product.discountPercent}% تخفیف
-                                        </Typography>
-                                      ) : null}
-                                      {product.inStock ? (
-                                        <Typography variant="caption" color="primary.main">
-                                          برای افزودن به سبد کلیک کنید
-                                        </Typography>
-                                      ) : (
-                                        <Typography variant="caption" color="text.secondary">
-                                          محصول ناموجود است
-                                        </Typography>
-                                      )}
-                                    </Stack>
-                                  </ButtonBase>
-                                );
-                              })
-                            )}
-                          </Box>
-                        </Box>
-                      </Stack>
-                    </Paper>
-                  )}
-                </Stack>
-              </Grid>
-            )}
 
-            {/* Middle: Progressive Details (Address + Shipping) */}
-            {
-              showAddress && <Grid size={{ xs: 12, md: 8 }}>
-                <Paper elevation={0} sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 4, border: 1, borderColor: "divider" }}>
-                  <Stack spacing={2}>
-                    <Typography variant="subtitle1" fontWeight={700}>آدرس تحویل</Typography>
-                    <AddressForm />
-                    <Divider variant="fullWidth" sx={{ borderStyle: "dashed" }} />
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle1" fontWeight={700}>روش ارسال</Typography>
-                      <CarrierSelect />
-                    </Stack>
+                    <Divider sx={{ borderColor: TEB_COLORS.border }} />
+
+                    {lines.length === 0 ? (
+                      <EmptyState
+                        title="سبد خرید شما خالی است"
+                        description="گیاهان دارویی، دمنوش‌ها و روغن‌های طبیعی طب احمدی را ببینید و محصولات مورد نیاز خود را اضافه کنید."
+                        actionLabel="مشاهده فروشگاه"
+                        actionHref="/store"
+                      />
+                    ) : (
+                      <Stack spacing={1.5}>
+                        {lines.map((line: CartLine) => (
+                          <CartLineItem key={line.variantId} line={line} />
+                        ))}
+                      </Stack>
+                    )}
                   </Stack>
                 </Paper>
-              </Grid>
-            }
-            {/* Right: Summary (unchanged behavior; sticky) */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Box sx={{ position: { md: "sticky" }, top: { md: 88 }, zIndex: 1 }}>
 
-                <Paper elevation={0} sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 4, border: 1, borderColor: "divider", position: { md: 'sticky' }, top: { md: 110 } }}>
-                  {
-                    activeStep === 1 && <Stack spacing={1}>
-                      <Typography variant="subtitle1" fontWeight={700}>کد تخفیف</Typography>
-                      <OfferInput />
+                {(isUpsellLoading || upsellProducts.length > 0) && (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: { xs: 2, md: 2.75 },
+                      borderRadius: `${TEB_RADII.lg}px`,
+                      border: `1px solid ${TEB_COLORS.border}`,
+                      bgcolor: "#FFFFFF",
+                    }}
+                  >
+                    <Stack spacing={2}>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Typography variant="subtitle1" fontWeight={800} color={TEB_COLORS.textPrimary}>
+                          پیشنهادهای مکمل برای سبد شما
+                        </Typography>
+                        <Stack direction="row" spacing={0.5}>
+                          <IconButton
+                            size="small"
+                            onClick={() => scrollCarousel(-1)}
+                            aria-label="اسکرول به عقب"
+                            sx={{ border: `1px solid ${TEB_COLORS.border}`, width: 36, height: 36 }}
+                          >
+                            <ChevronRight size={18} />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => scrollCarousel(1)}
+                            aria-label="اسکرول به جلو"
+                            sx={{ border: `1px solid ${TEB_COLORS.border}`, width: 36, height: 36 }}
+                          >
+                            <ChevronLeft size={18} />
+                          </IconButton>
+                        </Stack>
+                      </Stack>
+                      <Box sx={{ position: "relative" }}>
+                        <Box
+                          ref={carouselRef}
+                          sx={{
+                            display: "flex",
+                            gap: 1.5,
+                            overflowX: "auto",
+                            scrollSnapType: "x mandatory",
+                            scrollBehavior: "smooth",
+                            direction: "ltr",
+                            px: 0.5,
+                            py: 0.5,
+                            "&::-webkit-scrollbar": { display: "none" },
+                            scrollbarWidth: "none",
+                          }}
+                        >
+                          {isUpsellLoading && upsellProducts.length === 0 ? (
+                            <>
+                              {[...Array(4)].map((_, index) => (
+                                <Skeleton
+                                  key={`upsell-skeleton-${index}`}
+                                  variant="rounded"
+                                  width={180}
+                                  height={230}
+                                  sx={{ flex: "0 0 auto", borderRadius: `${TEB_RADII.md}px` }}
+                                />
+                              ))}
+                            </>
+                          ) : (
+                            upsellProducts.map((product) => {
+                              const isRecentlyAdded = recentlyAddedId === product.line.variantId;
+                              return (
+                                <ButtonBase
+                                  key={product.line.variantId}
+                                  focusRipple
+                                  disabled={!product.inStock}
+                                  onClick={() => handleUpsellClick(product)}
+                                  sx={{
+                                    flex: "0 0 auto",
+                                    width: 184,
+                                    borderRadius: `${TEB_RADII.md}px`,
+                                    overflow: "hidden",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "stretch",
+                                    border: "1px solid",
+                                    borderColor: isRecentlyAdded ? TEB_COLORS.primary : TEB_COLORS.border,
+                                    bgcolor: "#FFFFFF",
+                                    p: 0,
+                                    textAlign: "right",
+                                    direction: "rtl",
+                                    position: "relative",
+                                    transition: "transform 0.2s ease, border-color 0.2s ease",
+                                    "&:hover": product.inStock
+                                      ? {
+                                        transform: "translateY(-2px)",
+                                        borderColor: TEB_COLORS.primary,
+                                      }
+                                      : undefined,
+                                    "&.Mui-disabled": {
+                                      opacity: 0.7,
+                                      bgcolor: TEB_COLORS.surfaceSoft,
+                                    },
+                                    scrollSnapAlign: "start",
+                                  }}
+                                >
+                                  {isRecentlyAdded && (
+                                    <Chip
+                                      label="افزوده شد"
+                                      size="small"
+                                      sx={{
+                                        position: "absolute",
+                                        top: 8,
+                                        left: 8,
+                                        zIndex: 1,
+                                        bgcolor: TEB_COLORS.primary,
+                                        color: "#FFFFFF",
+                                        fontWeight: 700,
+                                      }}
+                                    />
+                                  )}
+                                  <Box
+                                    sx={{
+                                      position: "relative",
+                                      width: "100%",
+                                      aspectRatio: "1 / 1",
+                                      overflow: "hidden",
+                                      bgcolor: TEB_COLORS.surfaceSoft,
+                                    }}
+                                  >
+                                    <Box
+                                      component="img"
+                                      alt={product.title}
+                                      src={product.imageUrl ?? UPSELL_FALLBACK_IMAGE}
+                                      style={{
+                                        objectFit: "cover",
+                                        filter: product.inStock ? "none" : "grayscale(100%)",
+                                        position: "absolute",
+                                        inset: 0,
+                                        width: "100%",
+                                        height: "100%",
+                                      }}
+                                    />
+                                    {!product.inStock && (
+                                      <Box
+                                        sx={{
+                                          position: "absolute",
+                                          inset: 0,
+                                          bgcolor: "rgba(34, 34, 34, 0.4)",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}
+                                      >
+                                        <Typography variant="caption" color="#FFFFFF" fontWeight={700}>
+                                          ناموجود
+                                        </Typography>
+                                      </Box>
+                                    )}
+                                  </Box>
+                                  <Stack spacing={0.6} sx={{ p: 1.5, width: "100%" }}>
+                                    <Typography variant="body2" fontWeight={700} color={TEB_COLORS.textPrimary} noWrap>
+                                      {product.title}
+                                    </Typography>
+                                    <Stack direction="row" spacing={1} alignItems="baseline">
+                                      {typeof product.originalPrice === "number" && product.originalPrice > product.finalPrice && (
+                                        <Typography
+                                          variant="caption"
+                                          color="text.secondary"
+                                          sx={{ textDecoration: "line-through", fontVariantNumeric: "tabular-nums" }}
+                                        >
+                                          {formatPrice(product.originalPrice)}
+                                        </Typography>
+                                      )}
+                                      <Typography
+                                        variant="subtitle2"
+                                        fontWeight={800}
+                                        color={TEB_COLORS.primaryDark}
+                                        sx={{ fontVariantNumeric: "tabular-nums" }}
+                                      >
+                                        {formatPrice(product.finalPrice)}
+                                      </Typography>
+                                    </Stack>
+                                    {typeof product.discountPercent === "number" && product.discountPercent > 0 ? (
+                                      <Typography variant="caption" fontWeight={700} color={TEB_COLORS.error}>
+                                        {product.discountPercent.toLocaleString("fa-IR")}٪ تخفیف
+                                      </Typography>
+                                    ) : null}
+                                    <Typography
+                                      variant="caption"
+                                      fontWeight={700}
+                                      color={product.inStock ? TEB_COLORS.primary : "text.secondary"}
+                                    >
+                                      {product.inStock ? "افزودن سریع به سبد" : "ناموجود"}
+                                    </Typography>
+                                  </Stack>
+                                </ButtonBase>
+                              );
+                            })
+                          )}
+                        </Box>
+                      </Box>
                     </Stack>
-                  }
-                  <CartSummary show={activeStep === 1} action={renderStepper} />
-                </Paper>
-              </Box>
+                  </Paper>
+                )}
+              </Stack>
             </Grid>
+          )}
+
+          {showAddress && (
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 2, md: 3 },
+                  borderRadius: `${TEB_RADII.lg}px`,
+                  border: `1px solid ${TEB_COLORS.border}`,
+                  bgcolor: "#FFFFFF",
+                }}
+              >
+                <Stack spacing={2.5}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="subtitle1" fontWeight={800} color={TEB_COLORS.textPrimary}>
+                      اطلاعات گیرنده و آدرس تحویل
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      تکمیل نام، نام خانوادگی، شماره تماس و انتخاب استان و شهر برای محاسبه ارسال الزامی است.
+                    </Typography>
+                  </Stack>
+                  <AddressForm />
+                  <Divider sx={{ borderColor: TEB_COLORS.border }} />
+                  <Stack spacing={1.25}>
+                    <Typography variant="subtitle1" fontWeight={800} color={TEB_COLORS.textPrimary}>
+                      روش ارسال
+                    </Typography>
+                    <CarrierSelect />
+                  </Stack>
+                </Stack>
+              </Paper>
+            </Grid>
+          )}
+
+          {/* Summary Sidebar */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Box sx={{ position: { md: "sticky" }, top: { md: 108 }, zIndex: 1 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 1.5, md: 2 },
+                  borderRadius: `${TEB_RADII.lg}px`,
+                  border: `1px solid ${TEB_COLORS.border}`,
+                  bgcolor: "#FFFFFF",
+                }}
+              >
+                {activeStep === 1 && (
+                  <Stack spacing={1.25} sx={{ px: 1.5, pt: 1.5 }}>
+                    <Typography variant="subtitle2" fontWeight={800} color={TEB_COLORS.textPrimary}>
+                      کد تخفیف
+                    </Typography>
+                    <OfferInput />
+                    <Divider sx={{ pt: 1, borderColor: TEB_COLORS.border }} />
+                  </Stack>
+                )}
+                <CartSummary show={activeStep === 1} action={renderStepper} />
+                {lines.length > 0 && (
+                  <Box sx={{ px: 2, pb: 1.5 }}>
+                    <Button
+                      component={Link}
+                      href="/store"
+                      variant="text"
+                      size="small"
+                      fullWidth
+                      sx={{ color: TEB_COLORS.primary, fontWeight: 600 }}
+                    >
+                      ادامه خرید در فروشگاه
+                    </Button>
+                  </Box>
+                )}
+              </Paper>
+            </Box>
           </Grid>
-          {/* Navigation */}
-        </Box>
-      </Container>
-    </>
+        </Grid>
+      </Box>
+    </Container>
   );
 }
+

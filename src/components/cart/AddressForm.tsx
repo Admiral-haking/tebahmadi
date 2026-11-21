@@ -5,6 +5,7 @@ import { Autocomplete, Grid, TextField } from '@mui/material';
 
 import { useCart, type CartAddress } from './useCart';
 import { useAuth } from '@/auth';
+import { isValidIranMobile, isValidIranPostalCode, normalizeDigits } from '@/lib/format';
 import { PROVINCE_NAMES, getCitiesByProvinceName, isCityInProvince } from '@/utils/location';
 
 const emptyAddress: CartAddress = {
@@ -16,10 +17,12 @@ const emptyAddress: CartAddress = {
   address: '',
   postalCode: '',
 };
-let timeout: any = null
+let timeout: ReturnType<typeof setTimeout> | null = null;
+
 export default function AddressForm() {
   const { state, setAddress } = useCart();
   const [values, setValues] = useState<CartAddress>(state.address ?? emptyAddress);
+  const [touched, setTouched] = useState<Partial<Record<keyof CartAddress, boolean>>>({});
 
   const { user } = useAuth();
 
@@ -40,7 +43,8 @@ export default function AddressForm() {
       phone: state.address?.phone || emptyAddress.phone,
       postalCode: state.address?.postalCode || '',
     });
-  }, [state.address]);
+  }, [state.address, user?.address]);
+
   useEffect(() => {
     const candidateState = user?.state ?? state.address?.state ?? emptyAddress.state;
     const normalizedState = candidateState && PROVINCE_NAMES.includes(candidateState) ? candidateState : '';
@@ -58,7 +62,7 @@ export default function AddressForm() {
       phone: user?.phone || state.address?.phone || emptyAddress.phone,
       postalCode: state.address?.postalCode || '',
     });
-  }, [user]);
+  }, [user, state.address]);
 
   const cityOptions = useMemo(() => getCitiesByProvinceName(values.state), [values.state]);
 
@@ -78,7 +82,7 @@ export default function AddressForm() {
   }, [values.state, values.city]);
 
   useEffect(() => {
-    clearTimeout(timeout);
+    if (timeout) clearTimeout(timeout);
 
     timeout = setTimeout(() => {
       const hasAnyValue = Object.values(values).some((value) => value && value.toString().trim().length > 0);
@@ -91,8 +95,13 @@ export default function AddressForm() {
   }, [values.fname, values.lname, values.city, values.address, values.state, values.phone, values.postalCode]);
 
   const handleChange = (field: keyof CartAddress) => (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
+    const raw = event.target.value;
+    const value = field === 'phone' || field === 'postalCode' ? normalizeDigits(raw) : raw;
     setValues((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleBlur = (field: keyof CartAddress) => () => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
   const handleStateSelect = (_: unknown, newValue: string | null) => {
@@ -120,24 +129,56 @@ export default function AddressForm() {
     });
   };
 
+  const fnameError = touched.fname && !values.fname.trim() ? 'لطفاً نام گیرنده را وارد کنید.' : '';
+  const lnameError = touched.lname && !values.lname.trim() ? 'لطفاً نام خانوادگی را وارد کنید.' : '';
+  const phoneError = touched.phone
+    ? !values.phone.trim()
+      ? 'شماره تماس الزامی است.'
+      : !isValidIranMobile(values.phone)
+        ? 'شماره موبایل معتبر وارد کنید (مثال: 09123456789).'
+        : ''
+    : '';
+  const postalError =
+    touched.postalCode && values.postalCode && values.postalCode.trim().length > 0 && !isValidIranPostalCode(values.postalCode)
+      ? 'کد پستی باید ۱۰ رقم باشد.'
+      : '';
+
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField required label="نام" value={values.fname} onChange={handleChange('fname')} fullWidth />
-      </Grid>
-
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField required label="نام خانوادگی" value={values.lname} onChange={handleChange('lname')} fullWidth />
+        <TextField
+          label="نام *"
+          value={values.fname}
+          onChange={handleChange('fname')}
+          onBlur={handleBlur('fname')}
+          error={Boolean(fnameError)}
+          helperText={fnameError || undefined}
+          fullWidth
+        />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
-          label="شماره تماس"
-          required
+          label="نام خانوادگی *"
+          value={values.lname}
+          onChange={handleChange('lname')}
+          onBlur={handleBlur('lname')}
+          error={Boolean(lnameError)}
+          helperText={lnameError || undefined}
+          fullWidth
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <TextField
+          label="شماره تماس *"
           value={values.phone}
           onChange={handleChange('phone')}
+          onBlur={handleBlur('phone')}
+          error={Boolean(phoneError)}
+          helperText={phoneError || undefined}
           fullWidth
-          inputProps={{ dir: 'ltr', inputMode: 'tel' }}
+          inputProps={{ dir: 'ltr', inputMode: 'tel', style: { direction: 'ltr', textAlign: 'left' } }}
         />
       </Grid>
 
@@ -146,7 +187,7 @@ export default function AddressForm() {
           options={PROVINCE_NAMES}
           value={values.state || null}
           onChange={handleStateSelect}
-          renderInput={(params) => <TextField {...params} required label="استان" fullWidth />}
+          renderInput={(params) => <TextField {...params} label="استان" fullWidth />}
         />
       </Grid>
 
@@ -156,25 +197,25 @@ export default function AddressForm() {
           value={values.city || null}
           onChange={handleCitySelect}
           disabled={!values.state}
-          renderInput={(params) => <TextField {...params} required label="شهر" fullWidth />}
+          renderInput={(params) => <TextField {...params} label="شهر" fullWidth />}
         />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
-          label="کد پستی"
-          required
+          label="کد پستی (اختیاری)"
           value={values.postalCode ?? ''}
           onChange={handleChange('postalCode')}
+          onBlur={handleBlur('postalCode')}
+          error={Boolean(postalError)}
+          helperText={postalError || '۱۰ رقم بدون خط تیره (اختیاری)'}
           fullWidth
-          helperText="کد پستی ۱۰ رقمی محل تحویل"
-          inputProps={{ dir: 'ltr', inputMode: 'numeric' }}
+          inputProps={{ dir: 'ltr', inputMode: 'numeric', style: { direction: 'ltr', textAlign: 'left' } }}
         />
       </Grid>
       <Grid size={{ xs: 12 }}>
         <TextField
-          label="آدرس کامل"
-          required
+          label="آدرس کامل پستی"
           value={values.address ?? ''}
           onChange={handleChange('address')}
           fullWidth
@@ -182,7 +223,7 @@ export default function AddressForm() {
           minRows={3}
         />
       </Grid>
-
     </Grid>
   );
 }
+

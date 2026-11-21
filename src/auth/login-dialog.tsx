@@ -8,10 +8,10 @@ import {
   Alert, Box, Button, CircularProgress, Dialog, DialogContent,
   IconButton, Stack, TextField, Typography,
 } from "@mui/material";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import { Lock, X } from "lucide-react";
 import { useAuth, useLogin } from "@/auth";
 import { OTP_LENGTH, OTP_PATTERN } from "@/auth/otp";
+import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 
 /** Persian/Arabic digits → Latin. */
 function toLatin(s: string): string {
@@ -41,16 +41,12 @@ function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: 
   const refs = useRef<(HTMLInputElement | null)[]>([]);
   const digits = Array.from({ length: OTP_LENGTH }, (_, i) => value[i] ?? "");
 
-  // When the code step appears, put the cursor in the first empty box so the
-  // user can type the code immediately. A short delay lets the dialog finish
-  // mounting/animating so the focus reliably lands (no missed focus).
   useEffect(() => {
     const t = setTimeout(() => {
       const firstEmpty = Math.min(value.replace(/\D/g, "").length, OTP_LENGTH - 1);
       refs.current[firstEmpty]?.focus();
     }, 60);
     return () => clearTimeout(t);
-    // run once on mount (i.e. when the code step is shown)
   }, []);
 
   function clean(raw: string) { return toLatin(raw).replace(/\D/g, ""); }
@@ -79,7 +75,7 @@ function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: 
   }
 
   return (
-    <Box dir="ltr" style={{ direction: "ltr" }} sx={{ display: "flex", gap: { xs: 1, sm: 1.25 }, justifyContent: "center" }}>
+    <Box dir="ltr" style={{ direction: "ltr" }} sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
       {digits.map((d, i) => (
         <input
           key={i}
@@ -94,15 +90,16 @@ function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: 
           maxLength={1}
           aria-label={`رقم ${i + 1}`}
           style={{
-            width: "clamp(42px, 11vw, 48px)",
-            height: "clamp(50px, 13vw, 56px)",
+            width: 48,
+            height: 54,
             textAlign: "center",
             fontSize: "1.4rem",
             fontWeight: 700,
             fontFamily: "monospace",
-            border: "2px solid",
-            borderColor: d ? "var(--mui-palette-primary-light)" : "var(--mui-palette-divider)",
-            borderRadius: 12,
+            border: `1.5px solid ${d ? TEB_COLORS.primary : TEB_COLORS.border}`,
+            backgroundColor: d ? TEB_COLORS.surfaceSoft : "#FFFFFF",
+            color: TEB_COLORS.textPrimary,
+            borderRadius: TEB_RADII.md,
             outline: "none",
             direction: "ltr",
           }}
@@ -136,7 +133,6 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
 
   const close = useCallback(() => { setOpen(false); reset(); }, [reset]);
 
-  // Fire onSuccess once when the user becomes authenticated while the modal is open.
   useEffect(() => {
     if (open) wasOpenRef.current = true;
     if (wasOpenRef.current && status === "authenticated") {
@@ -149,7 +145,6 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
     }
   }, [status, open, reset]);
 
-  // Auto-submit the four-digit code once (no resubmit loop on a wrong code).
   useEffect(() => {
     if (code.length < OTP_LENGTH) { lastTriedRef.current = ""; return; }
     if (OTP_PATTERN.test(code) && step === "code-sent" && !isSubmitting && code !== lastTriedRef.current) {
@@ -169,50 +164,53 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
         slotProps={{
           paper: {
             sx: {
-              borderRadius: 4,
+              borderRadius: `${TEB_RADII.lg}px`,
               overflow: "hidden",
-              boxShadow: "0 28px 80px -40px rgba(31,70,53,.65)",
-              m: { xs: 2, sm: "auto" },
-              maxWidth: { xs: "calc(100% - 32px)", sm: 400 },
+              border: `1px solid ${TEB_COLORS.border}`,
+              bgcolor: "#FFFFFF",
             },
           },
         }}
       >
-        <Box sx={{ height: 4, bgcolor: "primary.main" }} />
-        <DialogContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+        <Box sx={{ height: 4, bgcolor: TEB_COLORS.primary }} />
+        <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 }, position: "relative" }}>
           <IconButton
             size="small"
             onClick={close}
             disabled={isSubmitting}
-            sx={{
-              position: "absolute",
-              insetInlineEnd: 10,
-              top: 10,
-              width: 36,
-              height: 36,
-            }}
+            sx={{ position: "absolute", insetInlineEnd: 12, top: 12, width: 40, height: 40 }}
             aria-label="بستن"
           >
-            <CloseRoundedIcon fontSize="small" />
+            <X size={18} />
           </IconButton>
 
           <Stack spacing={2.5}>
-            <Stack spacing={1} alignItems="center" textAlign="center">
-              <Box sx={{ width: 52, height: 52, borderRadius: 3, display: "grid", placeItems: "center",
-                bgcolor: "primary.50", border: "1px solid", borderColor: "primary.100" }}>
-                <LockRoundedIcon color="primary" />
+            <Stack spacing={1.25} alignItems="center" textAlign="center">
+              <Box
+                sx={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: "50%",
+                  display: "grid",
+                  placeItems: "center",
+                  bgcolor: TEB_COLORS.surfaceSoft,
+                  border: `1px solid ${TEB_COLORS.border}`,
+                  color: TEB_COLORS.primary,
+                }}
+              >
+                <Lock size={22} />
               </Box>
-              <Typography variant="h6" fontWeight={800}>
+              <Typography variant="h6" fontWeight={800} color={TEB_COLORS.textPrimary}>
                 {isCodeStep ? "کد تأیید" : "ورود / ثبت‌نام"}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {isCodeStep
-                  ? <>کد {OTP_LENGTH} رقمی ارسال‌شده به <Box component="span" dir="ltr" sx={{ fontWeight: 700 }}>{phone}</Box> را وارد کنید.</>
+                  ? <>کد {OTP_LENGTH} رقمی ارسال‌شده به <Box component="span" dir="ltr" sx={{ fontWeight: 700, color: TEB_COLORS.textPrimary }}>{phone}</Box> را وارد کنید.</>
                   : "برای ادامه، شماره موبایل خود را وارد کنید."}
               </Typography>
             </Stack>
 
-            {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
+            {error && <Alert severity="error" sx={{ borderRadius: `${TEB_RADII.md}px` }}>{error}</Alert>}
 
             {!isCodeStep ? (
               <Box component="form" onSubmit={(e) => { e.preventDefault(); void requestCode(phone); }}>
@@ -227,12 +225,23 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
                       setPhone(plus + latin.replace(/\D/g, ""));
                     }}
                     fullWidth autoFocus required
-                    placeholder="مثال: 09031234567"
+                    placeholder="09123456789"
                     disabled={isSubmitting}
                     inputProps={{ inputMode: "numeric", dir: "ltr", style: { direction: "ltr", textAlign: "left", letterSpacing: 1, unicodeBidi: "plaintext" } }}
                   />
-                  <Button type="submit" variant="contained" size="large" disabled={isSubmitting || !phone.trim()}
-                    sx={{ borderRadius: 99, py: 1.3, fontWeight: 700 }}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    disabled={isSubmitting || !phone.trim()}
+                    sx={{
+                      borderRadius: `${TEB_RADII.pill}px`,
+                      minHeight: 46,
+                      fontWeight: 700,
+                      bgcolor: TEB_COLORS.primary,
+                      "&:hover": { bgcolor: TEB_COLORS.primaryDark },
+                    }}
+                  >
                     {isSubmitting ? <CircularProgress size={22} color="inherit" /> : "ارسال کد تأیید"}
                   </Button>
                 </Stack>
@@ -240,12 +249,28 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
             ) : (
               <Stack spacing={2}>
                 <OtpBoxes value={code} onChange={setCode} disabled={isSubmitting} />
-                <Button variant="contained" size="large" onClick={() => verifyCode(code)}
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => verifyCode(code)}
                   disabled={isSubmitting || !OTP_PATTERN.test(code)}
-                  sx={{ borderRadius: 99, py: 1.3, fontWeight: 700 }}>
+                  sx={{
+                    borderRadius: `${TEB_RADII.pill}px`,
+                    minHeight: 46,
+                    fontWeight: 700,
+                    bgcolor: TEB_COLORS.primary,
+                    "&:hover": { bgcolor: TEB_COLORS.primaryDark },
+                  }}
+                >
                   {isSubmitting ? <CircularProgress size={22} color="inherit" /> : "تأیید و ورود"}
                 </Button>
-                <Button size="small" color="inherit" onClick={() => { setCode(""); reset(); }} disabled={isSubmitting}>
+                <Button
+                  size="small"
+                  color="inherit"
+                  onClick={() => { setCode(""); reset(); }}
+                  disabled={isSubmitting}
+                  sx={{ minHeight: 44 }}
+                >
                   تغییر شماره
                 </Button>
               </Stack>
@@ -256,3 +281,4 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
     </LoginDialogContext.Provider>
   );
 }
+

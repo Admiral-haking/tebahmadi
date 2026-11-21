@@ -1,115 +1,78 @@
-import SearchBox from '@/components/search';
-import { Box, Divider, Stack, Typography } from '@mui/material';
+import Link from "next/link";
+import { Box, Breadcrumbs, Stack, Typography } from "@mui/material";
+import { ChevronLeft } from "lucide-react";
+import type { StoreCategoryContext } from "../data";
+import { loadRootCategories } from "../data";
+import type { StoreViewSearchParams } from "..";
+import { StoreCatalogToolbar } from "./store-catalog-toolbar.client";
+import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 
-import StoreFilters from './filters';
-import type { StoreCategoryContext } from '../data';
-import type { StoreViewSearchParams } from '..';
-import Image from 'next/image';
-
-function extractSearchValue(searchParams: StoreViewSearchParams): string {
-  const raw = searchParams.q;
-  if (Array.isArray(raw)) {
-    return raw[0] ?? '';
-  }
-  return raw ?? '';
-}
-
-function buildBreadcrumbLabel(category: StoreCategoryContext): string | null {
-  if (category.breadcrumbs.length <= 1) {
-    return null;
-  }
-  return category.breadcrumbs.map((crumb) => crumb.name).join(' / ');
-}
-
-export default function Hero({
-  category,
-  searchParams,
-  siteTitle,
+export default async function Hero({
+    category,
+    searchParams,
 }: {
-  category: StoreCategoryContext;
-  searchParams: StoreViewSearchParams;
-  siteTitle?: string;
+    category: StoreCategoryContext;
+    searchParams: StoreViewSearchParams;
+    siteTitle?: string;
 }) {
-  const searchValue = extractSearchValue(searchParams);
-  const breadcrumb = buildBreadcrumbLabel(category);
-  const searchUrl = '/store/' + category.active.path;
+    const rootCategories = await loadRootCategories();
 
-  return (
-    <Stack
-      gap={{ xs: 2, md: 3 }}
-      alignItems={{ xs: 'stretch', md: 'center' }}
-      direction={{ xs: 'column', md: 'row' }}
-      sx={{
-        p: { xs: 2, sm: 2.5, md: 3 },
-        borderRadius: { xs: 4, md: 6 },
-        bgcolor: 'background.paper',
-        border: '1px solid',
-        borderColor: 'divider',
-        boxShadow: '0 14px 40px rgba(42, 90, 68, .07)',
-      }}
-    >
-      <Stack
-        direction="row"
-        gap={{ xs: 1.25, md: 2 }}
-        alignItems="center"
-        sx={{ flex: '1 1 auto', width: { xs: '100%', md: 'initial' } }}
-      >
-        <Box
-          sx={{
-            position: 'relative',
-            width: { xs: 62, sm: 76 },
-            height: { xs: 62, sm: 76 },
-            borderRadius: 3,
-            overflow: 'hidden',
-            border: '1px solid',
-            borderColor: 'divider',
-            flexShrink: 0,
-            bgcolor: 'rgba(42, 90, 68, .06)',
-          }}
-        >
-          <Image
-            alt={category.active.name}
-            src={category.mediaId ? '/api/media/' + category.mediaId : '/category.png'}
-            fill
-            sizes="(max-width: 600px) 62px, 76px"
-            style={{ objectFit: 'cover' }}
-          />
-        </Box>
+    return (
+        <Stack spacing={2.5}>
+            <Box
+                sx={{
+                    p: { xs: 2.5, md: 3.5 },
+                    borderRadius: `${TEB_RADII.lg}px`,
+                    bgcolor: TEB_COLORS.softSurface,
+                    border: `1px solid ${TEB_COLORS.border}`,
+                }}
+            >
+                <Breadcrumbs
+                    separator={<ChevronLeft size={14} color={TEB_COLORS.textSecondary} />}
+                    aria-label="مسیر دسته‌بندی"
+                    sx={{ mb: 1, fontSize: "12.5px" }}
+                >
+                    <Box component={Link} href="/" sx={{ color: TEB_COLORS.textSecondary }}>
+                        خانه
+                    </Box>
+                    <Box component={Link} href="/store" sx={{ color: TEB_COLORS.textSecondary }}>
+                        فروشگاه
+                    </Box>
+                    {category.breadcrumbs.map((crumb, index) => {
+                        const isLast = index === category.breadcrumbs.length - 1;
+                        return isLast ? (
+                            <Typography key={crumb.id} variant="caption" fontWeight={700} color={TEB_COLORS.primary}>
+                                {crumb.name}
+                            </Typography>
+                        ) : (
+                            <Box
+                                key={crumb.id}
+                                component={Link}
+                                href={`/store/${crumb.path}`}
+                                sx={{ color: TEB_COLORS.textSecondary }}
+                            >
+                                {crumb.name}
+                            </Box>
+                        );
+                    })}
+                </Breadcrumbs>
 
-        <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
-          {siteTitle && (
-            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-              {siteTitle}
-            </Typography>
-          )}
-          <Typography variant="h2" sx={{ fontSize: { xs: '1.35rem', sm: '1.65rem', md: '2rem' } }}>
-            {category.active.name}
-          </Typography>
-          {breadcrumb && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {breadcrumb}
-            </Typography>
-          )}
-        </Box>
+                <Typography variant="h2" sx={{ fontSize: { xs: "22px", md: "28px" }, fontWeight: 800 }}>
+                    {category.active.name}
+                </Typography>
+                {category.root.seoDescription && (
+                    <Typography variant="body2" sx={{ color: TEB_COLORS.textSecondary, mt: 0.75 }}>
+                        {category.root.seoDescription}
+                    </Typography>
+                )}
+            </Box>
 
-        <Divider sx={{ flex: '1 1 auto', display: { xs: 'none', md: 'block' } }} />
-      </Stack>
-
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        gap={1.5}
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-        sx={{ width: { xs: '100%', md: 'initial' } }}
-      >
-        <StoreFilters attributes={category.filterAttributes} searchParams={searchParams} />
-        <SearchBox
-          boxSx={{ width: '100%', minWidth: { xs: '100%', sm: 300 }, maxWidth: { xs: '100%', sm: 340 } }}
-          onSearchUrl={searchUrl}
-          initialQuery={searchValue}
-          alwaysShowSearch
-          preserveQueryParams
-        />
-      </Stack>
-    </Stack>
-  );
+            <StoreCatalogToolbar
+                categories={rootCategories}
+                activeCategoryPath={category.active.path}
+                filterAttributes={category.filterAttributes}
+                searchParams={searchParams}
+            />
+        </Stack>
+    );
 }

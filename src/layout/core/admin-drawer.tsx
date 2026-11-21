@@ -1,72 +1,77 @@
-"use client"
+"use client";
 
 import { Box, Drawer, IconButton, Stack, Typography } from "@mui/material";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import AdminMenu from "../components/admin-menu";
+import { TEB_COLORS } from "@/theme/tokens";
 
 export default function AdminDrawer() {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        const btn = window.document.getElementById("menu-admin-button");
+        const toggle = () => setOpen((last) => !last);
+        const btnDesktop = window.document.getElementById("menu-admin-button");
+        const btnMobile = window.document.getElementById("menu-admin-button-xs");
 
-        if (!btn) return;
+        btnDesktop?.addEventListener("click", toggle);
+        btnMobile?.addEventListener("click", toggle);
 
-        btn.onclick = function () {
-            setOpen(last => !last)
-        }
-    }, [])
-    useEffect(() => {
-        const btn = window.document.getElementById("menu-admin-button-xs");
+        return () => {
+            btnDesktop?.removeEventListener("click", toggle);
+            btnMobile?.removeEventListener("click", toggle);
+        };
+    }, []);
 
-        if (!btn) return;
-
-        btn.onclick = function () {
-            setOpen(last => !last)
-        }
-    }, [])
-    return <Drawer
-        anchor="right"
-        open={open}
-        onClose={() => setOpen(false)}
-        onClick={() => setOpen(false)}
-    >
-        <Box sx={{
-            maxHeight: '100vh',
-            overflowY: 'auto',
-            width: { xs: 'min(88vw, 360px)', sm: 360 },
-            height: '100%',
-            p: 2,
-            bgcolor: 'background.paper',
-            pt: 9,
-            pb: 3,
-        }}>
-            <AdminMenu />
-        </Box>
-
-        <Stack
-            direction="row"
-            alignItems="center"
-            gap={2}
-            justifyContent="space-between"
-            sx={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                left: 0,
-                p: 2,
-                bgcolor: 'background.default'
+    return (
+        <Drawer
+            anchor="right"
+            open={open}
+            onClose={() => setOpen(false)}
+            PaperProps={{
+                sx: {
+                    width: { xs: "86vw", sm: 320 },
+                    maxWidth: 340,
+                    bgcolor: "#FFFFFF",
+                    borderLeft: `1px solid ${TEB_COLORS.border}`,
+                },
             }}
         >
-            <Typography fontWeight="bold" variant="subtitle1">
-                منوی مدیریت
-            </Typography>
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{
+                    px: 2.25,
+                    py: 1.75,
+                    bgcolor: TEB_COLORS.surfaceSoft,
+                    borderBottom: `1px solid ${TEB_COLORS.border}`,
+                }}
+            >
+                <Typography fontWeight={800} variant="subtitle1" color={TEB_COLORS.primaryDark}>
+                    منوی مدیریت طب احمدی
+                </Typography>
 
-            <IconButton aria-label="close menu" onClick={() => setOpen(false)}>
-                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z"></path>
-                </svg>
-            </IconButton>
-        </Stack>
-    </Drawer>
+                <IconButton
+                    aria-label="بستن منو"
+                    onClick={() => setOpen(false)}
+                    sx={{ width: 40, height: 40, color: TEB_COLORS.textPrimary }}
+                >
+                    <X size={20} />
+                </IconButton>
+            </Stack>
+
+            <Box
+                onClick={() => setOpen(false)}
+                sx={{
+                    flex: 1,
+                    overflowY: "auto",
+                    p: 1.5,
+                }}
+            >
+                <AdminMenu />
+            </Box>
+        </Drawer>
+    );
 }
+

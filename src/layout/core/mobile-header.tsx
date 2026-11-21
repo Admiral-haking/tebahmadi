@@ -1,36 +1,67 @@
-import { Box, Stack, Typography } from '@mui/material';
-import Logo from '@/components/logo';
-import SearchBox from '@/components/search';
-import { loadCategoryTree } from '@/lib/cache';
-import MegaMenuMobile from '../components/mega-menu-mobile';
-import { glassSurface } from '@/theme/design-system';
+import Link from "next/link";
+import { Box, Stack, Typography } from "@mui/material";
+import MegaMenuMobile from "../components/mega-menu-mobile";
+import HeaderSearch from "../components/header-search";
+import { loadCategoryTree } from "@/lib/cache";
+import { BRAND } from "@/config/brand";
+import { TEB_COLORS } from "@/theme/tokens";
 
-export default async function HeaderMobile({ title: _title }: { title: string }) {
-  const categories = await loadCategoryTree();
+export default async function HeaderMobile({ title }: { title?: string }) {
+    const categories = await loadCategoryTree();
 
-  return (
-    <Stack
-      component="header"
-      sx={{
-        display: { xs: 'flex', md: 'none' },
-        position: 'sticky',
-        top: 0,
-        zIndex: 1100,
-        ...glassSurface,
-        bgcolor: 'rgba(255,255,255,.97)',
-        borderInline: 0,
-        borderTop: 0,
-      }}
-    >
-      <Stack direction="row" alignItems="center" gap={1.25} sx={{ width: '100%', px: 2, py: 1.25 }}>
-        <Logo size={58} />
-        <SearchBox onSearchUrl="/search" alwaysShowSearch boxSx={{ flex: 1, minWidth: 0 }} />
-        <MegaMenuMobile categories={JSON.parse(JSON.stringify(categories as any))} />
-      </Stack>
-      <Stack direction="row" justifyContent="center" alignItems="center" gap={1} sx={{ minHeight: 46, px: 2, borderTop: '1px solid', borderColor: 'divider', color: 'primary.main' }}>
-        <Box component="span" sx={{ width: 24, height: 24, border: '1px solid', borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 800 }}>i</Box>
-        <Typography sx={{ fontSize: 12.5 }}>زمان آماده‌سازی و ارسال سفارش‌ها: <b>۳ تا ۷ روز کاری</b></Typography>
-      </Stack>
-    </Stack>
-  );
+    return (
+        <Box
+            component="header"
+            sx={{
+                display: { xs: "block", md: "none" },
+                position: "sticky",
+                top: 0,
+                zIndex: 1050,
+                bgcolor: "rgba(249, 248, 246, 0.94)",
+                backdropFilter: "blur(10px)",
+                borderBottom: `1px solid ${TEB_COLORS.border}`,
+            }}
+        >
+            <Stack
+                direction="row"
+                alignItems="center"
+                gap={1}
+                sx={{
+                    px: 1.5,
+                    height: 58,
+                }}
+            >
+                <MegaMenuMobile categories={JSON.parse(JSON.stringify(categories as any))} />
+
+                <Box
+                    component={Link}
+                    href="/"
+                    aria-label={title || BRAND.name}
+                    sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 0.75,
+                        textDecoration: "none",
+                        flexShrink: 0,
+                    }}
+                >
+                    <Typography
+                        variant="subtitle1"
+                        sx={{
+                            fontWeight: 800,
+                            fontSize: "15px",
+                            color: TEB_COLORS.primary,
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {title || BRAND.name}
+                    </Typography>
+                </Box>
+
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <HeaderSearch size="sm" />
+                </Box>
+            </Stack>
+        </Box>
+    );
 }

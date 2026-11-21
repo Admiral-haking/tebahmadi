@@ -907,69 +907,71 @@ export default function Page() {
                                 />
                             </Stack>
 
-                            <Table sx={{ mt: 2 }}>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>کد سفارش</TableCell>
-                                        <TableCell>مشتری</TableCell>
-                                        <TableCell align="center">تعداد</TableCell>
-                                        <TableCell align="center">شهر</TableCell>
-                                        <TableCell align="right">مبلغ</TableCell>
-                                        <TableCell align="right">وضعیت</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {dashboard?.recentOrders.length ? (
-                                        dashboard.recentOrders.map((order) => {
-                                            const intention = statusIntentions[order.status] ?? statusIntentions.pending;
-                                            return (
-                                                <TableRow key={order.id}>
-                                                    <TableCell>
-                                                        <Stack spacing={0.5}>
-                                                            <Typography fontWeight={600}>
-                                                                {order.number}
-                                                            </Typography>
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {formatOrderTimestamp(order.createdAt)}
-                                                            </Typography>
-                                                        </Stack>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography fontWeight={500}>{order.customer}</Typography>
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        {order.items || "-"}
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        {order.city ?? "—"}
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        {currencyFormatter.format(Math.round(order.total))} تومان
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        <Chip
-                                                            label={intention.label}
-                                                            size="small"
-                                                            color={intention.color}
-                                                            variant="outlined"
-                                                        />
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })
-                                    ) : (
+                            <Box sx={{ mt: 2, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                                <Table sx={{ minWidth: 560 }}>
+                                    <TableHead>
                                         <TableRow>
-                                            <TableCell colSpan={6} align="center">
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {isFetching ? (
-                                                        <Skeleton width={200} />
-                                                    ) : "سفارشی برای نمایش وجود ندارد."}
-                                                </Typography>
-                                            </TableCell>
+                                            <TableCell>کد سفارش</TableCell>
+                                            <TableCell>مشتری</TableCell>
+                                            <TableCell align="center">تعداد</TableCell>
+                                            <TableCell align="center">شهر</TableCell>
+                                            <TableCell align="right">مبلغ</TableCell>
+                                            <TableCell align="right">وضعیت</TableCell>
                                         </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
+                                    </TableHead>
+                                    <TableBody>
+                                        {dashboard?.recentOrders.length ? (
+                                            dashboard.recentOrders.map((order) => {
+                                                const intention = statusIntentions[order.status] ?? statusIntentions.pending;
+                                                return (
+                                                    <TableRow key={order.id}>
+                                                        <TableCell>
+                                                            <Stack spacing={0.5}>
+                                                                <Typography fontWeight={600}>
+                                                                    {order.number}
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {formatOrderTimestamp(order.createdAt)}
+                                                                </Typography>
+                                                            </Stack>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Typography fontWeight={500}>{order.customer}</Typography>
+                                                        </TableCell>
+                                                        <TableCell align="center">
+                                                            {order.items || "-"}
+                                                        </TableCell>
+                                                        <TableCell align="center">
+                                                            {order.city ?? "—"}
+                                                        </TableCell>
+                                                        <TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+                                                            {currencyFormatter.format(Math.round(order.total))} تومان
+                                                        </TableCell>
+                                                        <TableCell align="right">
+                                                            <Chip
+                                                                label={intention.label}
+                                                                size="small"
+                                                                color={intention.color}
+                                                                variant="outlined"
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={6} align="center">
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {isFetching ? (
+                                                            <Skeleton width={200} />
+                                                        ) : "سفارشی برای نمایش وجود ندارد."}
+                                                    </Typography>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </Box>
                         </Paper>
                     </Grid>
                     <Grid size={{ xs: 12, lg: 5 }}>

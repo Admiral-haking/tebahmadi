@@ -1722,12 +1722,6 @@ function ensureInvoiceMaintenanceScheduler(): void {
   if (typeof window !== 'undefined') {
     return;
   }
-  // Importing route modules during `next build` must not start background work.
-  // The scheduler also has nothing useful to do until a Mongo connection is
-  // configured (local tests and static analysis intentionally omit it).
-  if (process.env.NEXT_PHASE === 'phase-production-build' || !process.env.MONGO_URI?.trim()) {
-    return;
-  }
   // Opt-out flag: the public-facing instance sets DISABLE_BACKGROUND_JOBS=1 so
   // recurring maintenance runs only in the dedicated worker instance. Defaults
   // to enabled, so single-instance / dev setups are unaffected.

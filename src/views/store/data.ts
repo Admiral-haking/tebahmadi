@@ -6,7 +6,7 @@ import { Types } from "mongoose";
 import CategoryModel from "@/catalog/models/Category";
 import ProductTypeModel from "@/catalog/models/ProductType";
 import type { AttributeDef } from "@/catalog/models/ProductType";
-import { connectMongoose } from "@/lib/mongoose";
+import { connectMongoose, isMongoConfigured } from "@/lib/mongoose";
 import MediaModel from "@/models/Media";
 
 export type StoreFilterAttributeOption = {
@@ -382,5 +382,13 @@ const loadRootCategoriesCached = unstable_cache(
 );
 
 export async function loadRootCategories(): Promise<StoreCategorySummary[]> {
-    return loadRootCategoriesCached();
+    if (!isMongoConfigured()) {
+        return [];
+    }
+    try {
+        return await loadRootCategoriesCached();
+    } catch (error) {
+        console.warn("loadRootCategories failed; returning empty list", error);
+        return [];
+    }
 }

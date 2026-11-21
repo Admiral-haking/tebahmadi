@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Box,
   List,
@@ -15,7 +13,6 @@ import digikala from "../assets/digikala.jpeg";
 import snapp from "../assets/snapp.jpg";
 import basalaam from "../assets/basalaam.png";
 import { AccountBalanceRounded, Category, CreditCardRounded, Inventory2Rounded, SchoolRounded } from "@mui/icons-material";
-import { usePathname } from "next/navigation";
 
 type MenuItem = {
   title: string;
@@ -606,15 +603,11 @@ export const menu: MenuItem[] = [
 ];
 
 export default function AdminMenu() {
-  const pathname = usePathname();
-
   return (
     <List
       sx={{
-        display: "grid",
-        gap: 0.5,
         "& .MuiListItemIcon-root": {
-          minWidth: 36,
+          minWidth: 0,
         },
       }}
     >
@@ -624,21 +617,12 @@ export default function AdminMenu() {
             LinkComponent={Link}
             href={item.href}
             aria-label={item.title}
-            selected={pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`))}
-            sx={{
-              minHeight: 46,
-              borderRadius: 2.5,
-              px: 1.5,
-              "&.Mui-selected": {
-                bgcolor: "rgba(42, 90, 68, .1)",
-                color: "primary.main",
-              },
-            }}
           >
             {item.icon && (
-              <ListItemIcon sx={{ color: "inherit" }}>{item.icon}</ListItemIcon>
+              <ListItemIcon sx={{ mr: 2 }}>{item.icon}</ListItemIcon>
             )}
-            <ListItemText primary={item.title} primaryTypographyProps={{ fontSize: 13.5, fontWeight: 600 }} />
+            <ListItemIcon sx={{ minWidth: 36 }}>{null}</ListItemIcon>
+            <ListItemText primary={item.title} />
           </ListItemButton>
         </ListItem>
       ))}

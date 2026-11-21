@@ -137,7 +137,7 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
                         </g>
                     </svg>
                 }
-                variant="outlined"
+                variant="text"
                 size="large"
                 onClick={handleOpen}
                 sx={{
@@ -146,41 +146,17 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
                     display: "flex",
                     gap: 1,
                     alignItems: "center",
-                    borderColor: "divider",
-                    minWidth: 112,
                 }}
             >
                 فیلتر
                 {appliedCount > 0 && <Chip label={appliedCount} size="small" color="primary" />}
             </Button>
 
-            <Drawer
-                anchor="right"
-                open={open}
-                onClose={handleClose}
-                PaperProps={{
-                    sx: {
-                        width: { xs: "100%", sm: 360 },
-                        maxWidth: "100vw",
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                    },
-                }}
-            >
-                <Stack
-                    sx={{
-                        p: { xs: 2, sm: 2.5 },
-                        pb: { xs: "calc(16px + env(safe-area-inset-bottom, 0px))", sm: 2.5 },
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                    }}
-                    spacing={2}
-                >
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pb: 0.5 }}>
-                        <Typography variant="h6" fontWeight={800}>فیلترها</Typography>
-                        <IconButton onClick={handleClose} aria-label="close filters" sx={{ width: 40, height: 40 }}>
+            <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: { width: { xs: "100%", sm: 360 } } }}>
+                <Stack sx={{ p: 3, height: "100%" }} spacing={3}>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Typography variant="h6">فیلترها</Typography>
+                        <IconButton onClick={handleClose} aria-label="close filters">
                             <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
                                 <path
                                     fill="currentColor"
@@ -192,7 +168,7 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
 
                     <Divider />
 
-                    <Stack spacing={2} sx={{ flex: "1 1 auto", overflowY: "auto", py: 1 }}>
+                    <Stack spacing={2} sx={{ flex: "1 1 auto", overflowY: "auto" }}>
                         {attributes.length === 0 ? (
                             <Typography variant="body2" color="text.secondary">
                                 فیلتری برای این دسته‌بندی در دسترس نیست.
@@ -200,7 +176,7 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
                         ) : (
                             attributes.map((attribute) => (
                                 <FormControl key={attribute.key} component="fieldset">
-                                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
                                         {attribute.label}
                                     </Typography>
                                     <FormGroup>
@@ -246,24 +222,11 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
 
                     <Divider />
 
-                    <Stack direction="row" spacing={1.5} sx={{ pt: 1 }}>
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            onClick={applyFilters}
-                            disabled={attributes.length === 0 && appliedCount === 0}
-                            sx={{ borderRadius: 99, py: 1.2, fontWeight: 700 }}
-                        >
+                    <Stack direction="row" spacing={2}>
+                        <Button fullWidth variant="contained" onClick={applyFilters} disabled={attributes.length === 0 && appliedCount === 0}>
                             اعمال فیلتر
                         </Button>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            color="secondary"
-                            onClick={clearFilters}
-                            disabled={appliedCount === 0}
-                            sx={{ borderRadius: 99, py: 1.2 }}
-                        >
+                        <Button fullWidth variant="outlined" color="secondary" onClick={clearFilters} disabled={appliedCount === 0}>
                             حذف فیلترها
                         </Button>
                     </Stack>

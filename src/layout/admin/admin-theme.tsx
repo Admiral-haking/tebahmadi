@@ -2,16 +2,8 @@
 
 import { useMemo, type ReactNode } from "react";
 import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
-import { brandTokens } from "@/theme/design-system";
+import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 
-/**
- * Scoped visual polish for the admin panel only.
- *
- * It extends the app's existing theme (inheriting palette, RTL, fonts) and adds
- * gentle, consistent component defaults — softer card shadows, smoother button
- * hovers, rounded chips — so every admin page looks tidy without touching the
- * global theme (the customer-facing storefront is unaffected).
- */
 export default function AdminTheme({ children }: { children: ReactNode }) {
     const parent = useTheme();
 
@@ -21,10 +13,9 @@ export default function AdminTheme({ children }: { children: ReactNode }) {
                 components: {
                     MuiPaper: {
                         styleOverrides: {
-                            // Only outlined/elevation-0 cards get the soft shadow; menus/popovers keep MUI defaults.
                             root: {
                                 "&.MuiPaper-elevation0": {
-                                    boxShadow: "0 1px 2px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.04), 0 4px 14px rgba(var(--mui-palette-common-onBackgroundChannel) / 0.05)",
+                                    borderColor: TEB_COLORS.border,
                                 },
                             },
                         },
@@ -33,9 +24,10 @@ export default function AdminTheme({ children }: { children: ReactNode }) {
                         defaultProps: { elevation: 0 },
                         styleOverrides: {
                             root: {
-                                borderRadius: brandTokens.radius.card,
-                                border: `1px solid ${brandTokens.color.border}`,
-                                boxShadow: brandTokens.shadow.subtle,
+                                borderRadius: TEB_RADII.lg,
+                                border: `1px solid ${TEB_COLORS.border}`,
+                                backgroundColor: TEB_COLORS.surface,
+                                boxShadow: "0 2px 10px rgba(34, 34, 34, 0.03)",
                             },
                         },
                     },
@@ -43,29 +35,30 @@ export default function AdminTheme({ children }: { children: ReactNode }) {
                         defaultProps: { disableElevation: true },
                         styleOverrides: {
                             root: {
-                                borderRadius: brandTokens.radius.control,
+                                borderRadius: TEB_RADII.md,
+                                minHeight: 40,
                                 textTransform: "none",
                                 fontWeight: 600,
-                                transition: "transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease",
-                            },
-                            containedPrimary: {
-                                "&:hover": { transform: "translateY(-1px)" },
                             },
                         },
                     },
                     MuiChip: {
                         styleOverrides: {
-                            root: { borderRadius: brandTokens.radius.pill, fontWeight: 600 },
+                            root: {
+                                borderRadius: TEB_RADII.pill,
+                                fontWeight: 600,
+                            },
                         },
                     },
                     MuiTableHead: {
                         styleOverrides: {
-                            root: { "& th": { fontWeight: 700 } },
-                        },
-                    },
-                    MuiTableContainer: {
-                        styleOverrides: {
-                            root: { borderRadius: brandTokens.radius.control, border: `1px solid ${brandTokens.color.border}` },
+                            root: {
+                                "& th": {
+                                    fontWeight: 700,
+                                    backgroundColor: TEB_COLORS.softSurface,
+                                    color: TEB_COLORS.textPrimary,
+                                },
+                            },
                         },
                     },
                 },

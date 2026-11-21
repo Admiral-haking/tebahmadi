@@ -8,6 +8,7 @@ import { connectMongoose } from "@/lib/mongoose";
 import { effectiveUnitPrice } from "@/catalog/services/productService";
 import { Types } from "mongoose";
 import { ProductReviewModel } from "@/reviews/models/ProductReview";
+import { isMongoConfigured, getPreviewProductDetail } from "@/lib/preview-fallback";
 
 const ALLOWED_UNITS = ['unit', 'pair', 'kg', 'g', 'lb', 'oz', 'l', 'ml'] as const;
 export type Unit = typeof ALLOWED_UNITS[number];
@@ -237,6 +238,9 @@ function buildMediaUrls(media: ProductVariantMedia) {
 }
 
 export async function loadProductDetail(slug: string): Promise<ProductDetailData | null> {
+    if (!isMongoConfigured()) {
+        return getPreviewProductDetail(slug);
+    }
     await connectMongoose();
 
     const product = await ProductModel.findOne({ slug, status: "active" }).lean();

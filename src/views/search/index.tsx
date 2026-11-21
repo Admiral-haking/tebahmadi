@@ -1,160 +1,140 @@
 "use client";
 
-import {
-    Box, CircularProgress, Container, Divider, InputBase,
-    Pagination, Paper, Stack, Typography,
-} from "@mui/material";
-import SearchRounded from "@mui/icons-material/SearchRounded";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Box, Container, Grid, Pagination, Stack, Typography } from "@mui/material";
+import { Search } from "lucide-react";
 import { toast } from "sonner";
-import { ProductSearchItem, loadProducts } from "./loaders";
-import ProductSearchLink, { ProductSearchLinkPlaceholder } from "./components/product";
+import { type ProductSearchItem, loadProducts } from "./loaders";
+import ProductCard from "@/components/product";
+import { SearchField } from "@/components/ui/SearchField";
+import { EmptyState, LoadingState } from "@/components/ui/States";
+import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
+import { formatFaNumber } from "@/lib/format";
 
 export default function SearchView() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
     const q = searchParams?.get("q") || "";
-    const [inputValue, setInputValue] = useState(q);
     const [loading, setLoading] = useState(false);
     const [products, setProducts] = useState<ProductSearchItem[]>([]);
     const [page, setPage] = useState(1);
     const [pages, setPages] = useState(1);
     const [total, setTotal] = useState(0);
 
-    // Sync input when URL changes (back/forward navigation)
     useEffect(() => {
-        setInputValue(q);
+        setPage(1);
     }, [q]);
 
-    // Debounce URL push so the page re-fetches only after the user pauses typing
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    function handleInput(value: string) {
-        setInputValue(value);
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            router.push(value.trim() ? `/search?q=${encodeURIComponent(value.trim())}` : '/search');
-        }, 400);
-    }
-
-    // Fetch results; reset page to 1 whenever the query changes
-    const prevQRef = useRef(q);
     useEffect(() => {
-        let fetchPage = page;
-
-        if (prevQRef.current !== q) {
-            fetchPage = 1;
-            prevQRef.current = q;
-        }
-
-        // If page needs resetting, update state and let this effect re-run with page=1
-        if (fetchPage !== page) {
-            setPage(fetchPage);
-            return;
-        }
-
-        if (!q) {
+        if (!q.trim()) {
             setProducts([]);
             setTotal(0);
             setPages(1);
             return;
         }
-
+        let cancelled = false;
         setLoading(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        loadProducts(q, fetchPage)
-            .then(result => {
+        loadProducts(q, page)
+            .then((result) => {
+                if (cancelled) return;
                 setProducts(result.products);
                 setTotal(result.total);
-                setPages(Math.ceil(result.total / 20));
+                setPages(Math.max(1, Math.ceil(result.total / 20)));
             })
-            .catch(() => toast.error("متاسفانه با خطایی غیر منتظره مواجه شدیم!"))
-            .finally(() => setLoading(false));
+            .catch(() => {
+                if (!cancelled) {
+                    toast.error("در دریافت نتایج جست‌وجو خطایی رخ داد.");
+                }
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
     }, [q, page]);
 
-    const showSkeletons = loading && products.length === 0;
-    const showEmpty = !loading && products.length === 0 && !!q;
-    const showInitial = !loading && products.length === 0 && !q;
+    const pushQuery = (value: string) => {
+        const trimmed = value.trim();
+        if (trimmed === q) return;
+        router.push(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : "/search");
+    };
 
     return (
-        <Container maxWidth="md" sx={{ py: 3 }}>
-            {/* Search bar */}
-            <Paper
-                elevation={0}
+        <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, px: { xs: 1.5, sm: 2.5 } }}>
+            <Box
                 sx={{
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 2,
-                    p: 0.5,
-                    mb: 2,
+                    p: { xs: 2.5, md: 3.5 },
+                    mb: 3,
+                    borderRadius: `${TEB_RADII.lg}px`,
+                    bgcolor: TEB_COLORS.softSurface,
+                    border: `1px solid ${TEB_COLORS.border}`,
                 }}
             >
-                <Stack direction="row" alignItems="center" gap={1}>
-                    {loading
-                        ? <CircularProgress size={20} sx={{ mx: 1, flexShrink: 0, color: 'text.secondary' }} />
-                        : <SearchRounded sx={{ color: 'text.secondary', mx: 1 }} />
-                    }
-                    <InputBase
-                        fullWidth
-                        placeholder="جستجو در کالاها..."
-                        value={inputValue}
-                        onChange={e => handleInput(e.target.value)}
-                        sx={{ py: 0.75, fontSize: '1rem' }}
-                        autoFocus
-                        inputProps={{ autoComplete: 'off' }}
-                    />
-                </Stack>
-            </Paper>
-
-            {/* Result count */}
-            {q && !loading && (
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                    {total > 0
-                        ? `${new Intl.NumberFormat('fa-IR').format(total)} نتیجه برای «${q}»`
-                        : `نتیجه‌ای برای «${q}» یافت نشد`
-                    }
+                <Typography variant="h3" fontWeight={800} sx={{ mb: 1.5, fontSize: { xs: "20px", md: "26px" } }}>
+                    جست‌وجو در فروشگاه طب احمدی
                 </Typography>
-            )}
-
-            <Divider sx={{ my: 1 }} />
-
-            {/* Results list */}
-            <Stack gap={1.5} sx={{ my: 2 }}>
-                {showSkeletons && (
-                    new Array(8).fill(0).map((_, i) => <ProductSearchLinkPlaceholder key={i} />)
+                <SearchField
+                    defaultValue={q}
+                    placeholder="نام گیاه دارویی، دمنوش، روغن یا عسل مورد نظر را وارد کنید..."
+                    debounceMs={400}
+                    onDebouncedChange={pushQuery}
+                    onSubmit={pushQuery}
+                />
+                {q && !loading && (
+                    <Typography variant="caption" sx={{ display: "block", mt: 1.5, color: TEB_COLORS.textSecondary, fontWeight: 600 }}>
+                        {total > 0
+                            ? `${formatFaNumber(total)} نتیجه برای «${q}» یافت شد`
+                            : `نتیجه‌ای برای «${q}» پیدا نشد`}
+                    </Typography>
                 )}
-                {!showSkeletons && products.map(item => (
-                    <ProductSearchLink key={item.id} {...item} />
-                ))}
-                {showEmpty && (
-                    <Box sx={{ py: 8, textAlign: 'center' }}>
-                        <Typography color="text.secondary">
-                            نتیجه‌ای برای «{q}» یافت نشد
-                        </Typography>
-                    </Box>
-                )}
-                {showInitial && (
-                    <Box sx={{ py: 8, textAlign: 'center' }}>
-                        <Typography color="text.secondary">
-                            نام کالا، برند یا مدل مورد نظر را جستجو کنید
-                        </Typography>
-                    </Box>
-                )}
-            </Stack>
+            </Box>
 
-            {/* Pagination */}
-            {pages > 1 && !loading && (
-                <>
-                    <Divider />
-                    <Stack alignItems="center" justifyContent="center" sx={{ mt: 2 }}>
-                        <Pagination
-                            page={page}
-                            count={pages}
-                            onChange={(_, p) => setPage(p)}
-                        />
-                    </Stack>
-                </>
+            {loading ? (
+                <LoadingState rows={4} height={96} />
+            ) : products.length > 0 ? (
+                <Stack spacing={4}>
+                    <Grid container spacing={{ xs: 1.5, sm: 2, md: 2.5 }}>
+                        {products.map((item) => (
+                            <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3 }}>
+                                <ProductCard
+                                    id={item.id}
+                                    slug={item.slug}
+                                    title={item.title}
+                                    variantSubtitle={item.productTypeName}
+                                    finalPrice={item.minPrice ?? 0}
+                                    inStock={item.inventoryTotal > 0}
+                                    stockCount={item.inventoryTotal}
+                                    imageUrl={item.images?.[0]}
+                                />
+                            </Grid>
+                        ))}
+                    </Grid>
+
+                    {pages > 1 && (
+                        <Stack alignItems="center">
+                            <Pagination page={page} count={pages} onChange={(_, p) => setPage(p)} />
+                        </Stack>
+                    )}
+                </Stack>
+            ) : q ? (
+                <EmptyState
+                    icon={<Search size={26} />}
+                    title={`نتیجه‌ای برای «${q}» پیدا نشد`}
+                    description="عبارت دیگری را امتحان کنید یا از دسته‌بندی‌های فروشگاه طب احمدی دیدن کنید."
+                    actionLabel="مشاهده همه محصولات"
+                    actionHref="/store"
+                />
+            ) : (
+                <EmptyState
+                    icon={<Search size={26} />}
+                    title="چه محصول طبیعی نیاز دارید؟"
+                    description="نام دمنوش، گیاه دارویی، روغن گیاهی یا عسل کوهستان را جست‌وجو کنید."
+                    actionLabel="ورود به فروشگاه"
+                    actionHref="/store"
+                />
             )}
         </Container>
     );

@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 
 import { connectMongoose } from '@/lib/mongoose';
 import ProductModel from '@/catalog/models/Product';
+import { isMongoConfigured, PREVIEW_PRODUCTS } from '@/lib/preview-fallback';
 
 export const runtime = 'nodejs';
 
@@ -160,6 +161,37 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const limitParam = searchParams.get('limit');
   const parsedLimit = limitParam ? Number(limitParam) : MAX_LIMIT;
   const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(Math.floor(parsedLimit), MAX_LIMIT) : MAX_LIMIT;
+
+  if (!isMongoConfigured()) {
+    const products = PREVIEW_PRODUCTS.slice(0, limit).map((item) => {
+      const variant = item.detail.variants[0];
+      return {
+        id: item.card.id,
+        slug: item.card.slug,
+        title: item.card.title,
+        finalPrice: item.card.finalPrice,
+        originalPrice: item.card.originalPrice ?? item.card.finalPrice,
+        discountPercent: item.card.discountPercent,
+        inStock: item.card.inStock,
+        imageUrl: item.card.imageUrl ?? PRICE_FALLBACK_IMAGE,
+        line: {
+          productId: item.card.id,
+          productSlug: item.card.slug,
+          title: item.card.title,
+          variantId: variant.id,
+          sku: variant.sku,
+          priceModel: variant.priceModel,
+          unitOfMeasure: variant.unitOfMeasure,
+          requestedUnit: variant.unitOfMeasure,
+          unitPriceBase: variant.unitPrice,
+          variantOfferAmount: variant.offerAmount ?? 0,
+          mediaThumbId: undefined,
+          attributesSummary: variant.attributesSummary,
+        },
+      };
+    });
+    return NextResponse.json({ products });
+  }
 
   await connectMongoose();
 

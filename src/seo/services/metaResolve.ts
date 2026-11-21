@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { MetaOverrideModel } from '@/seo/models/MetaOverride';
+import { loadMetaOverride } from '@/lib/cache';
 
 export type Seo = {
   title?: string;
@@ -31,7 +31,7 @@ function mergeSeo(sources: Array<Seo | undefined | null>): Seo {
 }
 
 export async function resolveSeoForRoute({ slug, entitySeo, categorySeo }: ResolveSeoInput): Promise<Seo> {
-  const override = await MetaOverrideModel.findOne({ slug }).lean();
+  const override = await loadMetaOverride(slug);
   const overrideSeo = override?.seo as Seo | undefined;
 
   return mergeSeo([categorySeo, entitySeo, overrideSeo]);

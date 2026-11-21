@@ -1,6 +1,6 @@
 import { unstable_cache, revalidateTag, revalidatePath } from 'next/cache';
 import type { Document } from 'mongoose';
-import { connectMongoose } from '@/lib/mongoose';
+import { connectMongoose, isMongoConfigured } from '@/lib/mongoose';
 import ProductModel, { type ProductDocument } from '@/catalog/models/Product';
 import CategoryModel, { type CategoryDocument } from '@/catalog/models/Category';
 import ProductTypeModel, { type ProductTypeDocument } from '@/catalog/models/ProductType';
@@ -54,12 +54,24 @@ function createCachedFunction<Args extends unknown[], Result>(
   fn: AsyncFn<Args, Result>,
   keyFactory: TagFactory<Args>,
   tagFactory?: TagFactory<Args>,
+  fallback?: (...args: Args) => Result,
 ): AsyncFn<Args, Result> {
   return async (...args: Args) => {
+    if (fallback && !isMongoConfigured()) {
+      return fallback(...args);
+    }
     const keyParts = [...keyFactory(...args)];
     const tags = tagFactory ? [...tagFactory(...args)] : undefined;
     const cached = unstable_cache(() => fn(...args), keyParts, tags ? { tags } : undefined);
-    return cached();
+    if (!fallback) {
+      return cached();
+    }
+    try {
+      return await cached();
+    } catch (error) {
+      console.warn(`Cache loader [${keyParts.join(':')}] failed; returning fallback`, error);
+      return fallback(...args);
+    }
   };
 }
 
@@ -70,6 +82,7 @@ const loadSiteInfoCached = createCachedFunction(
   },
   () => ['site-info'],
   () => [TAGS.SITE_INFO, TAGS.SETTINGS],
+  () => DEFAULT_SITE_INFO as unknown as Lean<SiteInfoDocument>,
 );
 
 export async function loadSiteInfo(): Promise<Lean<SiteInfoDocument> | null> {
@@ -83,6 +96,7 @@ const loadSiteConfigCached = createCachedFunction(
   },
   () => ['site-config'],
   () => [TAGS.SITE_CONFIG, TAGS.SETTINGS],
+  () => null,
 );
 
 export async function loadSiteConfig(): Promise<Lean<SiteConfigDocument> | null> {
@@ -96,6 +110,7 @@ const loadCategoryTreeCached = createCachedFunction(
   },
   () => ['category-tree'],
   () => [TAGS.CATEGORY_TREE, TAGS.CATALOG],
+  () => [] as Lean<CategoryDocument>[],
 );
 
 export async function loadCategoryTree(): Promise<Lean<CategoryDocument>[]> {
@@ -109,6 +124,7 @@ const loadProductTypeCached = createCachedFunction(
   },
   (id: string) => ['product-type-by-id', id],
   (id: string) => [TAGS.PRODUCT_TYPE(id), TAGS.CATALOG],
+  () => null,
 );
 
 export async function loadProductType(id: string): Promise<Lean<ProductTypeDocument> | null> {
@@ -122,6 +138,7 @@ const loadProductBySlugCached = createCachedFunction(
   },
   (slug: string) => ['product-by-slug', slug],
   (slug: string) => [TAGS.PRODUCT(slug), TAGS.CATALOG],
+  () => null,
 );
 
 export async function loadProductBySlug(slug: string): Promise<Lean<ProductDocument> | null> {
@@ -135,6 +152,7 @@ const loadProductsCached = createCachedFunction(
   },
   () => ['product-list'],
   () => [TAGS.CATALOG, TAGS.PRODUCT_LIST],
+  () => [] as Lean<ProductDocument>[],
 );
 
 export async function loadActiveProducts(): Promise<Lean<ProductDocument>[]> {
@@ -148,6 +166,7 @@ const loadBlogCategoriesCached = createCachedFunction(
   },
   () => ['blog-categories'],
   () => [TAGS.BLOG_CATEGORY_TREE],
+  () => [] as Lean<BlogCategoryDocument>[],
 );
 
 export async function loadBlogCategories(): Promise<Lean<BlogCategoryDocument>[]> {
@@ -161,6 +180,7 @@ const loadBlogPostsCached = createCachedFunction(
   },
   () => ['blog-posts'],
   () => [TAGS.BLOG_LIST],
+  () => [] as Lean<BlogPostDocument>[],
 );
 
 export async function loadPublishedBlogPosts(): Promise<Lean<BlogPostDocument>[]> {
@@ -174,6 +194,7 @@ const loadBlogPostBySlugCached = createCachedFunction(
   },
   (slug: string) => ['blog-post-by-slug', slug],
   (slug: string) => [TAGS.BLOG_POST(slug), TAGS.BLOG_LIST],
+  () => null,
 );
 
 export async function loadBlogPostBySlug(slug: string): Promise<Lean<BlogPostDocument> | null> {
@@ -187,6 +208,7 @@ const loadPublishedPagesCached = createCachedFunction(
   },
   () => ['pages'],
   () => [TAGS.PAGE_LIST],
+  () => [] as Lean<PageDocument>[],
 );
 
 export async function loadPublishedPages(): Promise<Lean<PageDocument>[]> {
@@ -200,6 +222,7 @@ const loadPageBySlugCached = createCachedFunction(
   },
   (slug: string) => ['page-by-slug', slug],
   (slug: string) => [TAGS.PAGE(slug)],
+  () => null,
 );
 
 export async function loadPageBySlug(slug: string): Promise<Lean<PageDocument> | null> {
@@ -252,6 +275,7 @@ const loadSlidesCached = createCachedFunction(
   },
   () => ['slides'],
   () => [TAGS.SLIDES],
+  () => [] as SlideCacheItem[],
 );
 
 export async function loadSlides(): Promise<SlideCacheItem[]> {
@@ -265,6 +289,7 @@ const loadMetaOverrideCached = createCachedFunction(
   },
   (slug: string) => ['meta-override-by-slug', slug],
   (slug: string) => [TAGS.META(slug)],
+  () => null,
 );
 
 export async function loadMetaOverride(slug: string): Promise<Lean<MetaOverrideDocument> | null> {
@@ -278,6 +303,7 @@ const loadOffersCached = createCachedFunction(
   },
   () => ['offers'],
   () => [TAGS.OFFERS],
+  () => [] as Lean<OfferDocument>[],
 );
 
 export async function loadOffers(): Promise<Lean<OfferDocument>[]> {
@@ -291,6 +317,7 @@ const loadTransportCached = createCachedFunction(
   },
   () => ['transport-list'],
   () => [TAGS.TRANSPORT],
+  () => [] as Lean<TransportDocument>[],
 );
 
 export async function loadActiveTransports(): Promise<Lean<TransportDocument>[]> {
@@ -303,7 +330,8 @@ const loadPopularProductsCached = createCachedFunction(
     return await getPopularProducts({ page: 1, perPage: 16 });
   },
   () => ['popular-home-v2'],
-  () => [TAGS.PRODUCT_LIST]
+  () => [TAGS.PRODUCT_LIST],
+  () => ({ items: [], total: 0, page: 1, perPage: 16 }),
 )
 
 export async function loadPopularProducts() {
@@ -317,7 +345,8 @@ const loadDiscountProductsCached = createCachedFunction(
     return await getDiscountProducts({ page: 1, perPage: 16 });
   },
   () => ['discount-home-v2'],
-  () => [TAGS.PRODUCT_LIST]
+  () => [TAGS.PRODUCT_LIST],
+  () => ({ items: [], total: 0, page: 1, perPage: 16 }),
 )
 
 export async function loadDiscountProducts() {
@@ -330,7 +359,8 @@ const loadNewestProductsCached = createCachedFunction(
     return await getNewestProducts({ page: 1, perPage: 12 });
   },
   () => ['newest'],
-  () => [TAGS.PRODUCT_LIST]
+  () => [TAGS.PRODUCT_LIST],
+  () => ({ items: [], total: 0, page: 1, perPage: 12 }),
 )
 
 export async function loadNewestProducts() {
