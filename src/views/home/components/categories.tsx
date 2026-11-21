@@ -1,112 +1,120 @@
-import Image from "next/image";
-import Link from "next/link";
-import { Box, Container, Stack, Typography } from "@mui/material";
-import { Coffee, Droplets, Flame, FlaskConical, Leaf, Sparkles } from "lucide-react";
-import { loadRootCategories } from "@/views/store/data";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { TEB_COLORS } from "@/theme/tokens";
+import OptimizedImage from '@/components/image';
+import { SiteInfoDocument } from '@/settings/models/SiteInfo';
+import { loadRootCategories, StoreCategorySummary } from '@/views/store/data';
+import { Box, Button, Divider, Stack, Typography } from '@mui/material';
+import Link from 'next/link';
 
-function resolveCategoryIcon(slug: string, name: string) {
-    const key = `${slug} ${name}`.toLowerCase();
-    if (key.includes("tea") || key.includes("دمنوش")) return Coffee;
-    if (key.includes("oil") || key.includes("روغن")) return Droplets;
-    if (key.includes("honey") || key.includes("عسل")) return Sparkles;
-    if (key.includes("distill") || key.includes("عرق")) return FlaskConical;
-    if (key.includes("spice") || key.includes("زعفران") || key.includes("ادویه")) return Flame;
-    return Leaf;
+export default async function Categories({ siteInfo }: { siteInfo: SiteInfoDocument }) {
+  const categories = await loadRootCategories();
+
+  return (
+    <Box sx={{ my: { xs: 3, md: 5 } }}>
+      <Stack
+        gap={2}
+        alignItems="center"
+        direction="row"
+        sx={{ mb: { xs: 2.5, md: 3 } }}
+      >
+        <Box sx={{ flex: '1 1 auto' }}>
+          <Typography variant="h3" sx={{ fontSize: { xs: '1.35rem', md: '2rem' } }}>
+            دسته‌بندی محصولات
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            انتخاب سریع از محصولات طبیعی {siteInfo.appName}
+          </Typography>
+        </Box>
+        <Button LinkComponent={Link} href="/store" variant="outlined" sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>
+          همه محصولات
+        </Button>
+      </Stack>
+
+      <CategoryGrid categories={categories} />
+    </Box>
+  );
 }
 
-export default async function Categories({
-    title = "دسته‌بندی محصولات طبیعی",
-    subtitle = "انتخاب سریع میان گیاهان دارویی، دمنوش‌ها، روغن‌ها و فرآورده‌های خالص",
-}: {
-    siteInfo?: unknown;
-    title?: string;
-    subtitle?: string;
-}) {
-    const categories = await loadRootCategories();
-    if (!categories || categories.length === 0) return null;
+async function CategoryGrid({ categories }: { categories: StoreCategorySummary[] }) {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: 'repeat(3, minmax(0, 1fr))',
+          sm: 'repeat(4, minmax(0, 1fr))',
+          md: 'repeat(5, minmax(0, 1fr))',
+        },
+        gap: { xs: 1.5, sm: 2, md: 2.5 },
+      }}
+    >
+      {categories.map((category, index) => (
+        <Box
+          key={category.id}
+          component={Button}
+          LinkComponent={Link}
+          href={category.path && category.path.trim().length > 0 ? '/store/' + category.path : '/store'}
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            textTransform: 'none',
+            color: 'text.primary',
+            p: 0,
+            minWidth: 0,
+            '&:hover .category-icon': {
+              transform: 'translateY(-3px)',
+              borderColor: 'primary.main',
+            },
+          }}
+        >
+          <Box
+            className="category-icon"
+            sx={{
+              position: 'relative',
+              width: { xs: 74, sm: 88, md: 108 },
+              height: { xs: 74, sm: 88, md: 108 },
+              borderRadius: { xs: 3, md: 4 },
+              overflow: 'hidden',
+              mb: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              boxShadow: '0 8px 24px rgba(42, 90, 68, .08)',
+              transition: 'transform 180ms ease, border-color 180ms ease',
+            }}
+          >
+            <OptimizedImage
+              src={category.mediaId ? '/api/media/' + category.mediaId : '/category.png'}
+              alt={category.name || 'category'}
+              fill
+              priority={index < 5}
+              fetchPriority={index < 5 ? 'high' : 'auto'}
+              style={{ objectFit: 'cover' }}
+            />
+          </Box>
 
-    return (
-        <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4.5 }, px: { xs: 1.5, sm: 2.5 } }}>
-            <SectionHeader title={title} subtitle={subtitle} href="/store" ctaLabel="همه دسته‌ها" />
-
-            <Box
-                sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                        xs: "repeat(3, minmax(0, 1fr))",
-                        sm: "repeat(3, minmax(0, 1fr))",
-                        md: "repeat(6, minmax(0, 1fr))",
-                    },
-                    gap: { xs: 1.5, sm: 2 },
-                }}
-            >
-                {categories.slice(0, 12).map((category) => {
-                    const Icon = resolveCategoryIcon(category.slug, category.name);
-                    return (
-                        <Stack
-                            key={category.id}
-                            component={Link}
-                            href={`/store/${category.path}`}
-                            alignItems="center"
-                            spacing={1.25}
-                            sx={{
-                                p: { xs: 1.5, sm: 2 },
-                                borderRadius: "24px",
-                                bgcolor: TEB_COLORS.surface,
-                                border: `1px solid ${TEB_COLORS.border}`,
-                                textDecoration: "none",
-                                transition: "border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease",
-                                "&:hover": {
-                                    borderColor: TEB_COLORS.primary,
-                                    bgcolor: TEB_COLORS.softSurface,
-                                    transform: "translateY(-2px)",
-                                },
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    width: { xs: 56, sm: 68 },
-                                    height: { xs: 56, sm: 68 },
-                                    borderRadius: "50%",
-                                    overflow: "hidden",
-                                    position: "relative",
-                                    display: "grid",
-                                    placeItems: "center",
-                                    bgcolor: TEB_COLORS.softSurface,
-                                    border: `1px solid ${TEB_COLORS.border}`,
-                                    color: TEB_COLORS.primary,
-                                }}
-                            >
-                                {category.mediaId ? (
-                                    <Image
-                                        src={`/api/media/${category.mediaId}`}
-                                        alt={category.name}
-                                        fill
-                                        sizes="68px"
-                                        style={{ objectFit: "cover" }}
-                                    />
-                                ) : (
-                                    <Icon size={26} strokeWidth={1.7} />
-                                )}
-                            </Box>
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    fontWeight: 700,
-                                    fontSize: { xs: "12.5px", sm: "13.5px" },
-                                    color: TEB_COLORS.textPrimary,
-                                    textAlign: "center",
-                                    lineHeight: 1.4,
-                                }}
-                            >
-                                {category.name}
-                            </Typography>
-                        </Stack>
-                    );
-                })}
-            </Box>
-        </Container>
-    );
+          <Typography
+            variant="body2"
+            component="p"
+            sx={{
+              textAlign: 'center',
+              width: '100%',
+              lineHeight: 1.45,
+              px: 0.5,
+              fontSize: { xs: '0.78rem', sm: '0.9rem' },
+              fontWeight: 600,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {category.name}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
 }

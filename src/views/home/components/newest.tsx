@@ -1,35 +1,42 @@
-import { Container, Grid } from "@mui/material";
-import { loadNewestProducts } from "@/lib/cache";
-import ProductCard from "@/components/product";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Box, Grid, Stack, Typography } from '@mui/material';
+import { loadNewest } from './loaders';
+import ProductCard, { ProductCardProps } from '@/components/product';
+import MegaButton from './mega-button';
 
-export default async function NewestProducts({
-    title = "جدیدترین محصولات طب احمدی",
-    subtitle = "تازه‌ترین برداشت و بسته‌بندی گیاهان دارویی و فرآورده‌های طبیعی",
-}: {
-    title?: string;
-    subtitle?: string;
-}) {
-    const result = await loadNewestProducts();
-    const items = Array.isArray(result?.items) ? result.items.slice(0, 4) : [];
-    if (items.length === 0) return null;
+export default async function NewestProducts() {
+  const products = await loadNewest();
 
-    return (
-        <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4.5 }, px: { xs: 1.5, sm: 2.5 } }}>
-            <SectionHeader
-                title={title}
-                subtitle={subtitle}
-                href="/store?sort=newest"
-                ctaLabel="مشاهده همه"
-            />
+  return (
+    <Box component="section" sx={{ my: { xs: 4, md: 7 } }}>
+      <Stack gap={2} alignItems="center" direction="row" justifyContent="space-between">
+        <Box>
+          <Typography variant="h3" sx={{ fontSize: { xs: '1.35rem', md: '2rem' } }}>
+            جدیدترین محصولات
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            تازه‌ترین انتخاب‌های طبیعی فروشگاه
+          </Typography>
+        </Box>
+        <MegaButton variant="outlined" sx={{ display: { xs: 'none', sm: 'inline-flex' } }} />
+      </Stack>
 
-            <Grid container spacing={{ xs: 1.5, sm: 2, md: 2.5 }}>
-                {items.map((item) => (
-                    <Grid key={item.id} size={{ xs: 6, sm: 6, md: 3 }}>
-                        <ProductCard {...item} />
-                    </Grid>
-                ))}
-            </Grid>
-        </Container>
-    );
+      <ProductGrid products={products} />
+
+      <Stack alignItems="center" justifyContent="center" sx={{ display: { xs: 'flex', sm: 'none' }, mt: 2 }}>
+        <MegaButton variant="outlined" fullWidth />
+      </Stack>
+    </Box>
+  );
+}
+
+async function ProductGrid({ products }: { products: ProductCardProps[] }) {
+  return (
+    <Grid container spacing={{ xs: 1.25, sm: 2, md: 2.5 }} sx={{ my: { xs: 2.5, md: 4 } }}>
+      {products?.map((item, index) => (
+        <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3 }}>
+          <ProductCard {...item} priorityImage={index < 2} />
+        </Grid>
+      ))}
+    </Grid>
+  );
 }

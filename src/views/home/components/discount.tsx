@@ -1,45 +1,47 @@
-import { Box, Container, Grid } from "@mui/material";
-import { loadDiscountProducts } from "@/lib/cache";
-import ProductCard from "@/components/product";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
+"use server";
 
-export default async function DiscountProducts({
-    title = "پیشنهادهای تخفیف‌دار طب احمدی",
-    subtitle = "محصولات منتخب طبیعی با تخفیف ویژه فصل",
-}: {
-    title?: string;
-    subtitle?: string;
-}) {
-    const result = await loadDiscountProducts();
-    const items = Array.isArray(result?.items) ? result.items.slice(0, 4) : [];
-    if (items.length === 0) return null;
+import { Box, Container, Stack, Typography } from '@mui/material';
+import { loadDiscount } from './loaders';
+import DiscountClient from './discount-client';
+import MegaButton from './mega-button';
 
-    return (
-        <Container maxWidth="lg" sx={{ py: { xs: 2.5, md: 3.5 }, px: { xs: 1.5, sm: 2.5 } }}>
-            <Box
-                sx={{
-                    p: { xs: 2, sm: 3, md: 4 },
-                    borderRadius: { xs: `${TEB_RADII.lg}px`, md: `${TEB_RADII.panel}px` },
-                    bgcolor: TEB_COLORS.softSurface,
-                    border: `1px solid ${TEB_COLORS.border}`,
-                }}
-            >
-                <SectionHeader
-                    title={title}
-                    subtitle={subtitle}
-                    href="/store?discount=1"
-                    ctaLabel="مشاهده همه تخفیف‌ها"
-                />
+export default async function DiscountProducts() {
+  const products = await loadDiscount();
 
-                <Grid container spacing={{ xs: 1.5, sm: 2, md: 2.5 }}>
-                    {items.map((item) => (
-                        <Grid key={item.id} size={{ xs: 6, sm: 6, md: 3 }}>
-                            <ProductCard {...item} />
-                        </Grid>
-                    ))}
-                </Grid>
-            </Box>
-        </Container>
-    );
+  return (
+    <Container component="section" maxWidth="lg" sx={{ my: { xs: 3, md: 5 }, px: { xs: 1.5, sm: 2 } }}>
+      <Box sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', borderRadius: { xs: 5, md: 8 }, py: { xs: 2.5, md: 4 }, overflow: 'hidden' }}>
+      <Box sx={{ px: { xs: 2, md: 4 } }}>
+        <Stack
+          direction="row"
+          gap={{ xs: 1.25, sm: 2 }}
+          alignItems="center"
+        >
+          <Box
+            component="svg"
+            sx={{ color: 'secondary.main', width: { xs: 36, sm: 48 }, height: { xs: 36, sm: 48 }, flexShrink: 0 }}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+          >
+            <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}>
+              <path d="M6 18L18 6"></path>
+              <circle cx={16.5} cy={16.5} r={2.5}></circle>
+              <circle cx={7.5} cy={7.5} r={2.5}></circle>
+            </g>
+          </Box>
+          <Stack flex="1 1 auto">
+            <Typography variant="h3" sx={{ fontSize: { xs: '1.25rem', md: '2rem' } }}>
+              فروش ویژه
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: .78, display: { xs: 'none', sm: 'block' } }}>
+              پیشنهادهای محدود با قیمت بهتر
+            </Typography>
+          </Stack>
+          <MegaButton color="secondary" sx={{ flexShrink: 0 }} />
+        </Stack>
+      </Box>
+      <DiscountClient products={products} />
+      </Box>
+    </Container>
+  );
 }
