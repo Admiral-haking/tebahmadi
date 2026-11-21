@@ -155,10 +155,10 @@ export function ProductCard({
             sx={{
                 position: "relative",
                 bgcolor: "var(--mui-palette-background-paper)",
-                borderRadius: { xs: 3, md: 4 },
+                borderRadius: { xs: 4, md: 5 },
                 border: "1px solid",
                 borderColor: "divider",
-                boxShadow: "0 6px 24px rgba(42, 90, 68, .055)",
+                boxShadow: "0 8px 26px rgba(91, 103, 58, .065)",
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
@@ -169,7 +169,7 @@ export function ProductCard({
                     "&:hover": {
                         transform: inStock ? "translateY(-3px)" : "none",
                         borderColor: inStock ? ACCENT : "divider",
-                        boxShadow: inStock ? "0 16px 38px rgba(42, 90, 68, .12)" : "none",
+                        boxShadow: inStock ? "0 16px 38px rgba(91, 103, 58, .14)" : "none",
                     },
                 },
                 "&:active": { transform: "scale(.997)" },
@@ -209,7 +209,7 @@ export function ProductCard({
             </Box>
 
             <Link href={href} style={{ display: "block", pointerEvents: inStock ? "auto" : "none" }} tabIndex={inStock ? 0 : -1}>
-                <Box sx={{ position: "relative", width: "100%", aspectRatio: "1 / 1", overflow: "hidden", bgcolor: "rgba(42, 90, 68, .06)" }}>
+                <Box sx={{ position: "relative", width: "100%", aspectRatio: "1 / 1.08", overflow: "hidden", bgcolor: "#F4F3E8" }}>
                     <OptimizedImage
                         alt={title}
                         src={imageUrl ?? FALLBACK_IMAGE}

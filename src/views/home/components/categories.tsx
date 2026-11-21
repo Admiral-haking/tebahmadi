@@ -60,15 +60,15 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
             sx={{
               position: 'relative',
               width: '100%',
-              aspectRatio: { xs: '1 / 1', sm: '2.35 / 1' },
-              maxWidth: { xs: 108, sm: 'none' },
-              borderRadius: { xs: '50%', sm: 999 },
+              aspectRatio: { xs: '1 / 1.08', sm: '1.35 / 1' },
+              maxWidth: { xs: 132, sm: 'none' },
+              borderRadius: { xs: 5, sm: 7 },
               overflow: 'hidden',
               mb: 1,
               border: '1px solid',
               borderColor: 'divider',
-              bgcolor: '#f6f4e8',
-              boxShadow: 'none',
+              bgcolor: '#F4F3E8',
+              boxShadow: '0 8px 22px rgba(91,103,58,.06)',
               transition: 'transform 180ms ease, border-color 180ms ease',
             }}
           >

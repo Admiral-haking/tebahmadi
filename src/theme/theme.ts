@@ -46,7 +46,7 @@ const useCreateTheme = (defaultColorScheme?: SupportedColorScheme | undefined) =
                     margin: 0,
                     padding: 0,
                     overflowX: "hidden",
-                    backgroundImage: "radial-gradient(circle at 85% -10%, rgba(42, 90, 68, .08), transparent 30rem)",
+                    backgroundImage: "radial-gradient(circle at 85% -10%, rgba(109, 125, 69, .07), transparent 30rem)",
                     minHeight: "100vh",
                 },
                 a: {

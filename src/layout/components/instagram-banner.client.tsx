@@ -72,7 +72,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
 
   return (
     <Box component="section" aria-label="پیشنهادهای ویژه" sx={{ py: { xs: 2, md: 4 }, overflow: 'hidden' }}>
-      <Box ref={emblaRef} sx={{ overflow: 'visible', maxWidth: 1440, mx: 'auto', px: { xs: 0, md: 1 } }}>
+        <Box ref={emblaRef} sx={{ overflow: 'visible', maxWidth: 1280, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <Box sx={{ display: 'flex', touchAction: 'pan-y pinch-zoom', direction: 'rtl' }}>
           {items.map((slide, index) => {
             const desktopId = slide.mediaDesktopId || slide.mediaId || slide.mediaMobileId;
