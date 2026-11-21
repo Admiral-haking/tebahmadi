@@ -8,7 +8,7 @@ describe("storefront chrome", () => {
   it("renders a useful announcement with a store call to action", () => {
     const markup = renderToStaticMarkup(<AnnouncementBar />);
 
-    expect(markup).toContain("پست پیشتاز");
+    expect(markup).toContain("پیشنهادهای تازه طب احمدی");
     expect(markup).toContain('href="/store"');
   });
 
