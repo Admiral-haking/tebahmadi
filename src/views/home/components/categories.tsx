@@ -1,4 +1,3 @@
-import OptimizedImage from '@/components/image';
 import { SiteInfoDocument } from '@/settings/models/SiteInfo';
 import { loadRootCategories, StoreCategorySummary } from '@/views/store/data';
 import { Box, Button, Stack, Typography } from '@mui/material';
@@ -72,13 +71,11 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
               transition: 'transform 180ms ease, border-color 180ms ease',
             }}
           >
-            <OptimizedImage
+            <Box
+              component="img"
               src="/tebahmadi-mark.svg"
               alt={category.name || 'category'}
-              fill
-              priority={index < 5}
-              fetchPriority={index < 5 ? 'high' : 'auto'}
-              style={{ objectFit: 'contain', padding: '12%' }}
+              sx={{ width: '100%', height: '100%', objectFit: 'contain', p: '12%' }}
             />
           </Box>
 
