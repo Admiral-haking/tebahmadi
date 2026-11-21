@@ -5,10 +5,10 @@ import { Suspense } from "react";
 import Categories from "./components/categories";
 import { loadSiteConfig, loadSiteInfo } from "@/lib/cache";
 import DiscountProducts from "./components/discount";
-import NewestProducts from "./components/newest";
 import PopularProducts from "./components/popular";
 import ConfigurableBanner from "./components/configurable-banner";
 import TrustBar from "./components/trust-bar";
+import InstagramBanner from "@/layout/components/instagram-banner";
 
 function CategoriesFallback() {
   return (
@@ -107,6 +107,7 @@ export default async function HomeView() {
 
   return (
     <>
+      <InstagramBanner />
       <Container
         maxWidth="lg"
         sx={{ position: "relative", px: { xs: 1.5, sm: 2 } }}
@@ -119,12 +120,6 @@ export default async function HomeView() {
       <Suspense fallback={<ProductSectionFallback tinted />}>
         <DiscountProducts />
       </Suspense>
-
-      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
-        <Suspense fallback={<ProductSectionFallback />}>
-          <NewestProducts />
-        </Suspense>
-      </Container>
 
       <Suspense fallback={<ProductSectionFallback />}>
         <PopularProducts />

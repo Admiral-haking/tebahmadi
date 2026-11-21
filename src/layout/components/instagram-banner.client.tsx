@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { getImageProps } from 'next/image';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { Box, Container, IconButton, Skeleton, Stack } from '@mui/material';
+import useEmblaCarousel from 'embla-carousel-react';
+import { Box, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 
 type SlideItem = {
   id: string;
@@ -14,220 +14,157 @@ type SlideItem = {
   mediaMobileId?: string;
 };
 
-type SlideResponse = {
-  data?: SlideItem[];
-};
+type SlideResponse = { data?: SlideItem[] };
 
-const FALLBACK_SRC = '/banner.png';
-const DESKTOP_BREAKPOINT = '(min-width: 900px)';
+const FALLBACK: SlideItem = {
+  id: 'tebahmadi-fallback',
+  href: '/store',
+  mediaDesktopId: 'fallback',
+  mediaMobileId: 'fallback',
+};
 
 const fetcher = async (url: string): Promise<SlideResponse> => {
   const response = await fetch(url);
-  if (!response.ok) {
-    const message = (await response.text().catch(() => '')) || response.statusText;
-    throw new Error(message || 'Failed to load slides');
-  }
+  if (!response.ok) throw new Error('Failed to load slides');
   return response.json();
 };
 
+function sourceFor(id: string | undefined): string {
+  if (!id || id === 'fallback') return '/tebahmadi-hero-botanical.webp';
+  return `/api/media/${id}?type=original`;
+}
+
 export default function InstagramBannerCarousel({ initialSlides }: { initialSlides?: SlideItem[] }) {
-  const { data, error, isLoading } = useSWR('/api/slides', fetcher, {
+  const { data, isLoading } = useSWR('/api/slides', fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 60_000,
     fallbackData: initialSlides ? { data: initialSlides } : undefined,
   });
-  const [index, setIndex] = useState(0);
-
-  const items = useMemo<SlideItem[]>(() => {
-    const list = data?.data ?? [];
-    return list.filter((slide) => {
-      const hasMedia = Boolean(slide.mediaDesktopId || slide.mediaMobileId || slide.mediaId);
-      return hasMedia && Boolean(slide.href);
-    });
+  const items = useMemo(() => {
+    const valid = (data?.data ?? []).filter((slide) =>
+      Boolean(slide.href && (slide.mediaDesktopId || slide.mediaMobileId || slide.mediaId)),
+    );
+    return valid.length > 0 ? valid : [FALLBACK];
   }, [data?.data]);
 
-  useEffect(() => {
-    if (items.length <= 1) return;
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % items.length);
-    }, 7000);
-    return () => clearInterval(timer);
-  }, [items.length]);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ direction: 'rtl', loop: items.length > 1, align: 'center' });
+  const [selected, setSelected] = useState(0);
+  const syncSelected = useCallback(() => {
+    if (emblaApi) setSelected(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
 
   useEffect(() => {
-    if (index >= items.length) {
-      setIndex(0);
-    }
-  }, [index, items.length]);
+    if (!emblaApi) return;
+    syncSelected();
+    emblaApi.on('select', syncSelected);
+    emblaApi.on('reInit', syncSelected);
+    return () => {
+      emblaApi.off('select', syncSelected);
+      emblaApi.off('reInit', syncSelected);
+    };
+  }, [emblaApi, syncSelected]);
 
-  const active = items[index] ?? null;
-  const desktopId = active?.mediaDesktopId || active?.mediaId || active?.mediaMobileId || '';
-  const mobileId = active?.mediaMobileId || active?.mediaDesktopId || active?.mediaId || '';
-  const desktopSrc = desktopId ? '/api/media/' + desktopId + '?type=original' : FALLBACK_SRC;
-  const mobileSrc = mobileId ? '/api/media/' + mobileId + '?type=original' : desktopSrc;
-  const href = active?.href || '/store';
-
-  const common = {
-    alt: active ? 'slide-' + active.id : 'home-banner',
-    sizes: '100vw',
-  };
-
-  const {
-    props: { srcSet: desktopSrcSet },
-  } = getImageProps({
-    ...common,
-    src: desktopSrc,
-    width: 1920,
-    height: 720,
-    quality: 75,
-  });
-
-  const {
-    props: { srcSet: mobileSrcSet, ...rest },
-  } = getImageProps({
-    ...common,
-    src: mobileSrc,
-    width: 1200,
-    height: 675,
-    quality: 75,
-  });
-
-  const hasDots = items.length > 1;
+  useEffect(() => {
+    if (!emblaApi || items.length <= 1) return;
+    const timer = window.setInterval(() => emblaApi.scrollNext(), 6500);
+    return () => window.clearInterval(timer);
+  }, [emblaApi, items.length]);
 
   return (
-    <Box sx={{ width: '100%', py: { xs: 1, md: 1.5 } }}>
-      <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 2 } }}>
-        <Stack alignItems="center" gap={1.25} sx={{ width: '100%', position: 'relative', overflow: 'hidden' }}>
-          <Link href={href} style={{ textDecoration: 'none', display: 'block', width: '100%' }}>
-            <Box
-              sx={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: { xs: '16 / 9', sm: '16 / 6.2', md: '16 / 6', lg: '16 / 5.8' },
-                minHeight: { xs: 168, sm: 188, md: 250, lg: 285 },
-                maxHeight: { xs: 260, sm: 320, md: 420, lg: 460 },
-                borderRadius: 0,
-                overflow: 'hidden',
-                bgcolor: 'background.default',
-              }}
-            >
-              <picture>
-                <source media={DESKTOP_BREAKPOINT} srcSet={desktopSrcSet} />
-                <source media="(max-width: 899px)" srcSet={mobileSrcSet} />
-                <img
-                  {...rest}
-                  alt={common.alt}
-                  loading="eager"
-                  fetchPriority="high"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: "contain",
-                    display: 'block',
-                    backgroundColor: 'transparent',
-                  }}
-                />
-              </picture>
-
-              {isLoading && !active && (
-                <Skeleton
-                  variant="rectangular"
-                  sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(var(--mui-palette-common-backgroundChannel) / 0.2)' }}
-                />
-              )}
-            </Box>
-          </Link>
-
-          {hasDots && (
-            <Stack direction="row" spacing={1}>
-              {items.map((item, idx) => (
-                <IconButton
-                  key={item.id}
-                  type="button"
-                  aria-label={`نمایش بنر ${idx + 1}`}
-                  aria-current={idx === index ? 'true' : undefined}
-                  onClick={() => setIndex(idx)}
+    <Box component="section" aria-label="پیشنهادهای ویژه" sx={{ py: { xs: 2, md: 4 }, overflow: 'hidden' }}>
+      <Box ref={emblaRef} sx={{ overflow: 'visible' }}>
+        <Box sx={{ display: 'flex', touchAction: 'pan-y pinch-zoom', direction: 'rtl' }}>
+          {items.map((slide, index) => {
+            const desktopId = slide.mediaDesktopId || slide.mediaId || slide.mediaMobileId;
+            const mobileId = slide.mediaMobileId || slide.mediaDesktopId || slide.mediaId;
+            const fallback = slide.id === FALLBACK.id;
+            return (
+              <Box
+                key={slide.id}
+                sx={{
+                  flex: { xs: '0 0 92%', sm: '0 0 78%', md: '0 0 66%' },
+                  minWidth: 0,
+                  px: { xs: 0.75, md: 1.25 },
+                  opacity: selected === index ? 1 : 0.5,
+                  transform: selected === index ? 'scale(1)' : 'scale(.955)',
+                  transition: 'opacity .35s ease, transform .35s ease',
+                }}
+              >
+                <Box
+                  component={Link}
+                  href={slide.href || '/store'}
                   sx={{
-                    width: 28,
-                    height: 28,
-                    p: 0.75,
-                    '&:hover': { bgcolor: 'action.hover' },
-                    '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+                    position: 'relative',
+                    display: 'block',
+                    overflow: 'hidden',
+                    borderRadius: { xs: 5, md: 6 },
+                    aspectRatio: { xs: '16 / 9', md: '16 / 8.8' },
+                    bgcolor: '#f3eadb',
                   }}
                 >
-                  <Box
-                    aria-hidden="true"
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      bgcolor: 'primary.main',
-                      transition: 'opacity 150ms ease',
-                      opacity: idx === index ? 1 : 0.35,
-                    }}
-                  />
-                </IconButton>
-              ))}
-            </Stack>
-          )}
+                  <picture>
+                    <source media="(min-width: 900px)" srcSet={sourceFor(desktopId)} />
+                    <img
+                      src={sourceFor(mobileId)}
+                      alt={fallback ? 'محصولات طبیعی طب احمدی' : `بنر ${index + 1}`}
+                      fetchPriority={index === 0 ? 'high' : 'auto'}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  </picture>
+                  {fallback ? (
+                    <Stack
+                      sx={{
+                        position: 'absolute',
+                        insetBlock: 0,
+                        left: { xs: 18, sm: '7%' },
+                        width: { xs: '48%', sm: '42%' },
+                        justifyContent: 'center',
+                        alignItems: 'flex-start',
+                        textAlign: 'right',
+                        direction: 'rtl',
+                      }}
+                    >
+                      <Typography sx={{ color: '#2a5a44', fontSize: { xs: 11, sm: 16 }, fontWeight: 700 }}>
+                        انتخابی از دل طبیعت
+                      </Typography>
+                      <Typography component="h1" sx={{ color: '#1f4635', fontSize: { xs: 21, sm: 36, md: 48 }, lineHeight: 1.35, fontWeight: 900, my: { xs: 0.5, sm: 1 } }}>
+                        محصولات طبیعی طب احمدی
+                      </Typography>
+                      <Box sx={{ bgcolor: '#2a5a44', color: '#fff', borderRadius: 99, px: { xs: 1.5, sm: 2.5 }, py: { xs: 0.7, sm: 1.1 }, fontSize: { xs: 10, sm: 14 }, fontWeight: 700 }}>
+                        مشاهده و خرید
+                      </Box>
+                    </Stack>
+                  ) : null}
+                  {isLoading && !data ? <Skeleton variant="rectangular" sx={{ position: 'absolute', inset: 0 }} /> : null}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
 
-          {items.length > 1 && (
-            <>
-              <Stack
-                alignItems="center"
-                justifyContent="center"
-                sx={{
-                  position: 'absolute',
-                  right: 0,
-                  top: 0,
-                  bottom: 18,
-                  zIndex: 2,
-                }}
-              >
-                <IconButton
-                  aria-label="banner-prev"
-                  sx={{ bgcolor: 'background.paper' }}
-                  onClick={() => setIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1))}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={28} height={28} viewBox="0 0 16 16">
-                    <path fill="currentColor" fillRule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5"></path>
-                  </svg>
-                </IconButton>
-              </Stack>
-
-              <Stack
-                alignItems="center"
-                justifyContent="center"
-                sx={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 18,
-                  zIndex: 2,
-                }}
-              >
-                <IconButton
-                  aria-label="banner-next"
-                  sx={{ bgcolor: 'background.paper' }}
-                  onClick={() => setIndex((prev) => (prev + 1) % items.length)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={28} height={28} viewBox="0 0 16 16">
-                    <path fill="currentColor" fillRule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8"></path>
-                  </svg>
-                </IconButton>
-              </Stack>
-            </>
-          )}
-
-          {error && (
-            <Skeleton
-              variant="text"
-              width={180}
-              sx={{ bgcolor: 'rgba(var(--mui-palette-common-backgroundChannel) / 0.5)', fontSize: 12, textAlign: 'center' }}
+      {items.length > 1 ? (
+        <Stack direction="row" justifyContent="center" gap={0.75} sx={{ mt: 1.5 }}>
+          {items.map((slide, index) => (
+            <Box
+              key={slide.id}
+              component="button"
+              type="button"
+              aria-label={`نمایش بنر ${index + 1}`}
+              onClick={() => emblaApi?.scrollTo(index)}
+              sx={{ width: selected === index ? 22 : 7, height: 7, border: 0, p: 0, borderRadius: 99, bgcolor: selected === index ? 'primary.main' : 'primary.100', cursor: 'pointer', transition: 'width .2s ease' }}
             />
-          )}
+          ))}
         </Stack>
-      </Container>
+      ) : null}
+
+      {items.length > 1 ? (
+        <Stack direction="row" justifyContent="center" gap={1} sx={{ mt: 1 }}>
+          <IconButton aria-label="بنر قبلی" onClick={() => emblaApi?.scrollPrev()} size="small">‹</IconButton>
+          <IconButton aria-label="بنر بعدی" onClick={() => emblaApi?.scrollNext()} size="small">›</IconButton>
+        </Stack>
+      ) : null}
     </Box>
   );
 }
