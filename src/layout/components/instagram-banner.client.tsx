@@ -8,7 +8,7 @@ import { Box, Container, IconButton, Skeleton, Stack } from '@mui/material';
 
 type SlideItem = {
   id: string;
-  href: string;
+  href?: string;
   mediaId?: string;
   mediaDesktopId?: string;
   mediaMobileId?: string;
@@ -18,7 +18,7 @@ type SlideResponse = {
   data?: SlideItem[];
 };
 
-const FALLBACK_SRC = '/banner.png';
+const FALLBACK_SRC = '/images/tebahmadi/hero-herbs.jpg';
 const DESKTOP_BREAKPOINT = '(min-width: 900px)';
 
 const fetcher = async (url: string): Promise<SlideResponse> => {
@@ -31,18 +31,18 @@ const fetcher = async (url: string): Promise<SlideResponse> => {
 };
 
 export default function InstagramBannerCarousel({ initialSlides }: { initialSlides?: SlideItem[] }) {
-  const { data, error, isLoading } = useSWR('/api/slides', fetcher, {
+  const { data, isLoading } = useSWR('/api/slides', fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 60_000,
     fallbackData: initialSlides ? { data: initialSlides } : undefined,
   });
   const [index, setIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const items = useMemo<SlideItem[]>(() => {
     const list = data?.data ?? [];
     return list.filter((slide) => {
-      const hasMedia = Boolean(slide.mediaDesktopId || slide.mediaMobileId || slide.mediaId);
-      return hasMedia && Boolean(slide.href);
+      return Boolean(slide.mediaDesktopId || slide.mediaMobileId || slide.mediaId);
     });
   }, [data?.data]);
 
@@ -60,12 +60,30 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
     }
   }, [index, items.length]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null || items.length <= 1) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    // In RTL layout: dragging left (diff > 50) moves to next slide
+    if (diff > 50) {
+      setIndex((prev) => (prev + 1) % items.length);
+    } else if (diff < -50) {
+      // dragging right (diff < -50) moves to previous slide
+      setIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
+    }
+    setTouchStartX(null);
+  };
+
   const active = items[index] ?? null;
   const desktopId = active?.mediaDesktopId || active?.mediaId || active?.mediaMobileId || '';
   const mobileId = active?.mediaMobileId || active?.mediaDesktopId || active?.mediaId || '';
   const desktopSrc = desktopId ? '/api/media/' + desktopId + '?type=original' : FALLBACK_SRC;
   const mobileSrc = mobileId ? '/api/media/' + mobileId + '?type=original' : desktopSrc;
-  const href = active?.href || '/store';
+  const href = active?.href && active.href.trim().length > 0 ? active.href.trim() : '/store';
 
   const common = {
     alt: active ? 'slide-' + active.id : 'home-banner',
@@ -99,18 +117,21 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
       <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
         <Stack alignItems="center" sx={{ width: '100%', position: 'relative' }}>
           <Box
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
             sx={{
               position: 'relative',
               width: '100%',
-              aspectRatio: { xs: '16 / 9', sm: '16 / 7.5', md: '21 / 9', lg: '2.4 / 1' },
-              minHeight: { xs: 180, sm: 220, md: 280, lg: 320 },
-              maxHeight: { xs: 280, sm: 360, md: 440, lg: 480 },
+              aspectRatio: { xs: '16 / 9', sm: '16 / 8.5', md: '16 / 8', lg: '16 / 7.5' },
+              minHeight: { xs: 180, sm: 240, md: 320, lg: 360 },
+              maxHeight: { xs: 300, sm: 380, md: 460, lg: 520 },
               borderRadius: { xs: 3, sm: 4, md: 5 },
               overflow: 'hidden',
               bgcolor: 'background.paper',
               border: '1px solid',
               borderColor: 'divider',
               boxShadow: '0 10px 32px rgba(42, 90, 68, 0.08)',
+              touchAction: 'pan-y pinch-zoom',
             }}
           >
             <Link href={href} style={{ textDecoration: 'none', display: 'block', width: '100%', height: '100%' }}>
@@ -126,8 +147,15 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                     width: '100%',
                     height: '100%',
                     objectFit: "cover",
+                    objectPosition: "center",
                     display: 'block',
                     backgroundColor: 'transparent',
+                  }}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (desktopSrc && target.src !== desktopSrc) {
+                      target.src = desktopSrc;
+                    }
                   }}
                 />
               </picture>
@@ -151,7 +179,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                   left: '50%',
                   transform: 'translateX(-50%)',
                   zIndex: 2,
-                  bgcolor: 'rgba(0, 0, 0, 0.3)',
+                  bgcolor: 'rgba(0, 0, 0, 0.35)',
                   backdropFilter: 'blur(8px)',
                   px: 1.25,
                   py: 0.5,
@@ -194,7 +222,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                     top: '50%',
                     transform: 'translateY(-50%)',
                     zIndex: 2,
-                    bgcolor: 'rgba(255, 255, 255, 0.88)',
+                    bgcolor: 'rgba(255, 255, 255, 0.9)',
                     backdropFilter: 'blur(8px)',
                     color: 'primary.main',
                     boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
@@ -207,8 +235,8 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                     },
                   }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 16 16">
-                    <path fill="currentColor" fillRule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5"></path>
+                  <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m9 18 6-6-6-6" />
                   </svg>
                 </IconButton>
 
@@ -221,7 +249,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                     top: '50%',
                     transform: 'translateY(-50%)',
                     zIndex: 2,
-                    bgcolor: 'rgba(255, 255, 255, 0.88)',
+                    bgcolor: 'rgba(255, 255, 255, 0.9)',
                     backdropFilter: 'blur(8px)',
                     color: 'primary.main',
                     boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
@@ -234,21 +262,13 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                     },
                   }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 16 16">
-                    <path fill="currentColor" fillRule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8"></path>
+                  <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m15 18-6-6 6-6" />
                   </svg>
                 </IconButton>
               </>
             )}
           </Box>
-
-          {error && (
-            <Skeleton
-              variant="text"
-              width={180}
-              sx={{ bgcolor: 'rgba(var(--mui-palette-common-backgroundChannel) / 0.5)', fontSize: 12, textAlign: 'center', mt: 1 }}
-            />
-          )}
         </Stack>
       </Container>
     </Box>

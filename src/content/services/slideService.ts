@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { revalidatePath, revalidateTag, TAGS } from '@/lib/cache';
 import { SlideModel, type SlideDocument } from '@/content/models/Slide';
+import { connectMongoose } from '@/lib/mongoose';
 
 export type SlideDTO = {
   id: string;
@@ -44,7 +45,7 @@ function mapSlide(doc: SlideSource): SlideDTO {
     mediaId,
     mediaDesktopId,
     mediaMobileId,
-    href: doc.href,
+    href: doc.href || '',
     createdAt,
     updatedAt,
   };
@@ -55,6 +56,7 @@ export async function createSlide(input: {
   mediaMobileId?: string;
   href: string;
 }): Promise<SlideDTO> {
+  await connectMongoose();
   const desktopObjectId = new Types.ObjectId(input.mediaDesktopId);
   const mobileObjectId = input.mediaMobileId
     ? new Types.ObjectId(input.mediaMobileId)
@@ -74,6 +76,7 @@ export async function createSlide(input: {
 }
 
 export async function listSlides(): Promise<SlideDTO[]> {
+  await connectMongoose();
   const slides = await SlideModel.find({})
     .sort({ createdAt: -1 })
     .lean<SlideDocument[]>();
@@ -92,6 +95,7 @@ export async function listSlides(): Promise<SlideDTO[]> {
 }
 
 export async function deleteSlide(id: string): Promise<boolean> {
+  await connectMongoose();
   const deleted = await SlideModel.findByIdAndDelete(id).lean();
   if (!deleted) {
     return false;

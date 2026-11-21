@@ -93,8 +93,10 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
                   ? '/api/media/' + category.mediaId
                   : (category as unknown as { imageUrl?: string }).imageUrl || '/category.png'
               }
+              fallbackSrc="/category.png"
               alt={category.name || 'category'}
               fill
+              sizes="(max-width: 600px) 74px, (max-width: 900px) 88px, 108px"
               priority={index < 5}
               fetchPriority={index < 5 ? 'high' : 'auto'}
               style={{ objectFit: 'cover' }}

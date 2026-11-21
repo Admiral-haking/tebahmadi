@@ -44,8 +44,9 @@ export default async function PopularProducts() {
           </Stack>
           <MegaButton color="primary" sx={{ flexShrink: 0 }} />
         </Stack>
+
+        <DiscountClient products={products} />
       </Container>
-      <DiscountClient products={products} />
     </Box>
   );
 }
