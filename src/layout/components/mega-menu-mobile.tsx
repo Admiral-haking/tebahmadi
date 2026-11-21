@@ -1,11 +1,11 @@
 "use client";
 import { CategoryDocument } from "@/catalog/models/Category";
 import { Box, Button, Dialog, DialogContent, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-
-
 
 type Props = {
     categories: CategoryDocument[]
@@ -22,7 +22,9 @@ export default function MegaMenuMobile({ categories }: Props) {
     return <>
         <IconButton
             onClick={() => setOpen(true)}
-            id="mega-btn-xs">
+            id="mega-btn-xs"
+            aria-label="منوی محصولات"
+        >
             <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
                 <path fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} d="M4 7h3m13 0h-9m9 10h-3M4 17h9m-9-5h16"></path>
             </svg>
@@ -36,7 +38,9 @@ export default function MegaMenuMobile({ categories }: Props) {
                 paper: {
                     sx: {
                         bgcolor: 'background.default',
-                        backgroundImage: 'none'
+                        backgroundImage: 'none',
+                        display: 'flex',
+                        flexDirection: 'column',
                     }
                 }
             }}
@@ -47,16 +51,20 @@ export default function MegaMenuMobile({ categories }: Props) {
                 justifyContent="space-between"
                 gap={2}
                 sx={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
+                    position: 'sticky',
                     top: 0,
-                    p: 2
+                    zIndex: 2,
+                    pt: 'calc(12px + env(safe-area-inset-top, 0px))',
+                    px: 2,
+                    pb: 1.5,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
                 }}
             >
-                <Typography variant="h5">محصولات ما</Typography>
+                <Typography variant="h6" fontWeight={800}>دسته‌بندی‌ها</Typography>
 
-                <IconButton onClick={() => setOpen(false)}>
+                <IconButton onClick={() => setOpen(false)} sx={{ width: 40, height: 40 }} aria-label="بستن منو">
                     <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
                         <path
                             fill="currentColor"
@@ -65,102 +73,139 @@ export default function MegaMenuMobile({ categories }: Props) {
                     </svg>
                 </IconButton>
             </Stack>
-            <DialogContent sx={{ mt: 8 }}>
+
+            <DialogContent sx={{ p: 2, pb: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}>
                 <Stack
                     direction="row"
                     gap={1}
-                    flex="1 1 auto"
-                    sx={{ mx: 1 }}>
-                    <Button onClick={() => setOpen(false)} LinkComponent={Link} href="/" startIcon={homeIcon}>
+                    sx={{ mb: 2 }}
+                >
+                    <Button onClick={() => setOpen(false)} LinkComponent={Link} href="/" startIcon={homeIcon} variant="outlined" size="small" sx={{ borderRadius: 99, flex: 1 }}>
                         ویترین
                     </Button>
 
-                    <Button onClick={() => setOpen(false)} LinkComponent={Link} href="/store" startIcon={storeIcon}>
+                    <Button onClick={() => setOpen(false)} LinkComponent={Link} href="/store" startIcon={storeIcon} variant="outlined" size="small" sx={{ borderRadius: 99, flex: 1 }}>
                         فروشگاه
                     </Button>
 
-                    <Button onClick={() => setOpen(false)} LinkComponent={Link} href="/blog" startIcon={blogIcon}>
+                    <Button onClick={() => setOpen(false)} LinkComponent={Link} href="/blog" startIcon={blogIcon} variant="outlined" size="small" sx={{ borderRadius: 99, flex: 1 }}>
                         بلاگ
                     </Button>
                 </Stack>
+
                 {
-                    !selected ? <List sx={{ mt: 2 }}>
-                        {
-                            roots.map(item => <ListItem key={`${item._id}`}>
-                                <ListItemButton onClick={() => setSelected(`${item._id}`)}>
-                                    <ListItemIcon>
-                                        <Box sx={{
-                                            width: 32,
-                                            height: 32,
-                                            position: 'relative',
-                                            borderRadius: '50%',
-                                            overflow: 'hidden'
-                                        }}>
-                                            <Image
-                                                src={`/api/media/${item.mediaId}`}
-                                                alt={item.name}
-                                                fill
-                                                loading="lazy"
-                                                objectFit="cover"
-                                                fetchPriority="low"
-                                                style={{
-                                                    maxHeight: 32,
-                                                    maxWidth: 32
-                                                }}
-                                            />
-                                        </Box>
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        primary={item.name}
-                                    />
-                                </ListItemButton>
-                            </ListItem>)
-                        }
-                    </List> : <Box sx={{ mt: 4 }}>
-                        <Box sx={{ mb: 4 }}>
-                            <Button onClick={() => setSelected("")}>
-                                بازگشت
-                            </Button>
-                        </Box>
-                        {
-                            subs.map(item => <Box key={item.path}>
-                                <Button
-                                    size="small"
-                                    startIcon={<Box sx={{
-                                        width: 32,
-                                        height: 32,
-                                        position: 'relative',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden'
-                                    }}>
-                                        <Image
-                                            src={`/api/media/${item.mediaId}`}
-                                            alt={item.name}
-                                            fill
-                                            loading="lazy"
-                                            objectFit="cover"
-                                            fetchPriority="low"
-                                            style={{
-                                                maxHeight: 32,
-                                                maxWidth: 32
-                                            }}
+                    !selected ? (
+                        <List sx={{ p: 0 }}>
+                            {roots.map(item => (
+                                <ListItem key={`${item._id}`} disablePadding sx={{ mb: 0.5 }}>
+                                    <ListItemButton
+                                        onClick={() => setSelected(`${item._id}`)}
+                                        sx={{ borderRadius: 2.5, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
+                                    >
+                                        <ListItemIcon sx={{ minWidth: 44 }}>
+                                            <Box sx={{
+                                                width: 32,
+                                                height: 32,
+                                                position: 'relative',
+                                                borderRadius: '50%',
+                                                overflow: 'hidden',
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                flexShrink: 0,
+                                            }}>
+                                                <Image
+                                                    src={item.mediaId ? `/api/media/${item.mediaId}` : '/category.png'}
+                                                    alt={item.name}
+                                                    fill
+                                                    loading="lazy"
+                                                    style={{ objectFit: 'contain', padding: '15%' }}
+                                                />
+                                            </Box>
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={item.name}
+                                            primaryTypographyProps={{ fontWeight: 600, fontSize: '0.925rem' }}
                                         />
-                                    </Box>}
-                                    onClick={() => setOpen(false)} LinkComponent={Link}
-                                    href={`/store/${item.path}`}
-                                >
-                                    {item.name}
-                                </Button>
-                                <ul>
-                                    {
-                                        categories.filter(x => `${x.parentId}` === `${item._id}`).map(x => <li key={x.path}>
-                                            <Button size="small" onClick={() => setOpen(false)} LinkComponent={Link} href={`/store/${x.path}`}>{x.name}</Button>
-                                        </li>)
-                                    }
-                                </ul>
-                            </Box>)
-                        }
-                    </Box>
+                                        <ChevronLeftRoundedIcon fontSize="small" color="action" />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                    ) : (
+                        <Box sx={{ mt: 1 }}>
+                            <Button
+                                startIcon={<ChevronRightRoundedIcon />}
+                                onClick={() => setSelected("")}
+                                sx={{ mb: 2, fontWeight: 700 }}
+                            >
+                                بازگشت به دسته‌بندی‌های اصلی
+                            </Button>
+                            <Stack spacing={1.5}>
+                                {subs.map(item => {
+                                    const childCategories = categories.filter(x => `${x.parentId}` === `${item._id}`);
+                                    return (
+                                        <Box
+                                            key={item.path}
+                                            sx={{
+                                                p: 1.5,
+                                                borderRadius: 2.5,
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                bgcolor: 'background.paper',
+                                            }}
+                                        >
+                                            <Button
+                                                size="medium"
+                                                startIcon={
+                                                    <Box sx={{
+                                                        width: 30,
+                                                        height: 30,
+                                                        position: 'relative',
+                                                        borderRadius: '50%',
+                                                        overflow: 'hidden',
+                                                        border: '1px solid',
+                                                        borderColor: 'divider',
+                                                        flexShrink: 0,
+                                                    }}>
+                                                        <Image
+                                                            src={item.mediaId ? `/api/media/${item.mediaId}` : '/category.png'}
+                                                            alt={item.name}
+                                                            fill
+                                                            loading="lazy"
+                                                            style={{ objectFit: 'contain', padding: '15%' }}
+                                                        />
+                                                    </Box>
+                                                }
+                                                onClick={() => setOpen(false)}
+                                                LinkComponent={Link}
+                                                href={`/store/${item.path}`}
+                                                sx={{ fontWeight: 700, width: '100%', justifyContent: 'flex-start' }}
+                                            >
+                                                {item.name}
+                                            </Button>
+                                            {childCategories.length > 0 && (
+                                                <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mt: 1, pr: 4 }}>
+                                                    {childCategories.map(x => (
+                                                        <Button
+                                                            key={x.path}
+                                                            size="small"
+                                                            variant="text"
+                                                            onClick={() => setOpen(false)}
+                                                            LinkComponent={Link}
+                                                            href={`/store/${x.path}`}
+                                                            sx={{ color: 'text.secondary', fontSize: '0.8rem' }}
+                                                        >
+                                                            • {x.name}
+                                                        </Button>
+                                                    ))}
+                                                </Stack>
+                                            )}
+                                        </Box>
+                                    );
+                                })}
+                            </Stack>
+                        </Box>
+                    )
                 }
             </DialogContent>
         </Dialog>

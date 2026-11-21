@@ -115,21 +115,34 @@ export default function UserButton(): JSX.Element {
         )}
       </Avatar>
 
-      <Drawer anchor="right" open={open} onClose={handleDrawerClose}>
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={handleDrawerClose}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: 360 },
+            maxWidth: 380,
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          },
+        }}
+      >
         <Stack
           direction="row"
           alignItems="center"
           justifyContent="space-between"
           sx={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            top: 0,
             p: 2,
-            bgcolor: 'background.paper'
-          }}>
-          <Typography variant="h6">حساب کاربری</Typography>
-          <IconButton onClick={handleDrawerClose} aria-label="بستن">
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+            flexShrink: 0,
+          }}
+        >
+          <Typography variant="h6" fontWeight={800}>حساب کاربری</Typography>
+          <IconButton onClick={handleDrawerClose} aria-label="بستن" sx={{ width: 36, height: 36 }}>
             <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24">
               <path
                 fill="currentColor"
@@ -140,13 +153,11 @@ export default function UserButton(): JSX.Element {
         </Stack>
         <Box
           sx={{
-            width: { xs: 320, sm: 350 },
-            p: 2,
-            maxHeight: '100vh',
-            height: '100%',
-            bgcolor: 'background.paper',
-            pt: 12,
-            overflowY: 'scroll'
+            flex: 1,
+            p: 2.5,
+            pb: "calc(24px + env(safe-area-inset-bottom, 0px))",
+            bgcolor: "background.paper",
+            overflowY: "auto",
           }}
           role="presentation"
         >

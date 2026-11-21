@@ -32,8 +32,8 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(3, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' },
-        gap: { xs: 1.5, sm: 2, md: 2.25 },
+        gridTemplateColumns: { xs: 'repeat(3, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))', md: 'repeat(6, minmax(0, 1fr))' },
+        gap: { xs: 1.5, sm: 2, md: 2.5 },
       }}
     >
       {categories.map((category, index) => (
@@ -60,16 +60,16 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
             sx={{
               position: 'relative',
               width: '100%',
-              aspectRatio: { xs: '1 / 1', sm: '2.35 / 1' },
-              maxWidth: { xs: 108, sm: 'none' },
-              borderRadius: { xs: '50%', sm: 999 },
+              aspectRatio: '1 / 1',
+              maxWidth: { xs: 96, sm: 110, md: 120 },
+              borderRadius: '50%',
               overflow: 'hidden',
-              mb: 1,
+              mb: 1.25,
               border: '1px solid',
               borderColor: 'divider',
               bgcolor: '#f6f4e8',
               boxShadow: 'none',
-              transition: 'transform 180ms ease, border-color 180ms ease',
+              transition: 'transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
             }}
           >
             <OptimizedImage

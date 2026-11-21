@@ -20,6 +20,8 @@ import {
     useTheme,
     Rating,
 } from "@mui/material";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 
 import { useCart } from "@/components/cart/useCart";
 import type {
@@ -857,8 +859,8 @@ export default function ProductDetailClient({
                             sx={{
                                 position: "relative",
                                 width: "100%",
-                                height: "100%",
-                                minHeight: { xs: 360, sm: 520, md: 420, lg: 480 },
+                                aspectRatio: "1 / 1",
+                                maxHeight: { xs: 400, sm: 480, md: 520 },
                                 borderRadius: { xs: 3, md: 5 },
                                 overflow: "hidden",
                                 bgcolor: "rgba(42, 90, 68, .045)",
@@ -874,7 +876,7 @@ export default function ProductDetailClient({
                                         alt={product.title}
                                         src={activeImage}
                                         fill
-                                        objectFit="contain"
+                                        style={{ objectFit: "contain" }}
                                     />
                                     :
                                     <ImageZoom
@@ -886,7 +888,7 @@ export default function ProductDetailClient({
                         </Box>
 
                         {thumbnails.length > 1 && (
-                            <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="center" sx={{ width: "100%" }}>
+                            <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="center" sx={{ width: "100%", mt: 1 }}>
                                 {thumbnails.map((media, index) => {
                                     const thumbSrc = getThumbnailSource(media);
                                     const fullSrc = media.fullUrl ?? thumbSrc;
@@ -896,14 +898,16 @@ export default function ProductDetailClient({
                                             key={`${media.id}-${index}`}
                                             onClick={() => handleThumbnailClick(media)}
                                             sx={{
-                                                width: 72,
-                                                height: 72,
+                                                width: { xs: 60, sm: 72 },
+                                                height: { xs: 60, sm: 72 },
                                                 borderRadius: 2.5,
                                                 overflow: "hidden",
                                                 bgcolor: isActive ? "background.paper" : "background.default",
                                                 border: "2px solid",
                                                 borderColor: isActive ? "primary.main" : "divider",
                                                 cursor: "pointer",
+                                                transition: "border-color .15s ease, transform .15s ease",
+                                                "&:hover": { transform: "scale(1.04)" },
                                             }}
                                         >
                                             <Image
@@ -911,7 +915,7 @@ export default function ProductDetailClient({
                                                 src={thumbSrc}
                                                 width={72}
                                                 height={72}
-                                                style={{ objectFit: "cover" }}
+                                                style={{ objectFit: "cover", width: "100%", height: "100%" }}
                                             />
                                         </Box>
                                     );
@@ -1326,55 +1330,98 @@ export default function ProductDetailClient({
             <Dialog
                 open={!!selectionErrors.length}
                 onClose={() => setSelectionErrors([])}
-                maxWidth="sm"
+                maxWidth="xs"
                 fullWidth
+                slotProps={{
+                    paper: {
+                        sx: {
+                            borderRadius: 4,
+                            p: { xs: 2, sm: 2.5 },
+                            m: { xs: 2, sm: "auto" },
+                        },
+                    },
+                }}
             >
-                <DialogContent>
-                    <Stack gap={2} alignItems="center" justifyContent="center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={100} height={100} viewBox="0 0 40 40">
-                            <g fill="none" strokeMiterlimit={10}>
-                                <path fill="#A54A4C" stroke="#7D383A" d="M.5 20a19.5 19.5 0 1 0 39 0a19.5 19.5 0 0 0-39 0Z" strokeWidth={1}></path>
-                                <path fill="#fff" stroke="#231f20" d="M30.08 25.41c-.16-.77-2.31-3.15-4.48-5.41c2.17-2.26 4.32-4.64 4.48-5.41c.46-.89-.63-2.11-1.59-3.08s-2.19-2-3.08-1.59c-.77.16-3.15 2.31-5.41 4.48c-2.26-2.17-4.64-4.32-5.41-4.48c-.89-.46-2.11.63-3.07 1.59s-2.06 2.19-1.6 3.08c.16.77 2.31 3.15 4.48 5.41c-2.17 2.26-4.32 4.64-4.48 5.41c-.46.89.63 2.11 1.59 3.08s2.19 2.05 3.08 1.59c.77-.16 3.15-2.31 5.41-4.48c2.26 2.17 4.64 4.32 5.41 4.48c.89.46 2.11-.63 3.08-1.59s2.05-2.19 1.59-3.08Z" strokeWidth={1}></path>
-                                <path stroke="#fff" strokeLinecap="round" d="M27.56 5a15.4 15.4 0 0 1 5.26 3.73" strokeWidth={1}></path>
-                            </g>
-                        </svg>
-                        {
-                            selectionErrors.map((x, i) => <Typography key={i}>{x.message}</Typography>)
-                        }
+                <DialogContent sx={{ px: { xs: 1, sm: 2 }, py: 1 }}>
+                    <Stack gap={2} alignItems="center" justifyContent="center" textAlign="center">
+                        <Box
+                            sx={{
+                                width: 56,
+                                height: 56,
+                                borderRadius: "50%",
+                                display: "grid",
+                                placeItems: "center",
+                                bgcolor: "rgba(var(--mui-palette-error-mainChannel) / 0.1)",
+                                color: "error.main",
+                            }}
+                        >
+                            <ReportProblemRoundedIcon sx={{ fontSize: 32 }} />
+                        </Box>
+                        <Stack spacing={0.75}>
+                            {selectionErrors.map((x, i) => (
+                                <Typography key={i} variant="body1" fontWeight={600} color="text.primary">
+                                    {x.message}
+                                </Typography>
+                            ))}
+                        </Stack>
                     </Stack>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setSelectionErrors([])} variant="contained">
+                <DialogActions sx={{ px: { xs: 1, sm: 2 }, pt: 1, pb: 0 }}>
+                    <Button onClick={() => setSelectionErrors([])} variant="contained" fullWidth sx={{ borderRadius: 99, py: 1.2, fontWeight: 700 }}>
                         متوجه شدم
                     </Button>
                 </DialogActions>
             </Dialog>
+
             <Dialog
                 open={showSuc}
                 onClose={() => setShowSuc(false)}
-                maxWidth="sm"
+                maxWidth="xs"
                 fullWidth
+                slotProps={{
+                    paper: {
+                        sx: {
+                            borderRadius: 4,
+                            p: { xs: 2, sm: 2.5 },
+                            m: { xs: 2, sm: "auto" },
+                        },
+                    },
+                }}
             >
-                <DialogContent>
-                    <Stack gap={2} alignItems="center" justifyContent="center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={150} height={150} viewBox="0 0 40 40">
-                            <g fill="none" stroke="#00034a" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit={10} strokeWidth={1}>
-                                <path fill="#00034a" d="M28.875 4.312c2.42-2.258 4.85-1.367 6.643 0c2.39 1.871 4.626 4.889 3.076 7.949c-.522 1.604-3.273 6.35-7.592 12.044c-.925 1.22-1.77 2.344-2.544 3.373c-3.118 4.15-5.098 6.784-6.633 8.199c-1.676 1.546-3.384 1.467-5.283.445c-1.584-.853-3.67-2.442-6.238-4.399l-1.13-.861c-2.49-1.898-6.543-4.515-7.822-7.617c-1.252-1.68.312-4.213 1.68-6.007c1.366-1.795 3.492-3.93 5.456-3.17c1.159.141 3.958 2.05 7.507 4.745c.97-1.328 2.034-2.739 3.153-4.226l.026-.035c4.32-5.695 8.258-9.49 9.7-10.44"></path>
-                                <path fill="#C5A059" d="M35.518 4.312c-1.795-1.367-4.224-2.258-6.643 0c-1.443.95-5.382 4.745-9.7 10.44a380 380 0 0 0-3.18 4.26c-3.55-2.694-6.348-4.602-7.507-4.745c-1.964-.759-4.09 1.377-5.457 3.17c-1.366 1.794-2.932 4.327-1.68 6.008c.447 1.082 2.97 3.35 6.52 6.055c4.262 3.236 7.337 5.694 9.14 5.922c2.761 1.072 4.745-2.192 12.689-12.68c4.319-5.694 7.07-10.439 7.593-12.043c1.479-2.923-.03-5.02-1.775-6.387"></path>
-                            </g>
-                        </svg>
-                        <Typography variant="subtitle1">
-                            این محصول با موفقیت به سبد خرید اضافه شد.
-                        </Typography>
+                <DialogContent sx={{ px: { xs: 1, sm: 2 }, py: 1 }}>
+                    <Stack gap={2} alignItems="center" justifyContent="center" textAlign="center">
+                        <Box
+                            sx={{
+                                width: 56,
+                                height: 56,
+                                borderRadius: "50%",
+                                display: "grid",
+                                placeItems: "center",
+                                bgcolor: "rgba(var(--mui-palette-success-mainChannel) / 0.12)",
+                                color: "success.main",
+                            }}
+                        >
+                            <CheckCircleRoundedIcon sx={{ fontSize: 36 }} />
+                        </Box>
+                        <Stack spacing={0.5}>
+                            <Typography variant="h6" fontWeight={800}>
+                                افزوده شد به سبد خرید
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                این محصول با موفقیت به سبد خرید شما اضافه شد.
+                            </Typography>
+                        </Stack>
                     </Stack>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowSuc(false)} variant="outlined">
-                        افزودن موارد دیگر
-                    </Button>
-                    <Button LinkComponent={Link} href="/cart" variant="contained">
-                        تکمیل خرید
-                    </Button>
+                <DialogActions sx={{ px: { xs: 1, sm: 2 }, pt: 1.5, pb: 0 }}>
+                    <Stack direction={{ xs: "column-reverse", sm: "row" }} gap={1} sx={{ width: "100%" }}>
+                        <Button onClick={() => setShowSuc(false)} variant="outlined" fullWidth sx={{ borderRadius: 99, py: 1.2 }}>
+                            ادامه خرید
+                        </Button>
+                        <Button LinkComponent={Link} href="/cart" variant="contained" fullWidth sx={{ borderRadius: 99, py: 1.2, fontWeight: 700 }}>
+                            تکمیل خرید
+                        </Button>
+                    </Stack>
                 </DialogActions>
             </Dialog>
         </>

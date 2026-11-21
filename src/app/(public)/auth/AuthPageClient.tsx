@@ -152,8 +152,8 @@ function OtpInput({
                         maxLength={1}
                         aria-label={`رقم ${i + 1}`}
                         style={{
-                            width: '48px',
-                            height: '58px',
+                            width: 'clamp(42px, 11vw, 48px)',
+                            height: 'clamp(50px, 13vw, 58px)',
                             textAlign: 'center',
                             fontSize: '1.5rem',
                             fontWeight: 700,
@@ -267,12 +267,12 @@ export default function AuthPageClient() {
                     "radial-gradient(900px 520px at 50% 0%, rgba(var(--mui-palette-primary-mainChannel) / 0.10), transparent 62%)",
             }}
         >
-            <Container maxWidth="xs" sx={{ py: { xs: 5, md: 8 } }}>
+            <Container maxWidth="xs" sx={{ py: { xs: 4, sm: 6, md: 8 }, px: { xs: 2, sm: 3 } }}>
                 <Paper
                     elevation={0}
                     sx={{
-                        borderRadius: 5,
-                        p: { xs: 3, sm: 4 },
+                        borderRadius: 4,
+                        p: { xs: 2.5, sm: 3.5, md: 4 },
                         border: "1px solid",
                         borderColor: "divider",
                         boxShadow: "0 24px 70px -42px rgba(31, 70, 53, 0.52)",

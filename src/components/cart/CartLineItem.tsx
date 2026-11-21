@@ -162,21 +162,33 @@ export default function CartLineItem({ line }: CartLineItemProps) {
   const unitLabel = line.priceModel === 'per_unit' ? (line.requestedUnit ?? line.unitOfMeasure ?? '') : '';
 
   return (
-    <Stack direction="row" flexWrap="wrap" spacing={2} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+    <Stack
+      direction="row"
+      spacing={{ xs: 1.5, sm: 2 }}
+      sx={{
+        p: { xs: 1.5, sm: 2 },
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 3,
+        bgcolor: 'background.paper',
+      }}
+    >
       <Box
         component="img"
         src={line.mediaThumbId ? `/api/media/${line.mediaThumbId}` : FALLBACK_IMAGE}
         alt={line.title}
         sx={{
-          width: 96,
-          height: 96,
+          width: { xs: 72, sm: 88, md: 96 },
+          height: { xs: 72, sm: 88, md: 96 },
+          aspectRatio: "1 / 1",
           borderRadius: 2,
           objectFit: 'cover',
           border: '1px solid',
           borderColor: 'divider',
+          flexShrink: 0,
         }}
       />
-      <Stack flex={1} flexWrap="wrap">
+      <Stack flex={1} minWidth={0}>
         <Stack direction={{ xs: 'column', sm: 'row' }} flexWrap="wrap" gap={2}>
           <Stack gap={1} flex={1} minWidth={0}>
             <Typography variant="subtitle1" fontWeight={600}>

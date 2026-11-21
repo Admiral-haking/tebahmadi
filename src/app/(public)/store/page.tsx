@@ -28,61 +28,86 @@ export default async function Page() {
                     برای شروع، یکی از دسته‌بندی‌های اصلی را انتخاب کنید تا محصولات مرتبط نمایش داده شوند.
                 </Typography>
             </Box>
-            <Stack direction="row" justifyContent={{ xs: 'center', md: 'start' }} flexWrap="wrap" gap={2} sx={{ my: 4 }}>
-
-                {categories.map(async (category) => (
+            <Box
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                        xs: "repeat(3, minmax(0, 1fr))",
+                        sm: "repeat(4, minmax(0, 1fr))",
+                        md: "repeat(6, minmax(0, 1fr))",
+                    },
+                    gap: { xs: 1.5, sm: 2, md: 2.5 },
+                    my: 4,
+                }}
+            >
+                {categories.map((category) => (
                     <Button
                         key={category.id}
                         component={Link}
                         href={`/store/${category.path}`}
-
                         size="small"
-                        sx={{ position: 'relative', display: 'block' }}
+                        sx={{
+                            position: "relative",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            textTransform: "none",
+                            color: "text.primary",
+                            p: 0,
+                            minWidth: 0,
+                            "&:hover .store-category-icon": {
+                                transform: "translateY(-3px)",
+                                borderColor: "primary.main",
+                            },
+                        }}
                     >
-
-                        <Box sx={{
-                            position: 'relative',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            direction: 'rtl',
-                            p: 2,
-                            mx: 'auto',
-                            width: 80,
-                            height: 80,
-                            borderRadius: '50%',
-                            overflow: 'hidden',
-                            bgcolor: 'background.paper'
-                        }}>
+                        <Box
+                            className="store-category-icon"
+                            sx={{
+                                position: "relative",
+                                width: "100%",
+                                aspectRatio: "1 / 1",
+                                maxWidth: { xs: 80, sm: 96, md: 104 },
+                                borderRadius: "50%",
+                                overflow: "hidden",
+                                mb: 1,
+                                border: "1px solid",
+                                borderColor: "divider",
+                                bgcolor: "background.paper",
+                                transition: "transform 180ms ease, border-color 180ms ease",
+                            }}
+                        >
                             <Image
-                                src={category.mediaId ? `/api/media/${category.mediaId}` : '/category.png'}
+                                src={category.mediaId ? `/api/media/${category.mediaId}` : "/category.png"}
                                 alt={category.name}
                                 fill
                                 loading="lazy"
-                                objectFit="contain"
-                                style={{ padding: '1rem' }}
+                                style={{ objectFit: "contain", padding: "16%" }}
                                 unoptimized={true}
                             />
                         </Box>
 
-
-                        <Box sx={{
-                            textAlign: 'center',
-                            '& *': {
-                                textAlign: 'center',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                maxWidth: '100%'
-                            }
-                        }}>
-                            <Typography variant="body2" component="p">
-                                {category.name}
-                            </Typography>
-                        </Box>
+                        <Typography
+                            variant="body2"
+                            component="p"
+                            sx={{
+                                textAlign: "center",
+                                width: "100%",
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                                fontWeight: 500,
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}
+                        >
+                            {category.name}
+                        </Typography>
                     </Button>
                 ))}
-            </Stack>
+            </Box>
             <Grid container gap={2}>
                 {categories.length === 0 && (
                     <Grid size={{ xs: 12 }}>

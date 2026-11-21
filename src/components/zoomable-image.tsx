@@ -96,7 +96,21 @@ export default function ZoomableImage({ src, alt = "", width = 40, height = 40, 
       )}
 
       {!canHover && (
-        <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm">
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          maxWidth="sm"
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: 4,
+                overflow: "hidden",
+                m: { xs: 2, sm: "auto" },
+                bgcolor: "background.paper",
+              },
+            },
+          }}
+        >
           <Box
             component="img"
             src={url}

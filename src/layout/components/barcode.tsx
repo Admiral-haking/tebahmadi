@@ -113,7 +113,17 @@ export default function BarcodeFinder() {
             open={open}
             onClose={() => setOpen(false)}
             maxWidth="sm"
-            fullWidth>
+            fullWidth
+            slotProps={{
+                paper: {
+                    sx: {
+                        borderRadius: 4,
+                        overflow: "hidden",
+                        m: { xs: 2, sm: "auto" },
+                    },
+                },
+            }}
+        >
             {loading && <LinearProgress />}
             <DialogTitle>
                 <Stack direction="row" gap={2} alignItems="center">

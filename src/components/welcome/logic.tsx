@@ -95,16 +95,26 @@ export default function WelcomeLogic() {
             }}
             fullWidth
             maxWidth="xs"
+            slotProps={{
+                paper: {
+                    sx: {
+                        borderRadius: 4,
+                        overflow: "hidden",
+                        m: { xs: 2, sm: "auto" },
+                        p: { xs: 1, sm: 1.5 },
+                    },
+                },
+            }}
         >
-            <DialogTitle>ما رو دنبال کن</DialogTitle>
+            <DialogTitle sx={{ fontWeight: 800 }}>ما رو دنبال کن</DialogTitle>
             <DialogContent>
-                <Typography sx={{ mb: 2 }}>
-                    در شبکه های مجازی ما رو دنبال کن، تا از خبر جدید عقب نمونی!
+                <Typography sx={{ mb: 2 }} color="text.secondary">
+                    در شبکه‌های مجازی ما رو دنبال کن، تا از خبر جدید عقب نمونی!
                 </Typography>
                 <Socials links={links.filter(x => x.platform !== 'torob' && x.platform !== 'digikala')} />
             </DialogContent>
-            <DialogActions>
-                <Button onClick={handleSocialsClose} disabled={!canCloseDialog}>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+                <Button onClick={handleSocialsClose} disabled={!canCloseDialog} variant="contained" fullWidth sx={{ borderRadius: 99, py: 1.2 }}>
                     بستن
                 </Button>
             </DialogActions>

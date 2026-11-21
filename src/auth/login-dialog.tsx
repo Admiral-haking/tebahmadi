@@ -79,7 +79,7 @@ function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: 
   }
 
   return (
-    <Box dir="ltr" style={{ direction: "ltr" }} sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+    <Box dir="ltr" style={{ direction: "ltr" }} sx={{ display: "flex", gap: { xs: 1, sm: 1.25 }, justifyContent: "center" }}>
       {digits.map((d, i) => (
         <input
           key={i}
@@ -94,9 +94,17 @@ function OtpBoxes({ value, onChange, disabled }: { value: string; onChange: (v: 
           maxLength={1}
           aria-label={`رقم ${i + 1}`}
           style={{
-            width: 44, height: 54, textAlign: "center", fontSize: "1.4rem", fontWeight: 700,
-            fontFamily: "monospace", border: "2px solid", borderColor: d ? "var(--mui-palette-primary-light)" : "var(--mui-palette-divider)",
-            borderRadius: 12, outline: "none", direction: "ltr",
+            width: "clamp(42px, 11vw, 48px)",
+            height: "clamp(50px, 13vw, 56px)",
+            textAlign: "center",
+            fontSize: "1.4rem",
+            fontWeight: 700,
+            fontFamily: "monospace",
+            border: "2px solid",
+            borderColor: d ? "var(--mui-palette-primary-light)" : "var(--mui-palette-divider)",
+            borderRadius: 12,
+            outline: "none",
+            direction: "ltr",
           }}
         />
       ))}
@@ -153,12 +161,38 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
   return (
     <LoginDialogContext.Provider value={{ openLogin }}>
       {children}
-      <Dialog open={open} onClose={() => !isSubmitting && close()} maxWidth="xs" fullWidth
-        slotProps={{ paper: { sx: { borderRadius: 5, overflow: "hidden", boxShadow: "0 28px 80px -40px rgba(31,70,53,.65)" } } }}>
+      <Dialog
+        open={open}
+        onClose={() => !isSubmitting && close()}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 4,
+              overflow: "hidden",
+              boxShadow: "0 28px 80px -40px rgba(31,70,53,.65)",
+              m: { xs: 2, sm: "auto" },
+              maxWidth: { xs: "calc(100% - 32px)", sm: 400 },
+            },
+          },
+        }}
+      >
         <Box sx={{ height: 4, bgcolor: "primary.main" }} />
         <DialogContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-          <IconButton size="small" onClick={close} disabled={isSubmitting}
-            sx={{ position: "absolute", insetInlineEnd: 8, top: 8 }} aria-label="بستن">
+          <IconButton
+            size="small"
+            onClick={close}
+            disabled={isSubmitting}
+            sx={{
+              position: "absolute",
+              insetInlineEnd: 10,
+              top: 10,
+              width: 36,
+              height: 36,
+            }}
+            aria-label="بستن"
+          >
             <CloseRoundedIcon fontSize="small" />
           </IconButton>
 
