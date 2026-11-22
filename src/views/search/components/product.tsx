@@ -11,7 +11,10 @@ export default function ProductSearchLink({
     title, slug, minPrice, maxPrice, images,
     inventoryTotal, activeInStockVariantCount,
 }: ProductSearchItem) {
-    const firstImage = images[0];
+    const firstImage = images.find((image) => {
+        const normalized = image?.trim().toLowerCase();
+        return Boolean(normalized) && !/(^|[\\/])(?:undefined|null)(?:[/?#]|$)/.test(normalized);
+    });
     const inStock = (activeInStockVariantCount ?? 0) > 0 || inventoryTotal > 0;
 
     const priceDisplay = (() => {

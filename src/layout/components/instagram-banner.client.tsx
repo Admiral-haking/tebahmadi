@@ -22,6 +22,11 @@ const FALLBACK_SRC = '/tebahmadi-hero-botanical.webp';
 const FALLBACK_ID = 'tebahmadi-fallback';
 const DESKTOP_BREAKPOINT = '(min-width: 900px)';
 
+function normalizeMediaId(id?: string): string | undefined {
+  const value = id?.trim();
+  return value && !/^(?:undefined|null)$/i.test(value) ? value : undefined;
+}
+
 const fetcher = async (url: string): Promise<SlideResponse> => {
   const response = await fetch(url);
   if (!response.ok) {
@@ -43,7 +48,11 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
   const items = useMemo<SlideItem[]>(() => {
     const list = data?.data ?? [];
     const valid = list.filter((slide) => {
-      return Boolean(slide.mediaDesktopId || slide.mediaMobileId || slide.mediaId);
+      return Boolean(
+        normalizeMediaId(slide.mediaDesktopId)
+        || normalizeMediaId(slide.mediaMobileId)
+        || normalizeMediaId(slide.mediaId),
+      );
     });
     return valid.length > 0
       ? valid
@@ -83,8 +92,14 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
   };
 
   const active = items[index] ?? null;
-  const desktopId = active?.mediaDesktopId || active?.mediaId || active?.mediaMobileId || '';
-  const mobileId = active?.mediaMobileId || active?.mediaDesktopId || active?.mediaId || '';
+  const desktopId = normalizeMediaId(active?.mediaDesktopId)
+    || normalizeMediaId(active?.mediaId)
+    || normalizeMediaId(active?.mediaMobileId)
+    || '';
+  const mobileId = normalizeMediaId(active?.mediaMobileId)
+    || normalizeMediaId(active?.mediaDesktopId)
+    || normalizeMediaId(active?.mediaId)
+    || '';
   const desktopSrc = desktopId ? '/api/media/' + desktopId + '?type=original' : FALLBACK_SRC;
   const mobileSrc = mobileId ? '/api/media/' + mobileId + '?type=original' : desktopSrc;
   const href = active?.href && active.href.trim().length > 0 ? active.href.trim() : '/store';

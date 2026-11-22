@@ -10,6 +10,13 @@ type OptimizedImageProps = ImageProps & {
     transparentBackground?: boolean;
 };
 
+function isUsableImageSource(src: ImageProps["src"] | undefined): src is ImageProps["src"] {
+    if (!src) return false;
+    if (typeof src !== "string") return true;
+    const normalized = src.trim().toLowerCase();
+    return normalized.length > 0 && !/(^|[\\/])(?:undefined|null)(?:[/?#]|$)/.test(normalized);
+}
+
 export default function OptimizedImage(props: OptimizedImageProps) {
     const {
         containerStyle,
@@ -27,15 +34,17 @@ export default function OptimizedImage(props: OptimizedImageProps) {
     } = props;
 
     const [isLoaded, setIsLoaded] = useState(false);
-    const [currentSrc, setCurrentSrc] = useState(props.src);
+    const fallback = isUsableImageSource(fallbackSrc) ? fallbackSrc : "/product-placeholder.svg";
+    const safeSource = isUsableImageSource(props.src) ? props.src : fallback;
+    const [currentSrc, setCurrentSrc] = useState(safeSource);
 
     const hasDimensions = !!(props.width && props.height);
     const aspectRatio = hasDimensions ? Number(props.width) / Number(props.height) : undefined;
 
     useEffect(() => {
-        setCurrentSrc(props.src);
+        setCurrentSrc(safeSource);
         setIsLoaded(false);
-    }, [props.src]);
+    }, [safeSource]);
 
     const resolvedAlt = typeof alt === "string" ? alt : "";
     const resolvedLoading = priority ? undefined : (loading ?? "lazy");
@@ -69,8 +78,8 @@ export default function OptimizedImage(props: OptimizedImageProps) {
                     onLoad?.(event);
                 }}
                 onError={(event) => {
-                    if (fallbackSrc && currentSrc !== fallbackSrc) {
-                        setCurrentSrc(fallbackSrc);
+                    if (currentSrc !== fallback) {
+                        setCurrentSrc(fallback);
                         setIsLoaded(false);
                     } else {
                         setIsLoaded(true);
