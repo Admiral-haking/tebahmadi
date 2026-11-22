@@ -6,6 +6,7 @@ import { InvoiceModel } from "@/models/Invoice";
 import { updateInvoiceStatus } from "@/orders/services/invoiceService";
 import PaymentVerificationView from "@/views/payment";
 import { generatePageMetadata } from "@/seo/services/metadataGenerator";
+import { getPaymentVerificationDecision } from "@/payments/paymentVerificationPolicy";
 
 interface VerifyPageProps {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -152,6 +153,11 @@ function parseVerifyInput(searchParams?: Record<string, string | string[] | unde
 async function renderResult(input: GatewayVerifyInput | null): Promise<ReactElement> {
   if (!input) {
     return <PaymentVerificationView status={false} />;
+  }
+
+  const gatewayDecision = getPaymentVerificationDecision(input.gateway);
+  if (!gatewayDecision.allowed) {
+    return <PaymentVerificationView status={false} message={gatewayDecision.message} />;
   }
 
   if (input.gateway === "torob") {

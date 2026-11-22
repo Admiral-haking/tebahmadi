@@ -4,7 +4,7 @@ import { isAdminFeatureEnabled } from "@/config/admin-features";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata() {
-    return buildAdminMetadata("دیجی کالا");
+    return buildAdminMetadata("صفحه پیدا نشد");
 }
 
 export default function Page() {

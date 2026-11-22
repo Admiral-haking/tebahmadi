@@ -3,10 +3,8 @@ import InventoryComparisonView from "@/views/admin/inventory-comparison";
 import { isAdminFeatureEnabled } from "@/config/admin-features";
 import { notFound } from "next/navigation";
 
-const PAGE_TITLE = "مقایسه موجودی";
-
 export async function generateMetadata() {
-  return buildAdminMetadata(PAGE_TITLE);
+  return buildAdminMetadata("صفحه پیدا نشد");
 }
 
 export default function Page() {
