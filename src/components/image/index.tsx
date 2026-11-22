@@ -10,6 +10,21 @@ type OptimizedImageProps = ImageProps & {
     transparentBackground?: boolean;
 };
 
+function isUsableImageSource(
+    source: ImageProps["src"] | null | undefined,
+): source is ImageProps["src"] {
+    if (!source) {
+        return false;
+    }
+
+    if (typeof source !== "string") {
+        return true;
+    }
+
+    const value = source.trim();
+    return Boolean(value) && !/(^|[\\/])(?:undefined|null)(?:[/?#]|$)/i.test(value);
+}
+
 export default function OptimizedImage(props: OptimizedImageProps) {
     const {
         containerStyle,
@@ -26,16 +41,18 @@ export default function OptimizedImage(props: OptimizedImageProps) {
         ...imageProps
     } = props;
 
+    const fallback = isUsableImageSource(fallbackSrc) ? fallbackSrc : "/product-placeholder.svg";
+    const safeSource = isUsableImageSource(props.src) ? props.src : fallback;
     const [isLoaded, setIsLoaded] = useState(false);
-    const [currentSrc, setCurrentSrc] = useState(props.src);
+    const [currentSrc, setCurrentSrc] = useState<ImageProps["src"]>(safeSource);
 
     const hasDimensions = !!(props.width && props.height);
     const aspectRatio = hasDimensions ? Number(props.width) / Number(props.height) : undefined;
 
     useEffect(() => {
-        setCurrentSrc(props.src);
+        setCurrentSrc(safeSource);
         setIsLoaded(false);
-    }, [props.src]);
+    }, [safeSource]);
 
     const resolvedAlt = typeof alt === "string" ? alt : "";
     const resolvedLoading = priority ? undefined : (loading ?? "lazy");
@@ -69,8 +86,8 @@ export default function OptimizedImage(props: OptimizedImageProps) {
                     onLoad?.(event);
                 }}
                 onError={(event) => {
-                    if (fallbackSrc && currentSrc !== fallbackSrc) {
-                        setCurrentSrc(fallbackSrc);
+                    if (currentSrc !== fallback) {
+                        setCurrentSrc(fallback);
                         setIsLoaded(false);
                     } else {
                         setIsLoaded(true);

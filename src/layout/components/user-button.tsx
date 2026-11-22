@@ -25,6 +25,16 @@ function hasElevatedRole(user: AuthUser | null | undefined): boolean {
   return user.roles.some((role) => role !== 'customer');
 }
 
+function avatarSource(user: AuthUser): string | undefined {
+  const thumbId = user.avatar?.thumbId;
+  if (typeof thumbId !== 'string') {
+    return undefined;
+  }
+
+  const value = thumbId.trim();
+  return value && !/^(?:undefined|null)$/i.test(value) ? `/api/media/${value}` : undefined;
+}
+
 export default function UserButton(): JSX.Element {
   const { user, status, setUser, logout } = useAuth();
   const { openLogin } = useLoginDialog();
@@ -97,7 +107,7 @@ export default function UserButton(): JSX.Element {
           cursor: 'pointer'
         }}
         variant='circular'
-        src={user.avatar ? `/api/media/${user.avatar.thumbId}` : ''}
+        src={avatarSource(user)}
       >
         {initials ? (
           <Typography component="span" sx={{ fontWeight: 600 }}>

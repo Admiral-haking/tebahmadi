@@ -29,9 +29,15 @@ const fetcher = async (url: string): Promise<SlideResponse> => {
   return response.json();
 };
 
+function normalizeMediaId(id?: string): string | undefined {
+  const value = id?.trim();
+  return value && !/^(?:undefined|null)$/i.test(value) ? value : undefined;
+}
+
 function sourceFor(id: string | undefined): string {
-  if (!id || id === 'fallback') return '/tebahmadi-hero-botanical.webp';
-  return `/api/media/${id}?type=original`;
+  const mediaId = normalizeMediaId(id);
+  if (!mediaId || mediaId === 'fallback') return '/tebahmadi-hero-botanical.webp';
+  return `/api/media/${mediaId}?type=original`;
 }
 
 export default function InstagramBannerCarousel({ initialSlides }: { initialSlides?: SlideItem[] }) {
@@ -41,9 +47,12 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
     fallbackData: initialSlides ? { data: initialSlides } : undefined,
   });
   const items = useMemo(() => {
-    const valid = (data?.data ?? []).filter((slide) =>
-      Boolean(slide.href && (slide.mediaDesktopId || slide.mediaMobileId || slide.mediaId)),
-    );
+    const valid = (data?.data ?? []).filter((slide) => {
+      const mediaId = normalizeMediaId(slide.mediaDesktopId)
+        || normalizeMediaId(slide.mediaMobileId)
+        || normalizeMediaId(slide.mediaId);
+      return Boolean(slide.href && mediaId);
+    });
     return valid.length > 0 ? valid : [FALLBACK];
   }, [data?.data]);
 

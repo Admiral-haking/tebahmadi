@@ -29,7 +29,13 @@ export default function MobileMenu({ hotLinks }: { hotLinks: any[] }) {
                 >
                     <ListItemAvatar>
                         <Avatar
-                            src={`/api/media/${item.mediaId}`}
+                            src={
+                                typeof item.mediaId === "string" &&
+                                item.mediaId.trim() &&
+                                !/^(?:undefined|null)$/i.test(item.mediaId.trim())
+                                    ? `/api/media/${item.mediaId.trim()}`
+                                    : undefined
+                            }
                             alt={item.title}
                             sx={{ height: 24, width: 24 }}
                         />
