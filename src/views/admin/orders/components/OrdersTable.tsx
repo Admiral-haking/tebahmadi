@@ -41,6 +41,7 @@ import {
   copyShippingText,
 } from "@/orders/utils/shippingText";
 import { toast } from "sonner";
+import { isAdminFeatureEnabled } from "@/config/admin-features";
 
 const dateFormatter = new Intl.DateTimeFormat("fa-IR", {
   dateStyle: "medium",
@@ -52,6 +53,8 @@ function formatDateTime(value?: string | null): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "-" : dateFormatter.format(date);
 }
+
+const holooEnabled = isAdminFeatureEnabled("holoo");
 
 function getPaymentStatusLabel(status?: string | null): string | null {
   const normalized = status?.trim().toLowerCase();
@@ -504,16 +507,18 @@ export default function OrdersTable({
               >
                 کپی متن ارسال
               </Button>
-              <Button
-                size="small"
-                variant="contained"
-                color="secondary"
-                onClick={handleSendSelectedToHoloo}
-                disabled={holooBusy}
-                startIcon={holooBusy ? <CircularProgress size={14} color="inherit" /> : <ReceiptLongRoundedIcon />}
-              >
-                ارسال به هلو
-              </Button>
+              {holooEnabled ? (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleSendSelectedToHoloo}
+                  disabled={holooBusy}
+                  startIcon={holooBusy ? <CircularProgress size={14} color="inherit" /> : <ReceiptLongRoundedIcon />}
+                >
+                  ارسال به هلو
+                </Button>
+              ) : null}
             </Stack>
           </Stack>
         ) : null}

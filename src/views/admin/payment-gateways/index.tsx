@@ -19,6 +19,7 @@ import {
 import { RefreshRounded, SaveRounded } from '@mui/icons-material';
 import { toast } from 'sonner';
 import type { PaymentGatewayControl } from '@/payments/paymentGatewayControls';
+import { PAYMENT_GATEWAYS_ENABLED } from '@/config/admin-features';
 
 type ApiResponse = { data: PaymentGatewayControl[] };
 
@@ -86,7 +87,7 @@ export default function PaymentGatewayControlsView() {
           <Box>
             <Typography variant="h4" fontWeight={900}>مدیریت درگاه‌های پرداخت</Typography>
             <Typography color="text.secondary" sx={{ mt: 0.75 }}>
-              فقط درگاه‌های دارای تنظیمات معتبر در فروشگاه نمایش داده می‌شوند. زرین‌پال عمداً پیش‌فرض خاموش است.
+              در وضعیت فعلی فقط زرین‌پال قابل استفاده و نمایش به مشتری است؛ سایر درگاه‌ها غیرفعال هستند.
             </Typography>
           </Box>
           <Stack direction="row" spacing={1}>
@@ -102,7 +103,7 @@ export default function PaymentGatewayControlsView() {
         {error ? <Alert severity="error">{error}</Alert> : null}
 
         <Stack spacing={1.5}>
-          {loading ? <CircularProgress sx={{ alignSelf: 'center' }} /> : controls.map((item) => (
+          {loading ? <CircularProgress sx={{ alignSelf: 'center' }} /> : controls.filter((item) => PAYMENT_GATEWAYS_ENABLED[item.gateway]).map((item) => (
             <Card key={item.gateway} variant="outlined">
               <CardContent>
                 <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={2}>
@@ -110,7 +111,7 @@ export default function PaymentGatewayControlsView() {
                     <Typography variant="h6" fontWeight={800}>{item.label}</Typography>
                     <Stack direction="row" spacing={1} sx={{ mt: 0.75 }}>
                       <Chip size="small" label={item.configured ? 'تنظیمات موجود است' : 'کلیدها ناقص است'} color={item.configured ? 'success' : 'warning'} />
-                      {item.gateway === 'zarinpal' ? <Chip size="small" label="پیش‌فرض خاموش" variant="outlined" /> : null}
+                      {item.gateway === 'zarinpal' ? <Chip size="small" label="درگاه مجاز" color="success" variant="outlined" /> : null}
                     </Stack>
                   </Box>
                   <Stack direction="row" divider={<Divider orientation="vertical" flexItem />}>

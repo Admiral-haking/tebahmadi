@@ -2,6 +2,9 @@
 
 import {
   Alert,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Chip,
   Container,
@@ -23,7 +26,9 @@ import {
   SettingsRounded,
   StorefrontRounded,
   SyncRounded,
+  ExpandMoreRounded,
 } from "@mui/icons-material";
+import { INVENTORY_GLOSSARY } from "./inventory-glossary-data";
 
 const guides = [
   {
@@ -139,6 +144,30 @@ export default function AdminHelpView() {
         <Alert severity="info" sx={{ borderRadius: 2 }}>
           پیشنهاد عملی: برای هر تغییر موجودی، اول کالا را در پنل محصولات اصلاح کنید و سپس از «مقایسه موجودی» سینک را انجام دهید.
         </Alert>
+
+        <Paper elevation={0} sx={{ p: { xs: 1, md: 2 }, borderRadius: 2, border: 1, borderColor: "divider" }}>
+          <Typography variant="h6" fontWeight={950} sx={{ px: 1, pt: 1 }}>
+            واژه‌نامهٔ موجودی و مارکت‌پلیس
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ px: 1, pb: 1 }}>
+            تعریف‌های این بخش با داشبورد مقایسهٔ موجودی و سلامت اتصال‌ها یکسان است.
+          </Typography>
+          {INVENTORY_GLOSSARY.map((item) => (
+            <Accordion key={item.term} disableGutters elevation={0} sx={{ borderTop: 1, borderColor: "divider", "&:before": { display: "none" } }}>
+              <AccordionSummary expandIcon={<ExpandMoreRounded />}>
+                <Stack spacing={0.25}>
+                  <Typography fontWeight={800}>{item.term}</Typography>
+                  <Typography variant="body2" color="text.secondary">{item.short}</Typography>
+                </Stack>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography variant="body2" sx={{ lineHeight: 1.9 }}>{item.detail}</Typography>
+                {item.formula && <Typography variant="body2" sx={{ mt: 1, fontWeight: 800 }}>{item.formula}</Typography>}
+                {item.pitfall && <Alert severity="warning" sx={{ mt: 1 }}>{item.pitfall}</Alert>}
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Paper>
 
         <Grid container spacing={2}>
           {guides.map((guide) => (

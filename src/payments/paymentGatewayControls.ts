@@ -1,5 +1,6 @@
 import type { PaymentGateway } from './paymentTypes';
 import { getSiteConfig, updateSiteConfig } from '@/settings/services/settingsService';
+import { PAYMENT_GATEWAYS_ENABLED } from '@/config/admin-features';
 
 export type { PaymentGateway } from './paymentTypes';
 
@@ -28,6 +29,10 @@ const PAYMENT_GATEWAY_IDS = new Set(PAYMENT_GATEWAY_META.map((item) => item.gate
 
 export function isPaymentGateway(value: string): value is PaymentGateway {
   return PAYMENT_GATEWAY_IDS.has(value as PaymentGateway);
+}
+
+export function isPaymentGatewayAllowed(gateway: PaymentGateway): boolean {
+  return PAYMENT_GATEWAYS_ENABLED[gateway];
 }
 
 function hasEnv(...keys: string[]) {
@@ -96,9 +101,10 @@ export function buildPaymentGatewayControls(
   return PAYMENT_GATEWAY_META.map((item) => {
     const isConfigured = configured[item.gateway] === true;
     const saved = persisted[item.gateway];
-    const defaultEnabled = item.gateway !== 'zarinpal' && isConfigured;
-    const enabled = isConfigured && (saved?.enabled ?? defaultEnabled);
-    const visible = isConfigured && (saved?.visible ?? defaultEnabled);
+    const allowed = isPaymentGatewayAllowed(item.gateway);
+    const defaultEnabled = allowed && isConfigured;
+    const enabled = allowed && isConfigured && (saved?.enabled ?? defaultEnabled);
+    const visible = allowed && isConfigured && (saved?.visible ?? defaultEnabled);
     return {
       ...item,
       configured: isConfigured,
@@ -112,7 +118,13 @@ export function getVisiblePaymentGatewaysFromControls(
   controls: PaymentGatewayControl[],
 ): PaymentGateway[] {
   return controls
-    .filter((control) => control.configured && control.visible && control.enabled)
+    .filter(
+      (control) =>
+        isPaymentGatewayAllowed(control.gateway) &&
+        control.configured &&
+        control.visible &&
+        control.enabled,
+    )
     .map((control) => control.gateway);
 }
 
@@ -127,7 +139,9 @@ export async function getPaymentGatewayControls(): Promise<PaymentGatewayControl
     },
     {},
   );
-  return buildPaymentGatewayControls(configured, persisted);
+  return buildPaymentGatewayControls(configured, persisted).filter((item) =>
+    isPaymentGatewayAllowed(item.gateway),
+  );
 }
 
 export async function getVisiblePaymentGateways(): Promise<PaymentGateway[]> {
@@ -141,6 +155,12 @@ export async function isPaymentGatewayEnabled(gateway: PaymentGateway): Promise<
 export async function updatePaymentGatewayControls(nextControls: PaymentGatewayControlMap) {
   const config = await getSiteConfig();
   const values = { ...((config?.values ?? {}) as Record<string, unknown>) };
-  values.paymentGateways = normalizeControlMap(nextControls);
+  const normalized = normalizeControlMap(nextControls);
+  for (const item of PAYMENT_GATEWAY_META) {
+    if (!isPaymentGatewayAllowed(item.gateway)) {
+      normalized[item.gateway] = { visible: false, enabled: false };
+    }
+  }
+  values.paymentGateways = normalized;
   return updateSiteConfig({ values });
 }

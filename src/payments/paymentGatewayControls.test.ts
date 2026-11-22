@@ -6,7 +6,7 @@ import {
 } from './paymentGatewayControls';
 
 describe('payment gateway controls', () => {
-  it('keeps Zarinpal disabled by default while exposing all six gateways', () => {
+  it('exposes only configured Zarinpal and forces every other gateway off', () => {
     const controls = buildPaymentGatewayControls(
       {
         zarinpal: true,
@@ -22,15 +22,12 @@ describe('payment gateway controls', () => {
     expect(PAYMENT_GATEWAY_META).toHaveLength(6);
     expect(controls.find((item) => item.gateway === 'zarinpal')).toMatchObject({
       configured: true,
-      visible: false,
-      enabled: false,
+      visible: true,
+      enabled: true,
     });
+    expect(controls.filter((item) => item.gateway !== 'zarinpal').every((item) => !item.visible && !item.enabled)).toBe(true);
     expect(getVisiblePaymentGatewaysFromControls(controls)).toEqual([
-      'torob',
-      'digipay',
-      'azkivam',
-      'snapppay',
-      'bajetpay',
+      'zarinpal',
     ]);
   });
 
@@ -48,12 +45,17 @@ describe('payment gateway controls', () => {
     });
   });
 
-  it('allows an administrator to explicitly enable Zarinpal later', () => {
+  it('ignores persisted enablement for disabled gateways', () => {
     const controls = buildPaymentGatewayControls(
-      { zarinpal: true },
-      { zarinpal: { visible: true, enabled: true } },
+      { torob: true, digipay: true, zarinpal: false },
+      { torob: { visible: true, enabled: true }, digipay: { visible: true, enabled: true } },
     );
 
-    expect(getVisiblePaymentGatewaysFromControls(controls)).toEqual(['zarinpal']);
+    expect(getVisiblePaymentGatewaysFromControls(controls)).toEqual([]);
+    expect(controls.find((item) => item.gateway === 'torob')).toMatchObject({
+      configured: true,
+      visible: false,
+      enabled: false,
+    });
   });
 });
