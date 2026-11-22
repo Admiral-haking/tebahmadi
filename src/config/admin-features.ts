@@ -87,3 +87,19 @@ export const PAYMENT_GATEWAYS_ENABLED = {
   snapppay: false,
   bajetpay: false,
 } as const;
+
+type PaymentGatewayId = keyof typeof PAYMENT_GATEWAYS_ENABLED;
+
+const PAYMENT_CALLBACK_GATEWAY_PREFIXES: ReadonlyArray<readonly [string, PaymentGatewayId]> = [
+  ["/api/payments/torob", "torob"],
+  ["/api/payments/digipay", "digipay"],
+  ["/api/payments/snapppay", "snapppay"],
+  ["/api/payments/bajetpay", "bajetpay"],
+];
+
+export function disabledPaymentGatewayForApiPath(pathname: string): PaymentGatewayId | null {
+  for (const [prefix, gateway] of PAYMENT_CALLBACK_GATEWAY_PREFIXES) {
+    if (matchesPath(pathname, prefix) && !PAYMENT_GATEWAYS_ENABLED[gateway]) return gateway;
+  }
+  return null;
+}

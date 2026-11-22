@@ -3,6 +3,7 @@ import { jwtVerify, type JWTPayload } from 'jose';
 import type { Permission } from './src/types';
 import { requiredSnappPermission } from './src/auth/snapp-permissions';
 import {
+  disabledPaymentGatewayForApiPath,
   disabledAdminFeatureForApiPath,
   isDisabledMarketplaceIntegrationApiPath,
   MARKETPLACE_INTEGRATIONS_ENABLED,
@@ -211,6 +212,14 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     if (!MARKETPLACE_INTEGRATIONS_ENABLED && isDisabledMarketplaceIntegrationApiPath(pathname)) {
       return NextResponse.json(
         { error: 'feature_disabled', feature: 'marketplaceIntegrations' },
+        { status: 404, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    const disabledPaymentGateway = disabledPaymentGatewayForApiPath(pathname);
+    if (disabledPaymentGateway) {
+      return NextResponse.json(
+        { error: 'feature_disabled', feature: 'paymentGateway', gateway: disabledPaymentGateway },
         { status: 404, headers: { 'Cache-Control': 'no-store' } },
       );
     }
