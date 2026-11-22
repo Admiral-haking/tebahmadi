@@ -28,6 +28,8 @@ import OfferInput from "./OfferInput";
 import CarrierSelect from "./CarrierSelect";
 import AddressForm from "./AddressForm";
 import CartSummary from "./CartSummary";
+import SavedCartLines from "./SavedCartLines";
+import { useCartAvailability } from "./useCartAvailability";
 import { usePaymentCleanup } from "./usePaymentCleanup";
 import { EmptyState } from "@/components/ui";
 import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
@@ -76,11 +78,13 @@ const collectVariantIdentityKeys = (variant: Record<string, unknown>): string[] 
 
 export default function CartPageContent() {
   usePaymentCleanup();
-  const { lines, clear, addFixedLine, addPerUnitLine, syncLineConstraints } = useCart();
+  const { lines, savedLines, clear, addFixedLine, addPerUnitLine, syncLineConstraints } = useCart();
   const [upsellProducts, setUpsellProducts] = React.useState<UpsellProduct[]>([]);
   const [isUpsellLoading, setIsUpsellLoading] = React.useState(false);
   const carouselRef = React.useRef<HTMLDivElement | null>(null);
   const [, setCarouselControls] = React.useState({ canScrollPrev: false, canScrollNext: false });
+  const cartVariantIds = React.useMemo(() => lines.map((line) => line.variantId), [lines]);
+  const { availability } = useCartAvailability(cartVariantIds);
   const recentlyAddedTimer = React.useRef<number | null>(null);
   const [recentlyAddedId, setRecentlyAddedId] = React.useState<string | null>(null);
   const variantConstraintsCache = React.useRef<Map<string, VariantConstraint | null>>(new Map());
@@ -446,17 +450,21 @@ export default function CartPageContent() {
                     <Divider sx={{ borderColor: TEB_COLORS.border }} />
 
                     {lines.length === 0 ? (
-                      <EmptyState
-                        title="سبد خرید شما خالی است"
-                        description="گیاهان دارویی، دمنوش‌ها و روغن‌های طبیعی طب احمدی را ببینید و محصولات مورد نیاز خود را اضافه کنید."
-                        actionLabel="مشاهده فروشگاه"
-                        actionHref="/store"
-                      />
+                      <>
+                        <EmptyState
+                          title="سبد خرید شما خالی است"
+                          description="گیاهان دارویی، دمنوش‌ها و روغن‌های طبیعی طب احمدی را ببینید و محصولات مورد نیاز خود را اضافه کنید."
+                          actionLabel="مشاهده فروشگاه"
+                          actionHref="/store"
+                        />
+                        {savedLines.length > 0 ? <SavedCartLines /> : null}
+                      </>
                     ) : (
                       <Stack spacing={1.5}>
                         {lines.map((line: CartLine) => (
-                          <CartLineItem key={line.variantId} line={line} />
+                          <CartLineItem key={line.variantId} line={line} availability={availability.get(line.variantId)} />
                         ))}
+                        <SavedCartLines />
                       </Stack>
                     )}
                   </Stack>

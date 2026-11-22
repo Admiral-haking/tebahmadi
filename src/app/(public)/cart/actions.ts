@@ -5,6 +5,17 @@ import { z } from 'zod';
 
 import { AUTH_COOKIE_NAME, verifyJwt } from '@/lib/auth';
 import { connectMongoose } from '@/lib/mongoose';
+import UserModel from '@/models/User';
+import { InvoiceModel } from '@/orders/models/Invoice';
+import { normalizeGuestCheckoutPhone } from '@/orders/validation/guest-checkout';
+import {
+  buildCartAvailabilityIssues,
+  getUnavailableVariantIds,
+  normalizeCartVariantIds,
+  type CartAvailabilityLine,
+  type CartAvailabilityRow,
+} from '@/components/cart/cart-availability';
+import { getCartVariantAvailability } from '@/orders/services/cartAvailabilityService';
 import { previewInvoice, createInvoice, updateInvoiceStatus, type InvoicePricingInput } from '@/orders/services/invoiceService';
 import {
   checkSnappPayEligibilityForAmount,
@@ -44,6 +55,7 @@ const shippingPaymentSchema = z.enum(['online', 'on_delivery']);
 
 const cartStateSchema = z.object({
   lines: z.array(cartLineSchema),
+  savedLines: z.array(cartLineSchema).default([]),
   offerCode: z.string().nullable().optional(),
   transportId: z.string().nullable().optional(),
   address: cartAddressSchema.nullable().optional(),
@@ -113,6 +125,15 @@ function translateCartError(raw: string | null | undefined, fallback: string): s
 
   if (lower === 'auth_required' || lower.includes('authentication required')) {
     return 'برای ادامه، لطفاً وارد حساب کاربری شوید.';
+  }
+  if (lower.includes('guest_phone_invalid')) {
+    return 'برای ثبت سفارش مهمان، شماره موبایل معتبر وارد کنید.';
+  }
+  if (lower.includes('guest_user_create_failed')) {
+    return 'ساخت حساب مهمان انجام نشد. لطفاً دوباره تلاش کنید.';
+  }
+  if (lower.includes('invoice_user_required')) {
+    return 'اطلاعات مشتری برای ثبت سفارش کامل نیست.';
   }
   if (lower.includes('product') && lower.includes('not found')) {
     return 'محصول انتخاب‌شده یافت نشد.';
@@ -290,12 +311,130 @@ async function getAuthUserId(): Promise<string | null> {
   }
 }
 
-async function requireAuthUserId(): Promise<string> {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    throw new Error('auth_required');
+async function resolveCheckoutUser(address: CartStateInput['address']): Promise<{ userId: string; guest: boolean }> {
+  const authUserId = await getAuthUserId();
+  if (authUserId) return { userId: authUserId, guest: false };
+
+  const guestPhone = normalizeGuestCheckoutPhone(address?.phone);
+  if (!guestPhone) throw new Error('guest_phone_invalid');
+
+  const fname = address?.fname?.trim() || undefined;
+  const lname = address?.lname?.trim() || undefined;
+  const state = address?.state?.trim() || undefined;
+  const city = address?.city?.trim() || undefined;
+  const customerAddress = address?.address?.trim() || undefined;
+
+  const user = await UserModel.findOneAndUpdate(
+    { phone: guestPhone },
+    {
+      $setOnInsert: {
+        phone: guestPhone,
+        fname,
+        lname,
+        state,
+        city,
+        address: customerAddress,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  ).exec();
+
+  if (!user) throw new Error('guest_user_create_failed');
+
+  const patch: Record<string, string> = {};
+  if (fname && !user.fname) patch.fname = fname;
+  if (lname && !user.lname) patch.lname = lname;
+  if (state && !user.state) patch.state = state;
+  if (city && !user.city) patch.city = city;
+  if (customerAddress && !user.address) patch.address = customerAddress;
+  if (Object.keys(patch).length > 0) {
+    await UserModel.updateOne({ _id: user._id }, { $set: patch }).exec();
   }
-  return userId;
+
+  return { userId: user._id.toString(), guest: true };
+}
+
+export type CartAvailabilityResult = CartAvailabilityRow[];
+
+export async function loadCartAvailabilityAction(variantIds: string[]): Promise<CartAvailabilityResult> {
+  const ids = normalizeCartVariantIds(variantIds);
+  if (ids.length === 0) return [];
+  try {
+    await connectMongoose();
+    return await getCartVariantAvailability(ids);
+  } catch (error) {
+    console.error('loadCartAvailabilityAction failed', error);
+    return [];
+  }
+}
+
+export async function reconcileCartAvailabilityAction(
+  variantIds: string[],
+): Promise<{ ok: boolean; unavailableVariantIds: string[] }> {
+  const ids = normalizeCartVariantIds(variantIds);
+  if (ids.length === 0) return { ok: true, unavailableVariantIds: [] };
+  try {
+    await connectMongoose();
+    const rows = await getCartVariantAvailability(ids);
+    return { ok: true, unavailableVariantIds: getUnavailableVariantIds(ids, rows) };
+  } catch (error) {
+    console.error('reconcileCartAvailabilityAction failed', error);
+    return { ok: false, unavailableVariantIds: [] };
+  }
+}
+
+export async function loadSavedAddressAction(): Promise<CartStateInput['address'] | null> {
+  const userId = await getAuthUserId();
+  if (!userId) return null;
+
+  try {
+    await connectMongoose();
+    const invoice = await InvoiceModel.findOne(
+      { userId, 'addressSnapshot.phone': { $nin: [null, ''] } },
+      { addressSnapshot: 1 },
+    ).sort({ createdAt: -1 }).lean();
+    if (!invoice?.addressSnapshot) return null;
+    return {
+      fname: invoice.addressSnapshot.fname ?? undefined,
+      lname: invoice.addressSnapshot.lname ?? undefined,
+      phone: invoice.addressSnapshot.phone ?? undefined,
+      state: invoice.addressSnapshot.state ?? undefined,
+      city: invoice.addressSnapshot.city ?? undefined,
+      address: invoice.addressSnapshot.address ?? undefined,
+      postalCode: invoice.addressSnapshot.postalCode ?? undefined,
+    };
+  } catch (error) {
+    console.error('loadSavedAddressAction failed', error);
+    return null;
+  }
+}
+
+export type CheckoutInventoryPreflightResult =
+  | { ok: true }
+  | { ok: false; error: string; issues?: ReturnType<typeof buildCartAvailabilityIssues> };
+
+export async function preflightCheckoutInventoryAction(
+  rawState: CartStateInput,
+): Promise<CheckoutInventoryPreflightResult> {
+  const parsed = cartStateSchema.parse(rawState);
+  if (parsed.lines.length === 0) return { ok: false, error: 'سبد خرید شما خالی است.' };
+
+  try {
+    await connectMongoose();
+    const rows = await getCartVariantAvailability(parsed.lines.map((line) => line.variantId));
+    const issues = buildCartAvailabilityIssues(parsed.lines as CartAvailabilityLine[], rows);
+    if (issues.length === 0) return { ok: true };
+    return {
+      ok: false,
+      error: issues.length > 1
+        ? `${issues.length.toLocaleString('fa-IR')} قلم از کالاهای سبد خرید موجودی کافی ندارد. لطفاً تعداد را اصلاح کنید.`
+        : issues[0].message,
+      issues,
+    };
+  } catch (error) {
+    console.error('preflightCheckoutInventoryAction failed', error);
+    return { ok: false, error: 'بررسی موجودی سفارش انجام نشد. لطفاً دوباره تلاش کنید.' };
+  }
 }
 
 export async function priceCartAction(rawState: CartStateInput): Promise<PriceCartResult> {
@@ -322,16 +461,9 @@ export async function priceCartAction(rawState: CartStateInput): Promise<PriceCa
   }
 
   const userId = await getAuthUserId();
-  if (!userId) {
-    return {
-      status: 'error',
-      estimate,
-      message: 'برای ادامه، لطفاً وارد حساب کاربری شوید.',
-    };
-  }
 
   const invoiceInput: InvoicePricingInput = {
-    userId,
+    userId: userId ?? undefined,
     lines: normalizedLines,
     transportId: parsed.transportId,
     address: normalizeAddress(parsed.address)!,
@@ -405,6 +537,7 @@ export async function checkSnappPayEligibilityAction(
 export async function checkoutAndPayAction(
   rawState: CartStateInput,
   gateway: PaymentGateway = 'zarinpal',
+  checkoutAttemptKey?: string,
 ): Promise<CheckoutResult> {
   const parsed = cartStateSchema.parse(rawState);
 
@@ -425,11 +558,18 @@ export async function checkoutAndPayAction(
     return { ok: false, error: 'لطفاً اطلاعات آدرس را تکمیل کنید.' };
   }
 
+  const preflight = await preflightCheckoutInventoryAction(parsed);
+  if (!preflight.ok) return { ok: false, error: preflight.error };
+
   let userId: string;
   try {
-    userId = await requireAuthUserId();
-  } catch {
-    return { ok: false, error: 'برای ثبت سفارش ابتدا وارد حساب کاربری شوید.', authRequired: true };
+    await connectMongoose();
+    userId = (await resolveCheckoutUser(parsed.address)).userId;
+  } catch (error) {
+    return {
+      ok: false,
+      error: translateCartError(error instanceof Error ? error.message : null, 'خطا در آماده‌سازی سفارش'),
+    };
   }
 
   const invoiceInput: InvoicePricingInput = {
@@ -439,6 +579,8 @@ export async function checkoutAndPayAction(
     address: normalizeAddress(parsed.address)!,
     offerCode: parsed.offerCode?.trim() ? parsed.offerCode.trim().toUpperCase() : undefined,
     shippingPaymentMethod: parsed.shippingPaymentMethod,
+    checkoutAttemptKey: checkoutAttemptKey?.trim() || undefined,
+    paymentMethod: gateway,
   };
 
   try {

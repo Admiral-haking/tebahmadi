@@ -55,7 +55,7 @@ export interface AddressInput {
 export type ShippingPaymentMethod = 'online' | 'on_delivery';
 
 export interface InvoicePricingInput {
-  userId: string;
+  userId?: string;
   lines: InvoiceLineInput[];
   transportId: string;
   address: AddressInput;
@@ -63,6 +63,8 @@ export interface InvoicePricingInput {
   now?: Date;
   shippingPaymentMethod?: ShippingPaymentMethod;
   torobClid?: string;
+  checkoutAttemptKey?: string;
+  paymentMethod?: string;
 }
 
 interface InvoiceLineSnapshot {
@@ -95,6 +97,7 @@ interface BuiltLine {
 
 type InvoiceCreatePayload = {
   number: string;
+  checkoutAttemptKey?: string;
   status: InvoiceStatus;
   userId: Types.ObjectId;
   lines: InvoiceLineSnapshot[];
@@ -1128,6 +1131,9 @@ async function executeInvoiceCreation(
   input: InvoicePricingInput,
   session?: ClientSession,
 ): Promise<{ created: InvoiceDocument; appliedOfferCode?: string }> {
+  if (!input.userId) {
+    throw new Error('invoice_user_required');
+  }
   const pricing = await computePricing(input, session ? { session } : {});
 
   if (pricing.offer) {
@@ -1145,6 +1151,7 @@ async function executeInvoiceCreation(
 
   const invoiceDoc: InvoiceCreatePayload = {
     number,
+    checkoutAttemptKey: input.checkoutAttemptKey?.trim() || undefined,
     status: 'pending' as const,
     userId: toObjectId(input.userId),
     lines: pricing.lines,
@@ -1162,7 +1169,7 @@ async function executeInvoiceCreation(
     discountTotal: pricing.discountTotal,
     shippingTotal: pricing.shippingTotal,
     grandTotal: pricing.grandTotal,
-    paymentMethod: 'zarinpal',
+    paymentMethod: input.paymentMethod?.trim() || 'zarinpal',
     paymentMethodData: undefined,
     torobClid: input.torobClid || undefined,
     pricingContext: {
@@ -1234,8 +1241,23 @@ async function createInvoiceWithoutTransactions(input: InvoicePricingInput): Pro
 }
 
 export async function createInvoice(input: InvoicePricingInput): Promise<InvoiceDocument> {
+  const attemptKey = input.checkoutAttemptKey?.trim();
+  const findExistingAttempt = async () => {
+    if (!attemptKey || !input.userId) return null;
+    return InvoiceModel.findOne({ userId: input.userId, checkoutAttemptKey: attemptKey }).exec();
+  };
+
+  const existing = await findExistingAttempt();
+  if (existing) return existing;
+
   if (!supportsMongoTransactions()) {
-    return createInvoiceWithoutTransactions(input);
+    try {
+      return await createInvoiceWithoutTransactions(input);
+    } catch (error) {
+      const raced = await findExistingAttempt();
+      if (raced) return raced;
+      throw error;
+    }
   }
 
   const session = await mongoose.startSession();
@@ -1254,6 +1276,8 @@ export async function createInvoice(input: InvoicePricingInput): Promise<Invoice
       return createInvoiceWithoutTransactions(input);
     }
     await session.endSession();
+    const raced = await findExistingAttempt();
+    if (raced) return raced;
     throw error;
   }
 

@@ -14,6 +14,10 @@ import { useTransportOptions } from './useTransportOptions';
 
 import { useCart } from './useCart';
 import { useLoginDialog } from '@/auth';
+import {
+  CHECKOUT_ATTEMPT_STORAGE_KEY,
+  getOrCreateCheckoutAttemptKey,
+} from './checkout-session';
 
 type PaymentGateway = 'zarinpal' | 'torob' | 'azkivam' | 'digipay' | 'snapppay';
 
@@ -167,11 +171,20 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
       ...state,
       lines,
     });
+    const checkoutAttemptKey = getOrCreateCheckoutAttemptKey(
+      typeof window === 'undefined' ? null : window.localStorage.getItem(CHECKOUT_ATTEMPT_STORAGE_KEY),
+    );
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(CHECKOUT_ATTEMPT_STORAGE_KEY, checkoutAttemptKey);
+    }
 
     startCheckoutTransition(() => {
-      checkoutAndPayAction(snapshot, gateway)
+      checkoutAndPayAction(snapshot, gateway, checkoutAttemptKey)
         .then((result) => {
           if (result.ok) {
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+            }
             if (result.redirectDelayMs && result.redirectDelayMs > 0) {
               setIsRedirectPending(true);
               redirectTimerRef.current = window.setTimeout(() => {
@@ -186,11 +199,17 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
             // automatically once the user signs in (no round-trip to /auth).
             openLogin(() => handleCheckout(gateway));
           } else {
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+            }
             setCheckoutError(result.error);
           }
         })
         .catch((error) => {
           console.error('checkoutAndPayAction failed', error);
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+          }
           setCheckoutError('خطا در اتصال به درگاه پرداخت');
         });
     });

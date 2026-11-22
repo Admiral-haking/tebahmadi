@@ -64,6 +64,7 @@ const progressSchema = new Schema(
 const invoiceSchema = new Schema(
   {
     number: { type: String, required: true, trim: true },
+    checkoutAttemptKey: { type: String, trim: true, maxlength: 128 },
     status: {
       type: String,
       enum: ['draft', 'pending', 'paid', 'canceled', 'refunded'],
@@ -115,6 +116,17 @@ const invoiceSchema = new Schema(
 );
 
 invoiceSchema.index({ number: 1 }, { unique: true });
+invoiceSchema.index(
+  { userId: 1, checkoutAttemptKey: 1 },
+  {
+    unique: true,
+    name: 'userId_1_checkoutAttemptKey_1',
+    partialFilterExpression: {
+      userId: { $type: 'objectId' },
+      checkoutAttemptKey: { $type: 'string' },
+    },
+  },
+);
 invoiceSchema.index({ userId: 1, createdAt: -1 });
 invoiceSchema.index({ torobClid: 1, createdAt: 1 });
 

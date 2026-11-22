@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Autocomplete, Grid, TextField } from '@mui/material';
 
 import { useCart, type CartAddress } from './useCart';
 import { useAuth } from '@/auth';
 import { isValidIranMobile, isValidIranPostalCode, normalizeDigits } from '@/lib/format';
 import { PROVINCE_NAMES, getCitiesByProvinceName, isCityInProvince } from '@/utils/location';
+import { loadSavedAddressAction } from '@/app/(public)/cart/actions';
 
 const emptyAddress: CartAddress = {
   fname: '',
@@ -23,8 +24,19 @@ export default function AddressForm() {
   const { state, setAddress } = useCart();
   const [values, setValues] = useState<CartAddress>(state.address ?? emptyAddress);
   const [touched, setTouched] = useState<Partial<Record<keyof CartAddress, boolean>>>({});
+  const savedAddressLoadAttemptedRef = useRef(false);
 
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (savedAddressLoadAttemptedRef.current || state.address) return;
+    savedAddressLoadAttemptedRef.current = true;
+    void loadSavedAddressAction().then((savedAddress) => {
+      if (savedAddress && !state.address) {
+        setAddress(savedAddress as CartAddress);
+      }
+    });
+  }, [setAddress, state.address]);
 
   useEffect(() => {
     const candidateState = state.address?.state ?? emptyAddress.state;

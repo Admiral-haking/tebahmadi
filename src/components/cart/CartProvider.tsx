@@ -47,16 +47,23 @@ export type ShippingPaymentMethod = 'online' | 'on_delivery';
 
 export type CartState = {
   lines: CartLine[];
+  savedLines: CartLine[];
   offerCode?: string | null;
   transportId?: string | null;
   address?: CartAddress | null;
   shippingPaymentMethod: ShippingPaymentMethod;
 };
 
-const STORAGE_KEY = 'app:cart:v1';
+export const CART_STORAGE_KEY = 'app:cart:v1';
+
+const normalizeOfferCode = (code: string | null | undefined): string | null => {
+  const normalized = code?.trim().toUpperCase().slice(0, 40);
+  return normalized || null;
+};
 
 const defaultState: CartState = {
   lines: [],
+  savedLines: [],
   offerCode: null,
   transportId: null,
   address: null,
@@ -68,6 +75,10 @@ type CartAction =
   | { type: 'UPDATE_QTY'; variantId: string; qty: number }
   | { type: 'UPDATE_REQUESTED_QTY'; variantId: string; requestedQty: number }
   | { type: 'REMOVE_LINE'; variantId: string }
+  | { type: 'REMOVE_UNAVAILABLE_LINES'; variantIds: string[] }
+  | { type: 'SAVE_FOR_LATER'; variantId: string }
+  | { type: 'MOVE_TO_CART'; variantId: string }
+  | { type: 'REMOVE_SAVED_LINE'; variantId: string }
   | {
       type: 'SYNC_LINE_CONSTRAINTS';
       variantId: string;
@@ -96,7 +107,7 @@ const normalizeConstraints = (line: CartLine) => {
   return { min, max };
 };
 
-function applyQuantityConstraints(line: CartLine): CartLine {
+export function applyQuantityConstraints(line: CartLine): CartLine {
   const { min, max } = normalizeConstraints(line);
   if (isPerUnit(line)) {
     let qty = line.requestedQty ?? 0;
@@ -163,6 +174,38 @@ function mergeLines(existing: CartLine, incoming: CartLine): CartLine {
   return applyQuantityConstraints(merged);
 }
 
+export function moveLineToSaved(state: CartState, variantId: string): CartState {
+  const line = state.lines.find((item) => item.variantId === variantId);
+  if (!line) return state;
+  return {
+    ...state,
+    lines: state.lines.filter((item) => item.variantId !== variantId),
+    savedLines: [line, ...state.savedLines.filter((item) => item.variantId !== variantId)],
+  };
+}
+
+export function moveSavedLineToCart(state: CartState, variantId: string): CartState {
+  const line = state.savedLines.find((item) => item.variantId === variantId);
+  if (!line) return state;
+  const nextState = {
+    ...state,
+    savedLines: state.savedLines.filter((item) => item.variantId !== variantId),
+  };
+  const existingIdx = nextState.lines.findIndex(
+    (item) =>
+      item.productId === line.productId &&
+      item.variantId === line.variantId &&
+      item.priceModel === line.priceModel &&
+      (isPerUnit(item) ? item.requestedUnit === line.requestedUnit : true),
+  );
+  if (existingIdx < 0) {
+    return { ...nextState, lines: [...nextState.lines, applyQuantityConstraints(line)] };
+  }
+  const nextLines = [...nextState.lines];
+  nextLines[existingIdx] = mergeLines(nextLines[existingIdx], line);
+  return { ...nextState, lines: nextLines };
+}
+
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_LINE': {
@@ -210,33 +253,66 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case 'REMOVE_LINE': {
       return { ...state, lines: state.lines.filter((line) => line.variantId !== action.variantId) };
     }
+    case 'REMOVE_UNAVAILABLE_LINES': {
+      const unavailable = new Set(action.variantIds);
+      const lines = state.lines.filter((line) => !unavailable.has(line.variantId));
+      return lines.length === state.lines.length ? state : { ...state, lines };
+    }
+    case 'SAVE_FOR_LATER': {
+      return moveLineToSaved(state, action.variantId);
+    }
+    case 'MOVE_TO_CART': {
+      return moveSavedLineToCart(state, action.variantId);
+    }
+    case 'REMOVE_SAVED_LINE': {
+      return {
+        ...state,
+        savedLines: state.savedLines.filter((line) => line.variantId !== action.variantId),
+      };
+    }
     case 'SYNC_LINE_CONSTRAINTS': {
-      const idx = state.lines.findIndex((line) => line.variantId === action.variantId);
-      if (idx < 0) {
+      const lineIdx = state.lines.findIndex((line) => line.variantId === action.variantId);
+      const savedIdx = state.savedLines.findIndex((line) => line.variantId === action.variantId);
+      if (lineIdx < 0 && savedIdx < 0) {
         return state;
       }
       const nextLines = [...state.lines];
-      const merged = applyQuantityConstraints({
-        ...nextLines[idx],
-        minimumOrderQuantity: action.minimumOrderQuantity ?? nextLines[idx].minimumOrderQuantity,
-        maximumOrderQuantity: action.maximumOrderQuantity ?? nextLines[idx].maximumOrderQuantity,
-      });
-      if (
-        merged.qty === nextLines[idx].qty &&
-        merged.requestedQty === nextLines[idx].requestedQty &&
-        merged.minimumOrderQuantity === nextLines[idx].minimumOrderQuantity &&
-        merged.maximumOrderQuantity === nextLines[idx].maximumOrderQuantity
-      ) {
-        return state;
+      const nextSavedLines = [...state.savedLines];
+      let changed = false;
+
+      if (lineIdx >= 0) {
+        const previous = nextLines[lineIdx];
+        const merged = applyQuantityConstraints({
+          ...previous,
+          minimumOrderQuantity: action.minimumOrderQuantity ?? previous.minimumOrderQuantity,
+          maximumOrderQuantity: action.maximumOrderQuantity ?? previous.maximumOrderQuantity,
+        });
+        if (JSON.stringify(merged) !== JSON.stringify(previous)) {
+          nextLines[lineIdx] = merged;
+          changed = true;
+        }
       }
-      nextLines[idx] = merged;
-      return { ...state, lines: nextLines };
+
+      if (savedIdx >= 0) {
+        const previous = nextSavedLines[savedIdx];
+        const merged = applyQuantityConstraints({
+          ...previous,
+          minimumOrderQuantity: action.minimumOrderQuantity ?? previous.minimumOrderQuantity,
+          maximumOrderQuantity: action.maximumOrderQuantity ?? previous.maximumOrderQuantity,
+        });
+        if (JSON.stringify(merged) !== JSON.stringify(previous)) {
+          nextSavedLines[savedIdx] = merged;
+          changed = true;
+        }
+      }
+
+      return changed ? { ...state, lines: nextLines, savedLines: nextSavedLines } : state;
     }
     case 'CLEAR': {
       return { ...defaultState };
     }
     case 'SET_OFFER_CODE': {
-      return { ...state, offerCode: action.code };
+      return { ...state, offerCode: normalizeOfferCode(action.code) };
     }
     case 'SET_TRANSPORT_ID': {
       return { ...state, transportId: action.transportId };
@@ -255,11 +331,22 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 function readStoredState(): CartState {
   if (typeof window === 'undefined') return defaultState;
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const stored = window.localStorage.getItem(CART_STORAGE_KEY);
     if (!stored) return defaultState;
     const parsed = JSON.parse(stored) as CartState;
     const lines = Array.isArray(parsed.lines)
       ? parsed.lines
+          .map((line) => {
+            try {
+              return applyQuantityConstraints(line as CartLine);
+            } catch {
+              return null;
+            }
+          })
+          .filter((line): line is CartLine => Boolean(line))
+      : [];
+    const savedLines = Array.isArray(parsed.savedLines)
+      ? parsed.savedLines
           .map((line) => {
             try {
               return applyQuantityConstraints(line as CartLine);
@@ -274,7 +361,8 @@ function readStoredState(): CartState {
 
     const state: CartState = {
       lines,
-      offerCode: parsed.offerCode ?? null,
+      savedLines,
+      offerCode: normalizeOfferCode(parsed.offerCode),
       transportId: parsed.transportId ?? null,
       address: parsed.address ?? null,
       shippingPaymentMethod,
@@ -289,6 +377,7 @@ function readStoredState(): CartState {
 type CartContextValue = {
   state: CartState;
   lines: CartLine[];
+  savedLines: CartLine[];
   totalLines: number;
   itemsCount: number;
   hasPerUnit: boolean;
@@ -296,6 +385,9 @@ type CartContextValue = {
   updateQty: (variantId: string, qty: number) => void;
   updateRequestedQty: (variantId: string, requestedQty: number) => void;
   removeLine: (variantId: string) => void;
+  saveForLater: (variantId: string) => void;
+  moveSavedToCart: (variantId: string) => void;
+  removeSavedLine: (variantId: string) => void;
   clear: () => void;
   setOfferCode: (code: string | null) => void;
   setTransportId: (transportId: string | null) => void;
@@ -321,7 +413,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state));
     } catch (error) {
       console.warn('Failed to persist cart state', error);
     }
@@ -334,6 +426,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [],
   );
   const removeLine = useCallback((variantId: string) => dispatch({ type: 'REMOVE_LINE', variantId }), []);
+  const saveForLater = useCallback((variantId: string) => dispatch({ type: 'SAVE_FOR_LATER', variantId }), []);
+  const moveSavedToCart = useCallback((variantId: string) => dispatch({ type: 'MOVE_TO_CART', variantId }), []);
+  const removeSavedLine = useCallback((variantId: string) => dispatch({ type: 'REMOVE_SAVED_LINE', variantId }), []);
   const clear = useCallback(() => dispatch({ type: 'CLEAR' }), []);
   const setOfferCode = useCallback((code: string | null) => dispatch({ type: 'SET_OFFER_CODE', code }), []);
   const setTransportId = useCallback((transportId: string | null) => dispatch({ type: 'SET_TRANSPORT_ID', transportId }), []);
@@ -370,6 +465,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       state,
       lines: state.lines,
+      savedLines: state.savedLines,
       totalLines: derived.totalLines,
       itemsCount: derived.itemsCount,
       hasPerUnit: derived.hasPerUnit,
@@ -377,6 +473,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateQty,
       updateRequestedQty,
       removeLine,
+      saveForLater,
+      moveSavedToCart,
+      removeSavedLine,
       clear,
       setOfferCode,
       setTransportId,
@@ -391,6 +490,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateQty,
       updateRequestedQty,
       removeLine,
+      saveForLater,
+      moveSavedToCart,
+      removeSavedLine,
       clear,
       setOfferCode,
       setTransportId,

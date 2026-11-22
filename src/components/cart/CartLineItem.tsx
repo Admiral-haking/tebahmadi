@@ -12,9 +12,10 @@ import {
   InputBase,
 } from '@mui/material';
 
-import { Minus, Plus, X } from 'lucide-react';
+import { BookmarkPlus, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { TEB_COLORS, TEB_RADII } from '@/theme/tokens';
 import { useCart, type CartLine } from './useCart';
+import type { CartAvailabilityRow } from './cart-availability';
 
 const FALLBACK_IMAGE = '/product-placeholder.svg';
 
@@ -26,10 +27,12 @@ const formatQuantity = (value: number) => QUANTITY_FORMATTER.format(value);
 
 interface CartLineItemProps {
   line: CartLine;
+  mode?: 'cart' | 'saved';
+  availability?: CartAvailabilityRow;
 }
 
-export default function CartLineItem({ line }: CartLineItemProps) {
-  const { updateQty, updateRequestedQty, removeLine } = useCart();
+export default function CartLineItem({ line, mode = 'cart', availability }: CartLineItemProps) {
+  const { updateQty, updateRequestedQty, removeLine, saveForLater, moveSavedToCart, removeSavedLine } = useCart();
 
   const effectiveUnitPrice = useMemo(() => {
     const discount = line.variantOfferAmount ?? 0;
@@ -51,7 +54,11 @@ export default function CartLineItem({ line }: CartLineItemProps) {
     typeof line.maximumOrderQuantity === 'number' && line.maximumOrderQuantity > 0
       ? line.maximumOrderQuantity
       : undefined;
-  const max = rawMax !== undefined && min !== undefined && rawMax < min ? min : rawMax;
+  const clientStockMax = availability?.sellable ? Math.max(0, availability.available) : undefined;
+  const boundedRawMax = rawMax !== undefined && clientStockMax !== undefined
+    ? Math.min(rawMax, clientStockMax)
+    : clientStockMax ?? rawMax;
+  const max = boundedRawMax !== undefined && min !== undefined && boundedRawMax < min ? min : boundedRawMax;
 
   const clampPerUnit = (value: number): number | undefined => {
     if (Number.isNaN(value) || value <= 0) {
@@ -298,11 +305,20 @@ export default function CartLineItem({ line }: CartLineItemProps) {
                 {quantityConstraintLabel}
               </Typography>
             ) : null}
+            {availability && (!availability.sellable || availability.available <= 0) ? (
+              <Typography variant="caption" color={TEB_COLORS.error} sx={{ mt: 0.5 }}>
+                این کالا فعلاً قابل خرید نیست.
+              </Typography>
+            ) : availability && max !== undefined && qtyDisplay > max ? (
+              <Typography variant="caption" color={TEB_COLORS.warning} sx={{ mt: 0.5 }}>
+                فقط {max.toLocaleString('fa-IR')} مورد قابل خرید است.
+              </Typography>
+            ) : null}
           </Stack>
 
           <IconButton
-            aria-label={`حذف ${line.title}`}
-            onClick={() => removeLine(line.variantId)}
+            aria-label={mode === 'saved' ? `حذف ذخیره‌شده ${line.title}` : `حذف ${line.title}`}
+            onClick={() => (mode === 'saved' ? removeSavedLine(line.variantId) : removeLine(line.variantId))}
             sx={{
               width: 40,
               height: 40,
@@ -312,6 +328,25 @@ export default function CartLineItem({ line }: CartLineItemProps) {
           >
             <X size={18} />
           </IconButton>
+          {mode === 'cart' ? (
+            <IconButton
+              aria-label={`ذخیره ${line.title} برای بعد`}
+              title="ذخیره برای بعد"
+              onClick={() => saveForLater(line.variantId)}
+              sx={{ width: 40, height: 40, color: TEB_COLORS.primary }}
+            >
+              <BookmarkPlus size={18} />
+            </IconButton>
+          ) : (
+            <IconButton
+              aria-label={`افزودن دوباره ${line.title} به سبد`}
+              title="افزودن به سبد"
+              onClick={() => moveSavedToCart(line.variantId)}
+              sx={{ width: 40, height: 40, color: TEB_COLORS.primary }}
+            >
+              <RotateCcw size={18} />
+            </IconButton>
+          )}
         </Stack>
       </Stack>
     </Stack>
