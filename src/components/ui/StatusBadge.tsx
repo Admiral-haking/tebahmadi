@@ -51,7 +51,7 @@ export function StatusBadge({ label, tone = "neutral", sx }: StatusBadgeProps) {
                 justifyContent: "center",
                 px: 1.25,
                 py: 0.35,
-                borderRadius: "9999px",
+                borderRadius: "8px",
                 fontSize: "12px",
                 fontWeight: 600,
                 lineHeight: 1.4,

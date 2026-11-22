@@ -760,7 +760,7 @@ export default function Page() {
                                     minHeight: 0,
                                     py: 1.2,
                                     px: 2.5,
-                                    borderRadius: 999,
+                                    borderRadius: "10px",
                                     mr: 1,
                                     bgcolor: "background.paper",
                                     textTransform: "none",
@@ -902,7 +902,7 @@ export default function Page() {
                                     sx={{
                                         bgcolor: "rgba(var(--mui-palette-info-mainChannel) / 0.1)",
                                         color: "var(--mui-palette-info-main)",
-                                        borderRadius: 999
+                                        borderRadius: "8px"
                                     }}
                                 />
                             </Stack>
@@ -1018,7 +1018,7 @@ export default function Page() {
                                                     sx={{
                                                         bgcolor: "rgba(var(--mui-palette-success-mainChannel) / 0.16)",
                                                         color: "var(--mui-palette-success-main)",
-                                                        borderRadius: 999
+                                                        borderRadius: "8px"
                                                     }}
                                                 />
                                             }

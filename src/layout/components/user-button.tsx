@@ -60,7 +60,7 @@ export default function UserButton(): JSX.Element {
                 sx={{
                     width: 44,
                     height: 44,
-                    borderRadius: "9999px",
+                    borderRadius: "10px",
                     display: "grid",
                     placeItems: "center",
                     bgcolor: TEB_COLORS.softSurface,
@@ -81,7 +81,7 @@ export default function UserButton(): JSX.Element {
                 sx={{
                     minHeight: 44,
                     px: 2,
-                    borderRadius: "9999px",
+                    borderRadius: "10px",
                     bgcolor: TEB_COLORS.softSurface,
                     borderColor: TEB_COLORS.border,
                     color: TEB_COLORS.textPrimary,
@@ -125,7 +125,7 @@ export default function UserButton(): JSX.Element {
                 sx={{
                     minHeight: 44,
                     px: 1.5,
-                    borderRadius: "9999px",
+                    borderRadius: "10px",
                     bgcolor: TEB_COLORS.softSurface,
                     borderColor: TEB_COLORS.border,
                     color: TEB_COLORS.textPrimary,
@@ -181,7 +181,7 @@ export default function UserButton(): JSX.Element {
                         sx={{
                             p: 2,
                             mb: 2.5,
-                            borderRadius: "16px",
+                            borderRadius: "10px",
                             bgcolor: TEB_COLORS.softSurface,
                             border: `1px solid ${TEB_COLORS.border}`,
                         }}

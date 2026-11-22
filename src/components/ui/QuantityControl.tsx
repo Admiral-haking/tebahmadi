@@ -72,7 +72,7 @@ export function QuantityControl({
             onKeyDown={handleKeyDown}
             sx={{
                 display: "inline-flex",
-                borderRadius: "9999px",
+                borderRadius: "10px",
                 border: `1px solid ${TEB_COLORS.border}`,
                 bgcolor: TEB_COLORS.surface,
                 p: 0.25,

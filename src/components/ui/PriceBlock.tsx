@@ -48,7 +48,7 @@ export function PriceBlock({
                                 alignItems: "center",
                                 px: 0.75,
                                 py: 0.15,
-                                borderRadius: "9999px",
+                                borderRadius: "8px",
                                 bgcolor: TEB_COLORS.error,
                                 color: "#FFFFFF",
                                 fontSize: "11px",

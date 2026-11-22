@@ -13,8 +13,8 @@ describe("Tab Ahmadi design system", () => {
   it("uses a predictable 4px spacing and restrained radius scale", () => {
     expect(brandTokens.space(1)).toBe(4);
     expect(brandTokens.space(6)).toBe(24);
-    expect(brandTokens.radius.card).toBe(28);
-    expect(brandTokens.radius.control).toBe(16);
+    expect(brandTokens.radius.card).toBe(16);
+    expect(brandTokens.radius.control).toBe(10);
   });
 
   it("keeps the storefront readable on small and large screens", () => {

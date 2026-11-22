@@ -77,7 +77,7 @@ export function SearchField({
                 width: "100%",
                 minHeight,
                 px: 1.5,
-                borderRadius: "9999px",
+                borderRadius: "10px",
                 bgcolor: TEB_COLORS.softSurface,
                 border: `1px solid ${TEB_COLORS.border}`,
                 transition: "border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease",

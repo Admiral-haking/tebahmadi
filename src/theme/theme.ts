@@ -30,7 +30,10 @@ const useCreateTheme = (defaultColorScheme: SupportedColorScheme = "light") =>
         colorSchemes,
         defaultColorScheme,
         shape: {
-            borderRadius: TEB_RADII.md,
+            // MUI numeric borderRadius values are multiplied by this base.
+            // A compact base keeps `sx={{ borderRadius: 4 }}` rectangular
+            // instead of turning ordinary panels into pills.
+            borderRadius: 4,
         },
         typography: {
             fontFamily: defaultFont.style.fontFamily,

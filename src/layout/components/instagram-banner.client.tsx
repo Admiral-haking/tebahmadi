@@ -202,7 +202,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                   backdropFilter: 'blur(8px)',
                   px: 1.25,
                   py: 0.5,
-                  borderRadius: '9999px',
+                  borderRadius: '10px',
                 }}
               >
                 {items.map((item, idx) => (
@@ -219,7 +219,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
                       p: 0,
                       border: 'none',
                       cursor: 'pointer',
-                      borderRadius: '9999px',
+                      borderRadius: '10px',
                       bgcolor: idx === index ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)',
                       transition: 'all 200ms ease',
                       '&:hover': { bgcolor: '#FFFFFF' },

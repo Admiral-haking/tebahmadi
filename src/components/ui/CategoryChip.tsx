@@ -26,7 +26,7 @@ export function CategoryChip({
         minHeight: 40,
         px: 2,
         py: 0.75,
-        borderRadius: "9999px",
+        borderRadius: "8px",
         fontSize: "13px",
         fontWeight: active ? 700 : 500,
         whiteSpace: "nowrap",

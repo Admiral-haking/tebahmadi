@@ -18,11 +18,11 @@ export const TEB_COLORS = {
 } as const;
 
 export const TEB_RADII = {
-    sm: 6,
-    md: 16,
-    lg: 24,
-    panel: 32,
-    pill: 9999,
+    sm: 4,
+    md: 10,
+    lg: 16,
+    panel: 20,
+    pill: 10,
 } as const;
 
 export const TEB_FONT_SIZES = {

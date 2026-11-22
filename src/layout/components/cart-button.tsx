@@ -20,7 +20,7 @@ export default function CartButton() {
                     sx={{
                         width: 44,
                         height: 44,
-                        borderRadius: "9999px",
+                        borderRadius: "10px",
                         border: `1px solid ${TEB_COLORS.border}`,
                         bgcolor: TEB_COLORS.softSurface,
                         color: TEB_COLORS.primary,

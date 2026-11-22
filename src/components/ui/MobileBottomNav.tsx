@@ -100,7 +100,7 @@ export function MobileBottomNav() {
                                 sx={{
                                     width: 36,
                                     height: 28,
-                                    borderRadius: "9999px",
+                                    borderRadius: "8px",
                                     display: "grid",
                                     placeItems: "center",
                                     bgcolor: item.active ? TEB_COLORS.primary : "transparent",
