@@ -42,12 +42,12 @@
 - Consumes: مدل‌های فعلی `CartState`, `Invoice`, `Offer`, `Transport`.
 - Produces: preflight موجودی، saved cart lines، address prefill، pricing snapshot و checkout idempotency بدون تغییر ظاهر کامپوننت‌ها.
 
-- [ ] استخراج قراردادهای سبد و checkout نسخهٔ منبع و نوشتن تست‌های failing برای preflight موجودی، saved lines، guest phone و duplicate checkout.
-- [ ] اجرای تست قرمز و ثبت علت failure.
-- [ ] انتقال حداقلی helper/serviceهای منبع به namespace فعلی، بدون کپی کامپوننت‌های بصری منبع.
-- [ ] اتصال کنترل‌های جدید به UI فعلی و حفظ tokenهای theme و شعاع‌های فعلی.
-- [ ] اجرای تست focused و سپس کل تست‌ها.
-- [ ] commit مستقل با پیام `feat: harden cart and checkout flow`.
+- [x] استخراج قراردادهای سبد و checkout نسخهٔ منبع و نوشتن تست‌های failing برای preflight موجودی، saved lines، guest phone و duplicate checkout.
+- [x] اجرای تست قرمز و ثبت علت failure.
+- [x] انتقال حداقلی helper/serviceهای منبع به namespace فعلی، بدون کپی کامپوننت‌های بصری منبع.
+- [x] اتصال کنترل‌های جدید به UI فعلی و حفظ tokenهای theme و شعاع‌های فعلی.
+- [x] اجرای تست focused و سپس کل تست‌ها.
+- [x] commit مستقل با پیام `feat: harden cart and checkout flow`.
 
 ### Task 2: درگاه‌ها و وضعیت پرداخت
 
@@ -63,13 +63,13 @@
 - Consumes: `PaymentGateway`, `PaymentTransaction`, current callback routes and site config.
 - Produces: list of six gateways with Zarinpal disabled by default, configured-only visibility, callback-safe verification and admin control.
 
-- [ ] Write failing tests for gateway visibility, Zarinpal default-off, missing credential masking, BajetPay callback parsing and duplicate verification.
-- [ ] Run the focused tests and verify expected red failures.
-- [ ] Add the source gateway control policy and BajetPay adapter using target path aliases and existing transaction model.
-- [ ] Wire all payment methods to invoice payment context without hardcoding Zarinpal.
-- [ ] Verify callback auth/state/amount checks and safe Persian errors.
-- [ ] Run focused and full tests.
-- [ ] commit مستقل با پیام `feat: add configurable payment gateways`.
+- [x] Write failing tests for gateway visibility, Zarinpal default-off, missing credential masking, BajetPay callback parsing and duplicate verification.
+- [x] Run the focused tests and verify expected red failures.
+- [x] Add the source gateway control policy and BajetPay adapter using target path aliases and existing transaction model.
+- [x] Wire all payment methods to invoice payment context without hardcoding Zarinpal.
+- [x] Verify callback auth/state/amount checks and safe Persian errors.
+- [x] Run focused and full tests.
+- [ ] commit مستقل با پیام `feat: add configurable payment gateways` (در commit تجمیعی نهایی انجام می‌شود).
 
 ### Task 3: مارکت‌پلیس‌ها، سلامت و مقایسهٔ موجودی
 
@@ -84,13 +84,13 @@
 - Consumes: existing service credentials stored in Mongo/site config; never raw env values in UI.
 - Produces: isolated admin health cards, inventory comparison and marketplace order/product operations with explicit evidence/status.
 
-- [ ] Characterize current endpoints and write failing tests for source behaviors missing in target.
-- [ ] Run tests red.
-- [ ] Port only provider adapters, status/reconciliation helpers and admin data routes; keep current Tab Ahmadi pages/styles.
-- [ ] Add bounded retry and explicit failure/reconciliation states where source requires them.
-- [ ] Verify authz and webhook replay protection.
-- [ ] Run focused/full tests and build.
-- [ ] commit مستقل با پیام `feat: complete marketplace operations`.
+- [x] Characterize current endpoints and write failing tests for source behaviors missing in target.
+- [x] Run tests red.
+- [x] Port only provider adapters, status/reconciliation helpers and admin data routes; keep current Tab Ahmadi pages/styles.
+- [x] Add bounded retry and explicit failure/reconciliation states where source requires them.
+- [x] Verify authz and webhook replay protection.
+- [x] Run focused/full tests and build.
+- [ ] commit مستقل با پیام `feat: complete marketplace operations` (در commit تجمیعی نهایی انجام می‌شود).
 
 ### Task 4: تاپین، هلو و حسابداری
 
@@ -105,13 +105,13 @@
 - Consumes: current Invoice/Payment/Transport models and Holoo adapter.
 - Produces: admin-accessible Tapin dashboard, Holoo sync operations and accounting reports without changing storefront visuals.
 
-- [ ] Write failing tests for route visibility/permissions and duplicate Holoo sync markers.
-- [ ] Run tests red.
-- [ ] Port source service boundaries and pages, adapting imports to target models; do not copy source branding.
-- [ ] Add explicit dry/read-only behavior for accounting reports and bounded retry for sync jobs.
-- [ ] Add menu links and confirm existing admin layout remains visually unchanged.
-- [ ] Run tests and build.
-- [ ] commit مستقل با پیام `feat: enable tapin and accounting operations`.
+- [x] Write failing tests for route visibility/permissions and duplicate Holoo sync markers.
+- [x] Run tests red.
+- [x] Port source service boundaries and pages, adapting imports to target models; do not copy source branding.
+- [x] Add explicit dry/read-only behavior for accounting reports and bounded retry for sync jobs.
+- [x] Add menu links and confirm existing admin layout remains visually unchanged.
+- [x] Run tests and build.
+- [ ] commit مستقل با پیام `feat: enable tapin and accounting operations` (در commit تجمیعی نهایی انجام می‌شود).
 
 ### Task 5: یکپارچه‌سازی، مستندسازی و انتشار
 
@@ -120,9 +120,9 @@
 - Modify: `README.md` and `docs/**`
 - Test: full Vitest, lint, build, route smoke checks
 
-- [ ] Audit all copied files for source branding, hardcoded domains and secrets.
-- [ ] Run secret scan and dependency review.
-- [ ] Run full test suite, lint and production build.
-- [ ] Smoke-test public cart, admin named routes and API health without external mutations.
-- [ ] Commit final integration on `main`, push, deploy and verify PM2/runtime health.
+- [x] Audit all copied files for source branding, hardcoded domains and secrets.
+- [x] Run secret scan and dependency review.
+- [x] Run full test suite, lint and production build.
+- [x] Smoke-test public cart, admin named routes and API health without external mutations.
+- [ ] Commit final integration on `main`, push, deploy and verify PM2/runtime health (commit is next; push/deploy require explicit release confirmation).
 

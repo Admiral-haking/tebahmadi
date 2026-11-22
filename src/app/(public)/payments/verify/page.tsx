@@ -12,7 +12,7 @@ interface VerifyPageProps {
 }
 
 type GatewayVerifyInput = {
-  gateway: "zarinpal" | "torob" | "azkivam" | "digipay" | "snapppay";
+  gateway: "zarinpal" | "torob" | "azkivam" | "digipay" | "snapppay" | "bajetpay";
   tx: string;
   invoiceId: string;
   authority?: string;
@@ -27,6 +27,10 @@ type GatewayVerifyInput = {
   snapppay?: {
     transactionId?: string;
     state?: string;
+    amount?: string;
+  };
+  bajetpay?: {
+    referenceId?: string;
     amount?: string;
   };
 };
@@ -114,6 +118,22 @@ function parseVerifyInput(searchParams?: Record<string, string | string[] | unde
         providerId: toStringValue(searchParams?.providerId),
         result: digipayState,
         type: toStringValue(searchParams?.type),
+        amount: toStringValue(searchParams?.amount),
+      },
+    };
+  }
+
+  if (gatewayRaw === "bajetpay") {
+    return {
+      gateway: "bajetpay",
+      tx,
+      invoiceId,
+      state: toStringValue(searchParams?.state) ?? toStringValue(searchParams?.status),
+      bajetpay: {
+        referenceId:
+          toStringValue(searchParams?.referenceId) ??
+          toStringValue(searchParams?.refId) ??
+          toStringValue(searchParams?.authority),
         amount: toStringValue(searchParams?.amount),
       },
     };
@@ -258,6 +278,40 @@ async function renderResult(input: GatewayVerifyInput | null): Promise<ReactElem
       const message = error instanceof Error ? error.message : "verification_failed";
       await Promise.all([
         markTransactionFailed(input.tx, undefined, "failed", message),
+        cancelPendingInvoice(input.invoiceId),
+      ]);
+      return <PaymentVerificationView status={false} message={message} />;
+    }
+  }
+
+  if (input.gateway === "bajetpay") {
+    const state = (input.state ?? "").trim().toLowerCase();
+    if (["failed", "cancel", "canceled", "cancelled", "nok"].includes(state)) {
+      await Promise.all([
+        markTransactionFailed(input.tx, input.bajetpay?.referenceId, "canceled", `gateway_status_${state}`),
+        cancelPendingInvoice(input.invoiceId),
+      ]);
+      return <PaymentVerificationView status={false} />;
+    }
+
+    try {
+      const result = await verifyAndFinalize({
+        invoiceId: input.invoiceId,
+        transactionId: input.tx,
+        authority: input.bajetpay?.referenceId,
+        bajetpay: input.bajetpay,
+      });
+      if (result.ok) {
+        const invoice = await InvoiceModel.findById(input.invoiceId).lean();
+        return <PaymentVerificationView status invoiceNumber={invoice?.number} transactionId={result.refId} />;
+      }
+
+      await cancelPendingInvoice(input.invoiceId);
+      return <PaymentVerificationView status={false} message={result.message} />;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "verification_failed";
+      await Promise.all([
+        markTransactionFailed(input.tx, input.bajetpay?.referenceId, "failed", message),
         cancelPendingInvoice(input.invoiceId),
       ]);
       return <PaymentVerificationView status={false} message={message} />;

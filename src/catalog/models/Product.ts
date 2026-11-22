@@ -32,6 +32,8 @@ export interface InventoryModel {
   trackingUnit: 'unit' | 'pair' | 'kg' | 'g' | 'lb' | 'oz' | 'l' | 'ml';
   quantity: number;
   lowStockThreshold?: number;
+  /** Prevents automatic marketplace pushes while an inventory discrepancy is investigated. */
+  frozen?: boolean;
 }
 
 export interface VariantSchema {
@@ -50,6 +52,15 @@ export interface VariantSchema {
   colorName?: string;
   colorSwatches?: string[];
   colorFamily?: ColorFamily;
+  tapinProductId?: number;
+  tapinCategoryId?: string;
+  tapinSyncedAt?: Date;
+  tapinMappings?: Array<{
+    shopId: string;
+    productId: number;
+    categoryId: string;
+    syncedAt?: Date;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -116,6 +127,7 @@ const inventorySchema = new Schema<InventoryModel>(
     },
     quantity: { type: Number, required: true, min: 0 },
     lowStockThreshold: { type: Number, min: 0 },
+    frozen: { type: Boolean, default: false },
   },
   { _id: false },
 );
@@ -138,6 +150,23 @@ const variantSchema = new Schema<VariantSchema>(
     colorFamily: {
       type: String,
       enum: ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'brown', 'black', 'white', 'grey', 'multi'],
+      default: undefined,
+    },
+    tapinProductId: { type: Number, min: 1 },
+    tapinCategoryId: { type: String, trim: true },
+    tapinSyncedAt: { type: Date },
+    tapinMappings: {
+      type: [
+        new Schema(
+          {
+            shopId: { type: String, required: true, trim: true },
+            productId: { type: Number, required: true, min: 1 },
+            categoryId: { type: String, required: true, trim: true },
+            syncedAt: { type: Date },
+          },
+          { _id: false },
+        ),
+      ],
       default: undefined,
     },
   },

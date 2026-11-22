@@ -6,6 +6,14 @@ import { getTorobClient } from '@/payments/torobAdapter';
 import { getAzkivamClient } from '@/payments/azkivamAdapter';
 import { getDigipayClient } from '@/payments/digipayAdapter';
 import { getSnappPayClient } from '@/payments/snapppayAdapter';
+import { getBajetPayClient } from '@/payments/bajetpayAdapter';
+import {
+  buildGatewayCallbackUrl as buildPaymentGatewayCallbackUrl,
+  getBajetPayCallbackPath,
+  getBajetPayEnv,
+} from '@/payments/paymentConfig';
+import { isPaymentGatewayEnabled } from '@/payments/paymentGatewayControls';
+import type { PaymentGateway } from '@/payments/paymentTypes';
 import { PaymentTransactionModel, type PaymentTransactionDocument } from '@/models/Payment';
 import { InvoiceModel, type InvoiceDocument } from '@/models/Invoice';
 import ProductModel from '@/catalog/models/Product';
@@ -23,7 +31,7 @@ import {
 
 export { buildSnappPayAmounts, buildSnappPayCartList, normalizeSnappPayMobileNumber };
 
-export type PaymentGateway = 'zarinpal' | 'torob' | 'azkivam' | 'digipay' | 'snapppay';
+export type { PaymentGateway } from '@/payments/paymentTypes';
 
 interface CreatePaymentInput {
   invoiceId: string;
@@ -33,6 +41,7 @@ interface CreatePaymentInput {
   email?: string;
   mobile?: string;
   gateway?: PaymentGateway;
+  requestKey?: string;
 }
 
 interface CreatePaymentResult {
@@ -55,6 +64,10 @@ interface VerifyInput {
   snapppay?: {
     transactionId?: string;
     state?: string;
+    amount?: string;
+  };
+  bajetpay?: {
+    referenceId?: string;
     amount?: string;
   };
 }
@@ -243,6 +256,10 @@ function getSnappPayCallbackPath() {
   return normalizeCallbackPath(process.env.SNAPPPAY_CALLBACK_PATH ?? '/api/payments/snapppay/callback');
 }
 
+function getBajetPayCallbackPathLocal() {
+  return getBajetPayCallbackPath();
+}
+
 function buildGatewayCallbackUrl(input: {
   baseUrl: string;
   path: string;
@@ -251,14 +268,7 @@ function buildGatewayCallbackUrl(input: {
   gateway: PaymentGateway;
   state?: string;
 }) {
-  const url = new URL(
-    buildCallbackUrl(input.baseUrl, input.path, input.invoiceId, input.transactionId),
-  );
-  url.searchParams.set('gateway', input.gateway);
-  if (input.state) {
-    url.searchParams.set('state', input.state);
-  }
-  return url.toString();
+  return buildPaymentGatewayCallbackUrl(input);
 }
 
 async function loadInvoice(invoiceId: string) {
@@ -1092,6 +1102,34 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
   }
 
   const gateway: PaymentGateway = input.gateway ?? 'zarinpal';
+  if (!(await isPaymentGatewayEnabled(gateway))) {
+    throw new Error('payment_gateway_unavailable');
+  }
+
+  const requestKey = input.requestKey?.trim().slice(0, 128) || undefined;
+  if (requestKey) {
+    const existing = await PaymentTransactionModel.findOne({
+      invoiceId: input.invoiceId,
+      gateway,
+      requestKey,
+    }).exec();
+    if (existing) {
+      if (
+        existing.gatewayUrl &&
+        existing.authority &&
+        ['requested', 'redirected'].includes(existing.status)
+      ) {
+        return {
+          gatewayUrl: existing.gatewayUrl,
+          authority: existing.authority,
+          transactionId: existing._id.toString(),
+        };
+      }
+      if (existing.status === 'initiated') throw new Error('payment_request_in_progress');
+      throw new Error('payment_attempt_already_failed');
+    }
+  }
+
   const { baseUrl, callbackPath } = getCallbackBase();
 
   const transactionId = new mongoose.Types.ObjectId();
@@ -1106,6 +1144,13 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
     invoiceId: input.invoiceId,
     transactionId,
     gateway: 'digipay',
+  });
+  const bajetPayCallbackURL = buildGatewayCallbackUrl({
+    baseUrl,
+    path: getBajetPayCallbackPathLocal(),
+    invoiceId: input.invoiceId,
+    transactionId,
+    gateway: 'bajetpay',
   });
   const azkivamSuccessURL = buildGatewayCallbackUrl({
     baseUrl,
@@ -1125,33 +1170,60 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
   });
   const description = input.description ?? `Payment for invoice ${invoice.number ?? input.invoiceId}`;
 
-  const transaction = await PaymentTransactionModel.create({
-    _id: transactionId,
-    invoiceId: input.invoiceId,
-    userId: input.userId,
-    amount: input.amount,
-    description,
-    email: input.email,
-    mobile: input.mobile,
-    callbackURL:
-      gateway === 'torob'
-        ? torobReturnURL
-        : gateway === 'snapppay'
-          ? snappPayReturnURL
-          : gateway === 'azkivam'
-            ? azkivamSuccessURL
-            : gateway === 'digipay'
-              ? digipayCallbackURL
-              : callbackURL,
-    gateway,
-    status: 'initiated',
-    meta: {
-      invoiceNumber: invoice.number,
-      ...(snappPayProviderTransactionId
-        ? { snappPayProviderTransactionId }
-        : {}),
-    },
-  });
+  let transaction: PaymentTransactionDocument;
+  try {
+    transaction = await PaymentTransactionModel.create({
+      _id: transactionId,
+      invoiceId: input.invoiceId,
+      userId: input.userId,
+      amount: input.amount,
+      description,
+      email: input.email,
+      mobile: input.mobile,
+      callbackURL:
+        gateway === 'torob'
+          ? torobReturnURL
+          : gateway === 'snapppay'
+            ? snappPayReturnURL
+            : gateway === 'azkivam'
+              ? azkivamSuccessURL
+              : gateway === 'digipay'
+                ? digipayCallbackURL
+                : gateway === 'bajetpay'
+                  ? bajetPayCallbackURL
+                  : callbackURL,
+      gateway,
+      requestKey,
+      status: 'initiated',
+      meta: {
+        invoiceNumber: invoice.number,
+        ...(snappPayProviderTransactionId
+          ? { snappPayProviderTransactionId }
+          : {}),
+      },
+    });
+  } catch (error) {
+    if (requestKey && (error as { code?: number }).code === 11000) {
+      const winner = await PaymentTransactionModel.findOne({
+        invoiceId: input.invoiceId,
+        gateway,
+        requestKey,
+      }).exec();
+      if (
+        winner?.gatewayUrl &&
+        winner.authority &&
+        ['requested', 'redirected'].includes(winner.status)
+      ) {
+        return {
+          gatewayUrl: winner.gatewayUrl,
+          authority: winner.authority,
+          transactionId: winner._id.toString(),
+        };
+      }
+      throw new Error('payment_request_in_progress');
+    }
+    throw error;
+  }
 
   await updateInvoicePaymentContext(invoice, gateway, {
     transactionId: transaction._id.toString(),
@@ -1164,7 +1236,9 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
             ? azkivamSuccessURL
             : gateway === 'digipay'
               ? digipayCallbackURL
-              : callbackURL,
+              : gateway === 'bajetpay'
+                ? bajetPayCallbackURL
+                : callbackURL,
     amount: transaction.amount,
     status: 'initiated',
     requestedAt: new Date(),
@@ -1205,6 +1279,7 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
         {
           $set: {
             authority: snappPay.paymentToken,
+            gatewayUrl: snappPay.paymentPageUrl,
             status: 'requested',
             callbackURL: snappPayReturnURL,
             meta: {
@@ -1267,6 +1342,7 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
         {
           $set: {
             authority: digipay.ticket,
+            gatewayUrl: digipay.redirectUrl,
             status: 'requested',
             callbackURL: digipayCallbackURL,
             meta: {
@@ -1290,6 +1366,52 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
       return {
         gatewayUrl: digipay.redirectUrl,
         authority: digipay.ticket,
+        transactionId: transaction._id.toString(),
+      };
+    }
+
+    if (gateway === 'bajetpay') {
+      const env = getBajetPayEnv();
+      const client = getBajetPayClient(env);
+      const mobile = normalizeSnappPayMobileNumber(transaction.mobile ?? invoice.addressSnapshot?.phone);
+      if (!/^\+98\d{10}$/.test(mobile)) {
+        throw new Error('bajetpay_mobile_number_invalid');
+      }
+
+      const bajetPay = await client.createOrder({
+        orderId: invoice.number ?? input.invoiceId,
+        amountRial: tomanToRial(transaction.amount),
+        returnUrl: bajetPayCallbackURL,
+        mobile,
+      });
+
+      await PaymentTransactionModel.updateOne(
+        { _id: transaction._id },
+        {
+          $set: {
+            authority: bajetPay.referenceId,
+            gatewayUrl: bajetPay.redirectUrl,
+            status: 'requested',
+            callbackURL: bajetPayCallbackURL,
+            meta: {
+              invoiceNumber: invoice.number,
+              referenceId: bajetPay.referenceId,
+            },
+          },
+        },
+      );
+
+      await updateInvoicePaymentContext(invoice, gateway, {
+        authority: bajetPay.referenceId,
+        referenceId: bajetPay.referenceId,
+        gatewayUrl: bajetPay.redirectUrl,
+        status: 'requested',
+        request: bajetPay.raw,
+      });
+
+      return {
+        gatewayUrl: bajetPay.redirectUrl,
+        authority: bajetPay.referenceId,
         transactionId: transaction._id.toString(),
       };
     }
@@ -1322,6 +1444,7 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
         {
           $set: {
             authority: azkivam.ticketId,
+            gatewayUrl: azkivam.paymentUri,
             status: 'requested',
             callbackURL: azkivamSuccessURL,
             meta: {
@@ -1372,6 +1495,7 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
         {
           $set: {
             authority: torob.paymentToken,
+            gatewayUrl: torob.paymentPageUrl,
             status: 'requested',
             callbackURL: torobReturnURL,
             meta: {
@@ -1424,6 +1548,7 @@ export async function createPaymentForInvoice(input: CreatePaymentInput): Promis
       {
         $set: {
           authority,
+          gatewayUrl,
           status: 'requested',
           callbackURL,
         },
@@ -2265,6 +2390,54 @@ export async function verifyAndFinalize(input: VerifyInput): Promise<VerifyResul
       ok: false,
       code: verifyResult.code,
       message: verifyResult.message ?? `digipay_verification_failed_${verifyResult.code}`,
+    };
+  }
+
+  if (transaction.gateway === 'bajetpay') {
+    const referenceId = input.bajetpay?.referenceId ?? transaction.authority;
+    if (!referenceId) throw new Error('bajetpay_reference_id_missing');
+    const callbackAmount = input.bajetpay?.amount ? Number(input.bajetpay.amount) : undefined;
+    if (
+      Number.isFinite(callbackAmount) &&
+      callbackAmount !== undefined &&
+      callbackAmount !== tomanToRial(transaction.amount)
+    ) {
+      throw new Error('bajetpay_amount_mismatch');
+    }
+
+    const verifyResult = await getBajetPayClient(getBajetPayEnv()).verify(referenceId);
+    if (verifyResult.ok) {
+      await finalizeSuccessfulPayment(
+        transaction,
+        invoice,
+        verifyResult.referenceId ?? referenceId,
+        verifyResult.raw,
+      );
+      return {
+        ok: true,
+        code: 100,
+        refId: verifyResult.referenceId ?? referenceId,
+      };
+    }
+
+    await setTransactionStatus(transaction._id.toString(), 'failed', {
+      verifyPayload: verifyResult.raw,
+      errorCode: verifyResult.code,
+      errorMessage: verifyResult.message ?? `bajetpay_verification_failed_${verifyResult.code}`,
+    });
+    await updateInvoicePaymentContext(invoice, transaction.gateway, {
+      status: 'failed',
+      verify: verifyResult.raw,
+      lastError: {
+        code: verifyResult.code,
+        message: verifyResult.message ?? `bajetpay_verification_failed_${verifyResult.code}`,
+      },
+    });
+
+    return {
+      ok: false,
+      code: verifyResult.code,
+      message: verifyResult.message ?? `bajetpay_verification_failed_${verifyResult.code}`,
     };
   }
 

@@ -42,6 +42,11 @@ const ENV_GROUPS: Record<string, { label: string; requiredKeys: string[]; option
     requiredKeys: ['SNAPPPAY_BASE_URL', 'SNAPPPAY_CLIENT_ID', 'SNAPPPAY_CLIENT_SECRET', 'SNAPPPAY_USERNAME', 'SNAPPPAY_PASSWORD'],
     optionalKeys: ['SNAPPPAY_CALLBACK_PATH', 'SNAPPPAY_PAYMENT_METHOD_TYPES', 'SNAPPPAY_VENTURE'],
   },
+  bajetpay: {
+    label: 'باجت‌پی',
+    requiredKeys: ['BAJETPAY_TERMINAL_ID', 'BAJETPAY_USERNAME', 'BAJETPAY_PASSWORD'],
+    optionalKeys: ['BAJETPAY_BASE_URL', 'BAJETPAY_CALLBACK_PATH'],
+  },
 };
 
 const smsTemplateSchema = z.object({

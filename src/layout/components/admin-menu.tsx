@@ -12,7 +12,7 @@ import { ReactNode } from "react";
 import digikala from "../assets/digikala.jpeg";
 import snapp from "../assets/snapp.jpg";
 import basalaam from "../assets/basalaam.png";
-import { AccountBalanceRounded, Category, CreditCardRounded, Inventory2Rounded, SchoolRounded } from "@mui/icons-material";
+import { AccountBalanceRounded, AssessmentRounded, Category, CreditCardRounded, Inventory2Rounded, LocalShippingRounded, SchoolRounded } from "@mui/icons-material";
 
 type MenuItem = {
   title: string;
@@ -78,6 +78,11 @@ export const menu: MenuItem[] = [
   {
     title: "کنترل کیفیت پرداخت‌ها",
     href: "/admin/payment-quality",
+    icon: <CreditCardRounded />,
+  },
+  {
+    title: "مدیریت درگاه‌های پرداخت",
+    href: "/admin/payment-gateways",
     icon: <CreditCardRounded />,
   },
   {
@@ -303,6 +308,16 @@ export const menu: MenuItem[] = [
     title: "حسابداری هلو",
     href: "/admin/holoo",
     icon: <AccountBalanceRounded />,
+  },
+  {
+    title: "مدیریت تاپین",
+    href: "/admin/tapin",
+    icon: <LocalShippingRounded />,
+  },
+  {
+    title: "گزارش‌های حسابداری",
+    href: "/admin/accounting",
+    icon: <AssessmentRounded />,
   },
   {
     title: "پیگیری سفارش‌ها",

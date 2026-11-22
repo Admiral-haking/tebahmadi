@@ -23,6 +23,8 @@ const lineSchema = new Schema(
     unitPriceBase: { type: Number, required: true, min: 0 },
     variantOfferAmount: { type: Number, min: 0 },
     unitPriceEffective: { type: Number, required: true, min: 0 },
+    unitCostSnapshot: { type: Number, min: 0 },
+    costSnapshotEstimated: { type: Boolean, default: false },
     lineTotal: { type: Number, required: true, min: 0 },
     weightGrams: { type: Number, min: 0 },
     attributesSnapshot: { type: Schema.Types.Mixed },
@@ -59,6 +61,66 @@ const progressSchema = new Schema(
     packagedPostedTrackingNumber: { type: String, trim: true },
   },
   { _id: false }
+);
+
+const tapinShipmentSchema = new Schema(
+  {
+    id: { type: String, required: true, trim: true },
+    orderId: { type: Number, required: true },
+    barcode: { type: String, trim: true },
+    status: { type: Number, required: true },
+    totalPrice: { type: Number, min: 0 },
+    sendPrice: { type: Number, min: 0 },
+    registeredAt: { type: Date, required: true },
+    syncedAt: { type: Date },
+    provinceCode: { type: Number },
+    cityCode: { type: Number },
+    boxId: { type: Number },
+    packetType: { type: Number },
+    packageWeight: { type: Number },
+    orderType: { type: Number },
+    contentType: { type: Number },
+    hasInsurance: { type: Boolean },
+    shopId: { type: String, trim: true },
+    payType: { type: Number },
+    employeeCode: { type: Number },
+    prePaidPrice: { type: Number },
+    packagingPrice: { type: Number },
+    presenterCode: { type: Number },
+    kioskId: { type: Number },
+    duration: { type: Number },
+    parcelTurning: { type: Boolean },
+    itemWeights: {
+      type: [
+        new Schema(
+          {
+            variantId: { type: Schema.Types.ObjectId, required: true },
+            weightGrams: { type: Number, required: true, min: 0 },
+          },
+          { _id: false },
+        ),
+      ],
+      default: undefined,
+    },
+    statusHistory: {
+      type: [
+        new Schema(
+          {
+            status: { type: Number, required: true },
+            barcode: { type: String, trim: true },
+            changedAt: { type: Date, required: true },
+            source: { type: String, enum: ['register', 'sync', 'manual'], required: true },
+          },
+          { _id: false },
+        ),
+      ],
+      default: undefined,
+    },
+    syncFailureCount: { type: Number, min: 0, default: 0 },
+    syncLastError: { type: String, trim: true },
+    syncLastErrorAt: { type: Date },
+  },
+  { _id: false },
 );
 
 const invoiceSchema = new Schema(
@@ -104,12 +166,19 @@ const invoiceSchema = new Schema(
       default: DEFAULT_INVOICE_PAYMENT_METHOD,
     },
     paymentMethodData: { type: Schema.Types.Mixed },
+    paidAt: { type: Date, index: true },
+    refundedAt: { type: Date, index: true },
     pricingContext: {
       productTypeVersions: Schema.Types.Mixed,
       transportRowLabel: { type: String, trim: true },
       offerSnapshot: Schema.Types.Mixed,
     },
     torobClid: { type: String, trim: true },
+    tapinShipment: tapinShipmentSchema,
+    tapinRegistrationLock: {
+      token: { type: String, trim: true },
+      claimedAt: { type: Date },
+    },
     progress: progressSchema,
   },
   { timestamps: true }
@@ -129,6 +198,14 @@ invoiceSchema.index(
 );
 invoiceSchema.index({ userId: 1, createdAt: -1 });
 invoiceSchema.index({ torobClid: 1, createdAt: 1 });
+invoiceSchema.index(
+  { 'tapinShipment.orderId': 1 },
+  {
+    unique: true,
+    name: 'tapinShipment_orderId_unique',
+    partialFilterExpression: { 'tapinShipment.orderId': { $type: 'number' } },
+  },
+);
 
 export type InvoiceDocument = InferSchemaType<typeof invoiceSchema> & {
   _id: mongoose.Types.ObjectId;

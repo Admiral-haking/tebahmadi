@@ -22,6 +22,7 @@ import {
   createPaymentForInvoice,
   type PaymentGateway,
 } from '@/payments/paymentService';
+import { getVisiblePaymentGateways } from '@/payments/paymentGatewayControls';
 
 const cartLineSchema = z.object({
   productId: z.string().min(1),
@@ -193,6 +194,12 @@ function translateCartError(raw: string | null | undefined, fallback: string): s
   }
   if (lower.includes('snapppay credentials are not configured')) {
     return 'تنظیمات درگاه اسنپ‌پی کامل نیست. لطفاً با پشتیبانی تماس بگیرید.';
+  }
+  if (lower.includes('bajetpay credentials are not configured')) {
+    return 'تنظیمات درگاه باجت‌پی کامل نیست. لطفاً با پشتیبانی تماس بگیرید.';
+  }
+  if (lower.includes('payment_gateway_unavailable')) {
+    return 'این روش پرداخت فعلاً در دسترس نیست. لطفاً روش دیگری را انتخاب کنید.';
   }
   if (lower.includes('invoice_not_found')) {
     return 'سفارش یافت نشد.';
@@ -534,6 +541,15 @@ export async function checkSnappPayEligibilityAction(
   }
 }
 
+export async function getAvailablePaymentGatewaysAction(): Promise<PaymentGateway[]> {
+  try {
+    return await getVisiblePaymentGateways();
+  } catch (error) {
+    console.error('getAvailablePaymentGatewaysAction failed', error);
+    return [];
+  }
+}
+
 export async function checkoutAndPayAction(
   rawState: CartStateInput,
   gateway: PaymentGateway = 'zarinpal',
@@ -606,6 +622,7 @@ export async function checkoutAndPayAction(
         description: `پرداخت سفارش ${invoice.number ?? invoice._id.toString()}`,
         mobile: invoice.addressSnapshot?.phone,
         gateway,
+        requestKey: checkoutAttemptKey,
       });
     } catch (error) {
       await updateInvoiceStatus(invoice._id.toString(), 'canceled');

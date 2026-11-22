@@ -34,6 +34,11 @@ const ALL_PERMISSIONS: Permission[] = [
   'products:write',
   'orders:read',
   'orders:write',
+  'accounting:read',
+  'accounting:write',
+  'accounting:admin',
+  'holoo:read',
+  'holoo:write',
   'promotions:write',
   'catalog:publish',
 ];
