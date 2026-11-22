@@ -18,7 +18,8 @@ type SlideResponse = {
   data?: SlideItem[];
 };
 
-const FALLBACK_SRC = '/images/tebahmadi/hero-herbs.jpg';
+const FALLBACK_SRC = '/tebahmadi-hero-botanical.webp';
+const FALLBACK_ID = 'tebahmadi-fallback';
 const DESKTOP_BREAKPOINT = '(min-width: 900px)';
 
 const fetcher = async (url: string): Promise<SlideResponse> => {
@@ -41,9 +42,12 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
 
   const items = useMemo<SlideItem[]>(() => {
     const list = data?.data ?? [];
-    return list.filter((slide) => {
+    const valid = list.filter((slide) => {
       return Boolean(slide.mediaDesktopId || slide.mediaMobileId || slide.mediaId);
     });
+    return valid.length > 0
+      ? valid
+      : [{ id: FALLBACK_ID, href: '/store', mediaDesktopId: '', mediaMobileId: '' }];
   }, [data?.data]);
 
   useEffect(() => {
@@ -86,7 +90,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
   const href = active?.href && active.href.trim().length > 0 ? active.href.trim() : '/store';
 
   const common = {
-    alt: active ? 'slide-' + active.id : 'home-banner',
+    alt: active?.id === FALLBACK_ID ? 'محصولات طبیعی طب احمدی' : active ? 'slide-' + active.id : 'محصولات طبیعی طب احمدی',
     sizes: '100vw',
   };
 

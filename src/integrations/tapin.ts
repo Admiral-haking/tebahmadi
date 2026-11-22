@@ -9,6 +9,8 @@ export interface TapinConfig {
 
 export interface TapinRecipient {
   name: string;
+  firstName?: string;
+  lastName?: string;
   mobile: string;
   address: string;
   postalCode: string;
@@ -41,6 +43,17 @@ export class TapinError extends Error {
   }
 }
 
+export function getTapinConfigFromEnv(): TapinConfig {
+  return {
+    // Keep both names compatible with the existing deployment and the Tapin
+    // documentation used by the second project.
+    token: (process.env.TAPIN_WEBSERVICE_TOKEN || process.env.TAPIN_TOKEN || '').trim(),
+    shopId: (process.env.TAPIN_SHOP_ID || '').trim(),
+    baseUrl: process.env.TAPIN_API_BASE_URL || process.env.TAPIN_BASE_URL,
+    timeoutMs: Number(process.env.TAPIN_TIMEOUT_MS) || 20_000,
+  };
+}
+
 function assertConfigured(config: TapinConfig): void {
   if (!config.token.trim() || !config.shopId.trim()) throw new TapinError('tapin_not_configured');
 }
@@ -55,7 +68,7 @@ async function callTapin(config: TapinConfig, path: string, body: Record<string,
   });
   const result = await response.json().catch(() => null);
   if (!response.ok || result?.error || result?.errors) {
-    throw new TapinError('tapin_request_failed', response.status);
+    throw new TapinError('ارتباط با تاپین ناموفق بود.', response.status);
   }
   return result;
 }
@@ -89,11 +102,13 @@ export async function registerTapin(config: TapinConfig, input: TapinShipmentInp
     packet_type: input.packetType ?? 2,
     weight: input.weightGrams,
     pay_type: input.payType ?? 1,
-    recipient_name: input.recipient.name,
-    recipient_mobile: input.recipient.mobile,
-    recipient_address: input.recipient.address,
-    recipient_postal_code: input.recipient.postalCode,
-    products: input.items.map((item) => ({ name: item.name, count: item.quantity, price: item.priceToman, weight: item.weightGrams })),
+    first_name: input.recipient.firstName || input.recipient.name.split(/\s+/)[0],
+    last_name: input.recipient.lastName || input.recipient.name.split(/\s+/).slice(1).join(' ') || input.recipient.name,
+    mobile: input.recipient.mobile,
+    address: input.recipient.address,
+    postal_code: input.recipient.postalCode,
+    package_weight: Math.max(0, input.weightGrams - input.items.reduce((sum, item) => sum + item.weightGrams * item.quantity, 0)),
+    products: input.items.map((item) => ({ title: item.name, count: item.quantity, price: item.priceToman * 10, weight: item.weightGrams, discount: 0, product_id: null })),
   }, fetchImpl);
 }
 

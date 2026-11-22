@@ -420,7 +420,7 @@ export default function InventoryComparisonView() {
                         <Stack direction="row" spacing={1.25} alignItems="center">
                           <Box
                             component="img"
-                            src={item.imageId && item.imageId !== "null" ? `/api/media/${item.imageId}` : "/placeholder.jpg"}
+                            src={item.imageId && item.imageId !== "null" ? `/api/media/${item.imageId}` : "/product-placeholder.svg"}
                             width={48}
                             height={48}
                             alt={item.title}

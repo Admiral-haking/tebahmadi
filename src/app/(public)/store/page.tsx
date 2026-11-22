@@ -55,7 +55,7 @@ export default async function Page() {
                             bgcolor: 'background.paper'
                         }}>
                             <Image
-                                src={category.mediaId ? `/api/media/${category.mediaId}` : '/category.png'}
+                                src="/tebahmadi-mark.svg"
                                 alt={category.name}
                                 fill
                                 loading="lazy"

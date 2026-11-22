@@ -4,18 +4,7 @@ import { Box } from '@mui/material';
 import Link from 'next/link';
 import OptimizedImage from '../image';
 import { BRAND } from '@/config/brand';
-
-
-function DefaultLogo({ size }: { size: number }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 128 128" role="img" aria-label={`نشان ${BRAND.name}`}>
-      <rect width="128" height="128" rx="30" fill="#f7f5ed" />
-      <path d="M64 12 76 24l17 4 4 17 12 12-12 12-4 17-17 4-12 12-12-12-17-4-4-17L19 57l12-12 4-17 17-4z" fill="none" stroke="#2a5a44" strokeWidth="5" />
-      <path d="M72 86c-16-2-28-13-28-27 11 1 22 5 29 15 4-12 12-21 22-27 1 17-7 31-23 39Z" fill="#2a5a44" />
-      <path d="M49 91c5-12 13-22 25-30" fill="none" stroke="#f9f8f6" strokeWidth="4" strokeLinecap="round" />
-    </svg>
-  );
-}
+import BrandLockup from '../brand-lockup';
 
 export default async function Logo({ size = 40, showName = false }: { size?: number; showName?: boolean }) {
   const siteInfo = await loadSiteInfo();
@@ -27,31 +16,44 @@ export default async function Logo({ size = 40, showName = false }: { size?: num
   const logoSrc = logoId ? `/api/media/${logoId}` : null;
 
   return (
-    <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: showName ? 12 : 0 }}>
+    <Link
+      href="/"
+      aria-label={appName}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: showName ? 10 : 0, minWidth: 0, maxWidth: '100%', flexShrink: 0, overflow: 'visible' }}
+    >
       {logoSrc ? (
         <Box sx={{
-          bgcolor: 'white',
-          p: .5,
-          borderRadius: 1,
+          bgcolor: 'transparent',
+          p: 0,
+          borderRadius: 0,
           width: size,
           height: size,
-          position: 'relative'
+          position: 'relative',
+          flex: '0 0 auto',
+          overflow: 'visible',
         }}>
           <OptimizedImage
             src={logoSrc}
+            fallbackSrc="/tebahmadi-mark.svg"
             alt={appName}
             fill
             style={{
               objectFit: 'contain',
+              background: 'transparent',
             }}
-            priority={false}
+            priority={size >= 56}
+            transparentBackground
+            containerStyle={{ overflow: 'hidden', borderRadius: 0, backgroundColor: 'transparent' }}
           />
         </Box>
       ) : (
-        <DefaultLogo size={size} />
+        <BrandLockup size={size} showName={false} compact />
       )}
       {showName ? (
-        <span style={{ fontSize: Math.max(size / 2.5, 14), fontWeight: 700 }}>{appName}</span>
+        <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 3, minWidth: 0, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: Math.max(size / 2.5, 14), fontWeight: 800, lineHeight: 1.1 }}>{appName}</span>
+          <span style={{ fontSize: Math.max(size / 5.8, 9), color: 'var(--mui-palette-text-secondary)', lineHeight: 1.1 }}>اصالت طبیعت، عیار تندرستی</span>
+        </span>
       ) : null}
     </Link>
   );

@@ -27,7 +27,10 @@ const contentLinks = [
 export default async function Footer() {
   const siteInfo = await loadSiteInfo();
   const appName = siteInfo?.appName ?? BRAND.name;
-  const phones = Array.isArray(siteInfo?.phones) ? siteInfo.phones : [];
+  const configuredPhones = Array.isArray(siteInfo?.phones)
+    ? siteInfo.phones.filter((phone) => phone.number && phone.number !== "021000000")
+    : [];
+  const phones = configuredPhones.length > 0 ? configuredPhones : [{ number: BRAND.phone, label: "پشتیبانی خرید" }];
   const addresses = siteInfo?.addresses ?? [];
   const socials = siteInfo?.socials ?? [];
   const bio = siteInfo?.bio ?? siteInfo?.description ?? BRAND.bio;

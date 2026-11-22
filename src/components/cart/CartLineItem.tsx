@@ -16,7 +16,7 @@ import { Minus, Plus, X } from 'lucide-react';
 import { TEB_COLORS, TEB_RADII } from '@/theme/tokens';
 import { useCart, type CartLine } from './useCart';
 
-const FALLBACK_IMAGE = '/images/tebahmadi/herbal-tea.jpg';
+const FALLBACK_IMAGE = '/product-placeholder.svg';
 
 const formatToman = (value: number) =>
   `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.max(0, Math.floor(value)))} تومان`;

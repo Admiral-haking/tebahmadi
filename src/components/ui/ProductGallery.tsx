@@ -17,7 +17,7 @@ export type ProductGalleryProps = {
     discountBadge?: React.ReactNode;
 };
 
-const DEFAULT_FALLBACK = "/images/tebahmadi/herbal-tea.jpg";
+const DEFAULT_FALLBACK = "/product-placeholder.svg";
 
 export function ProductGallery({
     images,

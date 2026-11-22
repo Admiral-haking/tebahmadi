@@ -99,7 +99,7 @@ export default function BlogPostCard({ post, featured = false }: BlogPostCardPro
                                 letterSpacing: 2,
                             }}
                         >
-                            GHL
+                            طب احمدی
                         </Box>
                     )}
                     <Box

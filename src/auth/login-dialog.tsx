@@ -11,6 +11,7 @@ import {
 import { Lock, X } from "lucide-react";
 import { useAuth, useLogin } from "@/auth";
 import { OTP_LENGTH, OTP_PATTERN } from "@/auth/otp";
+import BrandLockup from "@/components/brand-lockup";
 import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 
 /** Persian/Arabic digits → Latin. */
@@ -159,21 +160,26 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
       <Dialog
         open={open}
         onClose={() => !isSubmitting && close()}
-        maxWidth="xs"
-        fullWidth
+        maxWidth={false}
+        scroll="paper"
         slotProps={{
           paper: {
             sx: {
+              width: "min(460px, calc(100vw - 24px))",
+              maxWidth: "460px",
+              maxHeight: "calc(100dvh - 24px)",
+              m: 1.5,
               borderRadius: `${TEB_RADII.lg}px`,
               overflow: "hidden",
               border: `1px solid ${TEB_COLORS.border}`,
               bgcolor: "#FFFFFF",
+              boxShadow: "0 28px 80px -40px rgba(31,70,53,.65)",
             },
           },
         }}
       >
         <Box sx={{ height: 4, bgcolor: TEB_COLORS.primary }} />
-        <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 }, position: "relative" }}>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 }, position: "relative", overflowY: "auto" }}>
           <IconButton
             size="small"
             onClick={close}
@@ -186,6 +192,7 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
 
           <Stack spacing={2.5}>
             <Stack spacing={1.25} alignItems="center" textAlign="center">
+              <BrandLockup size={42} compact />
               <Box
                 sx={{
                   width: 52,

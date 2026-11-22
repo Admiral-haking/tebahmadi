@@ -27,7 +27,7 @@ export type ProductCardProps = {
     priorityImage?: boolean;
 };
 
-const FALLBACK_IMAGE = "/images/tebahmadi/herbal-tea.jpg";
+const FALLBACK_IMAGE = "/product-placeholder.svg";
 const LOW_STOCK_THRESHOLD = 5;
 
 export function ProductCard({

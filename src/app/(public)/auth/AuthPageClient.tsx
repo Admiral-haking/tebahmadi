@@ -16,6 +16,7 @@ import {
 import { Lock, MessageSquare } from "lucide-react";
 import { useAuth, useLogin } from "@/auth";
 import { OTP_LENGTH, OTP_PATTERN } from "@/auth/otp";
+import BrandLockup from "@/components/brand-lockup";
 import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 
 // ─── OTP Input ───────────────────────────────────────────────────────────────
@@ -264,6 +265,7 @@ export default function AuthPageClient() {
                     <Stack spacing={3}>
                         {/* Header */}
                         <Stack spacing={1.5} alignItems="center" textAlign="center">
+                            <BrandLockup size={48} compact />
                             <Box
                                 sx={{
                                     width: 58,

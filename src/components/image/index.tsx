@@ -7,12 +7,14 @@ import styles from "./image.module.css";
 type OptimizedImageProps = ImageProps & {
     containerStyle?: React.CSSProperties;
     fallbackSrc?: ImageProps["src"];
+    transparentBackground?: boolean;
 };
 
 export default function OptimizedImage(props: OptimizedImageProps) {
     const {
         containerStyle,
         fallbackSrc,
+        transparentBackground = false,
         style,
         onLoad,
         onError,
@@ -48,8 +50,8 @@ export default function OptimizedImage(props: OptimizedImageProps) {
                 width: props.fill ? "100%" : (props.width || "100%"),
                 height: props.fill ? "100%" : (props.height || "auto"),
                 aspectRatio: props.fill ? undefined : aspectRatio,
-                backgroundColor: "rgba(var(--mui-palette-text-secondaryChannel) / 0.12)",
-                borderRadius: 1,
+                backgroundColor: transparentBackground ? "transparent" : "rgba(var(--mui-palette-text-secondaryChannel) / 0.12)",
+                borderRadius: transparentBackground ? 0 : 1,
                 ...(containerStyle || {}),
             }}
             aria-label={resolvedAlt ? `تصویر ${resolvedAlt}` : "تصویر"}
@@ -83,7 +85,7 @@ export default function OptimizedImage(props: OptimizedImageProps) {
                 }}
             />
 
-            {!isLoaded && (
+            {!isLoaded && !transparentBackground && (
                 <div className={styles.shimmer} />
             )}
         </div>

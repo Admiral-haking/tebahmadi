@@ -47,7 +47,7 @@ type LeanProduct = {
   variants?: LeanVariant[];
 };
 
-const PRICE_FALLBACK_IMAGE = '/sample.jpg';
+const PRICE_FALLBACK_IMAGE = '/product-placeholder.svg';
 
 function isOfferActive(offer: LeanOffer | null | undefined, now: Date): boolean {
   if (!offer) return false;

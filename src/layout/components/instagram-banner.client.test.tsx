@@ -16,7 +16,7 @@ describe('InstagramBannerCarousel', () => {
   it('renders one fallback banner when no slide is available', () => {
     const markup = renderToStaticMarkup(<InstagramBannerCarousel initialSlides={[]} />);
 
-    expect((markup.match(/alt="home-banner"/g) ?? []).length).toBe(1);
+    expect((markup.match(/alt="محصولات طبیعی طب احمدی"/g) ?? []).length).toBe(1);
   });
 
   it('renders slide image and navigation controls when slides are provided', () => {
