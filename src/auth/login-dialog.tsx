@@ -12,6 +12,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import { useAuth, useLogin } from "@/auth";
 import { OTP_LENGTH, OTP_PATTERN } from "@/auth/otp";
+import BrandLockup from "@/components/brand-lockup";
 
 /** Persian/Arabic digits → Latin. */
 function toLatin(s: string): string {
@@ -153,20 +154,38 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
   return (
     <LoginDialogContext.Provider value={{ openLogin }}>
       {children}
-      <Dialog open={open} onClose={() => !isSubmitting && close()} maxWidth="xs" fullWidth
-        slotProps={{ paper: { sx: { borderRadius: 5, overflow: "hidden", boxShadow: "0 28px 80px -40px rgba(31,70,53,.65)" } } }}>
+      <Dialog
+        open={open}
+        onClose={() => !isSubmitting && close()}
+        maxWidth={false}
+        scroll="paper"
+        slotProps={{
+          paper: {
+            sx: {
+              width: "min(460px, calc(100vw - 24px))",
+              maxWidth: "460px",
+              maxHeight: "calc(100dvh - 24px)",
+              m: 1.5,
+              borderRadius: { xs: 4, sm: 5 },
+              overflow: "hidden",
+              boxShadow: "0 28px 80px -40px rgba(31,70,53,.65)",
+            },
+          },
+        }}
+      >
         <Box sx={{ height: 4, bgcolor: "primary.main" }} />
-        <DialogContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 }, overflowY: "auto" }}>
           <IconButton size="small" onClick={close} disabled={isSubmitting}
             sx={{ position: "absolute", insetInlineEnd: 8, top: 8 }} aria-label="بستن">
             <CloseRoundedIcon fontSize="small" />
           </IconButton>
 
           <Stack spacing={2.5}>
-            <Stack spacing={1} alignItems="center" textAlign="center">
-              <Box sx={{ width: 52, height: 52, borderRadius: 3, display: "grid", placeItems: "center",
+            <Stack spacing={1.25} alignItems="center" textAlign="center">
+              <BrandLockup size={42} compact />
+              <Box sx={{ width: 36, height: 36, borderRadius: "50%", display: "grid", placeItems: "center",
                 bgcolor: "primary.50", border: "1px solid", borderColor: "primary.100" }}>
-                <LockRoundedIcon color="primary" />
+                <LockRoundedIcon color="primary" sx={{ fontSize: 18 }} />
               </Box>
               <Typography variant="h6" fontWeight={800}>
                 {isCodeStep ? "کد تأیید" : "ورود / ثبت‌نام"}

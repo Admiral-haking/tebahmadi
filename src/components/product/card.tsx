@@ -44,7 +44,7 @@ export type ProductCardProps = {
 };
 
 const CURRENCY_LABEL = "تومان";
-const FALLBACK_IMAGE = "/sample.jpg";
+const FALLBACK_IMAGE = "/product-placeholder.svg";
 const ACCENT = "var(--mui-palette-primary-main)";
 const LOW_STOCK_THRESHOLD = 5;
 const WISHLIST_KEY = "app:wishlist:v1";

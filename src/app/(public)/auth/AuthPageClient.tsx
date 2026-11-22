@@ -17,6 +17,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
 import { useAuth, useLogin } from "@/auth";
 import { OTP_LENGTH, OTP_PATTERN } from "@/auth/otp";
+import BrandLockup from "@/components/brand-lockup";
 
 // ─── OTP Input ───────────────────────────────────────────────────────────────
 // The whole block is locked to LTR: a verification code reads left-to-right even
@@ -282,11 +283,12 @@ export default function AuthPageClient() {
                     <Stack spacing={3}>
                         {/* Header */}
                         <Stack spacing={1.5} alignItems="center" textAlign="center">
+                            <BrandLockup size={48} compact />
                             <Box
                                 sx={{
-                                    width: 60,
-                                    height: 60,
-                                    borderRadius: 3.5,
+                                    width: 34,
+                                    height: 34,
+                                    borderRadius: "50%",
                                     display: "grid",
                                     placeItems: "center",
                                     color: "primary.main",
@@ -295,7 +297,7 @@ export default function AuthPageClient() {
                                     borderColor: "primary.100",
                                 }}
                             >
-                                {isCodeStep ? <SmsOutlinedIcon /> : <LockOutlinedIcon />}
+                                {isCodeStep ? <SmsOutlinedIcon sx={{ fontSize: 18 }} /> : <LockOutlinedIcon sx={{ fontSize: 18 }} />}
                             </Box>
                             <Typography variant="h5" component="h1" fontWeight={800} sx={{ letterSpacing: "-0.03em" }}>
                                 {isCodeStep ? "تایید شماره موبایل" : "ورود یا ثبت‌نام"}

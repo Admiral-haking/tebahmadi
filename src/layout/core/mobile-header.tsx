@@ -22,8 +22,8 @@ export default async function HeaderMobile({ title: _title }: { title: string })
         borderTop: 0,
       }}
     >
-      <Stack direction="row" alignItems="center" gap={1.25} sx={{ width: '100%', px: 2, py: 1.25 }}>
-        <Logo size={58} />
+      <Stack direction="row" alignItems="center" gap={1.25} sx={{ width: '100%', px: { xs: 1.5, sm: 2 }, py: 1.25, minWidth: 0 }}>
+        <Logo size={46} showName />
         <SearchBox onSearchUrl="/search" alwaysShowSearch boxSx={{ flex: 1, minWidth: 0 }} />
         <MegaMenuMobile categories={JSON.parse(JSON.stringify(categories as any))} />
       </Stack>

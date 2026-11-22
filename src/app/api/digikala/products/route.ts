@@ -141,7 +141,7 @@ async function buildLocalProductsFallback(vendorId: string, page: number, search
                     brand_title_en: "",
                     brand_title_fa: "",
                     product_url: productId ? `https://www.digikala.com/product/dkp-${productId}` : "",
-                    image_src: localImage ?? item.image_src ?? "/placeholder.jpg",
+                    image_src: localImage ?? item.image_src ?? "/product-placeholder.svg",
                     dimension_level: "",
                     brand_title: "",
                     moderation_status: {

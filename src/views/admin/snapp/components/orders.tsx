@@ -283,7 +283,7 @@ export default function SnappOrders({
                                 direction="row" gap={1} alignItems="center" sx={{ p: 1 }}>
                                 <Box
                                   component="img"
-                                  src={meta.imageId ? `/api/media/${meta.imageId}` : "/placeholder.jpg"}
+                                  src={meta.imageId ? `/api/media/${meta.imageId}` : "/product-placeholder.svg"}
                                   alt={meta.title}
                                   sx={{ width: 44, height: 44, borderRadius: 1, objectFit: "cover", flexShrink: 0, bgcolor: "background.default" }}
                                 />

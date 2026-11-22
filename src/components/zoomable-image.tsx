@@ -14,7 +14,7 @@ type Props = {
   style?: CSSProperties;
 };
 
-const FALLBACK = "/placeholder.jpg";
+const FALLBACK = "/product-placeholder.svg";
 
 /**
  * A thumbnail that magnifies on hover (desktop) or opens a full-screen modal on

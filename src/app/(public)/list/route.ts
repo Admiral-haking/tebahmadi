@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
 const DEFAULT_PAGE_SIZE = 50;
 const MIN_PAGE_SIZE = 1;
 const MAX_PAGE_SIZE = 500;
-const FALLBACK_IMAGE = '/sample.jpg';
+const FALLBACK_IMAGE = '/product-placeholder.svg';
 
 type LeanVariant = ProductDocument['variants'][number];
 

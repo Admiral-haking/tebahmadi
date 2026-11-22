@@ -205,7 +205,7 @@ function stringifyId(value: unknown) {
 
 function getLineImageSrc(line: InvoiceLine) {
   const mediaId = stringifyId(line.mediaId);
-  return mediaId ? `/api/media/${mediaId}` : '/placeholder.jpg';
+  return mediaId ? `/api/media/${mediaId}` : '/product-placeholder.svg';
 }
 
 const paymentMethodLabels: Record<string, string> = {

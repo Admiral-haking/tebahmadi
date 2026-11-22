@@ -14,8 +14,7 @@ import {
 
 import { useCart, type CartLine } from './useCart';
 
-const FALLBACK_IMAGE =
-  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2296%22 height=%2296%22 viewBox=%220 0 96 96%22%3E%3Crect width=%2296%22 height=%2296%22 rx=%2212%22 fill=%22%23f0f0f0%22/%3E%3Cpath d=%22M24 68h48a4 4 0 0 0 3.2-6.4l-16-21.333a4 4 0 0 0-6.4 0L36 60l-6.4-8.533a4 4 0 0 0-6.4 0L20 62a4 4 0 0 0 4 6Z%22 fill=%22%23d0d0d0%22/%3E%3Ccircle cx=%2236%22 cy=%2230%22 r=%228%22 fill=%22%23d0d0d0%22/%3E%3C/svg%3E';
+const FALLBACK_IMAGE = '/product-placeholder.svg';
 
 const formatToman = (value: number) =>
   `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.max(0, Math.floor(value)))} تومان`;

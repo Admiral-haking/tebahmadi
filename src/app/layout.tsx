@@ -81,18 +81,13 @@ export default async function RootLayout({
   const info = await loadSiteInfo();
   const baseUrl = ((await resolveSiteBaseUrl())?.toString() || "https://tebahmadi.ir").replace(/\/+$/, '');
 
-  const logoField = info?.logo;
-  const logoId = logoField
-    ? String(logoField.thumbId ?? logoField.mobileId ?? logoField.originalId ?? '')
-    : '';
-  const logoSrc = logoId ? `/api/media/${logoId}` : null;
   const appName = info?.appName ?? BRAND.name;
   const description = info?.description ?? BRAND.description;
 
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        <link rel="icon" href={logoSrc ?? '/tebahmadi-mark.svg'} />
+        <link rel="icon" href="/tebahmadi-mark.svg" />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
         {/* JSON-LD Structured Data for AI/SEO */}

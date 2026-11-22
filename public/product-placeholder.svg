@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-labelledby="title desc">
+  <title id="title">تصویر محصول طب احمدی</title>
+  <desc id="desc">نشان طب احمدی روی زمینهٔ کرم طبیعی</desc>
+  <rect width="800" height="800" rx="64" fill="#f4f3e8"/>
+  <circle cx="400" cy="350" r="180" fill="#e6e9d6"/>
+  <path d="M400 212c-54 50-94 106-94 178 0 73 40 129 94 178 54-49 94-105 94-178 0-72-40-128-94-178Z" fill="none" stroke="#6d7d45" stroke-width="14"/>
+  <path d="M400 286c-64 42-91 92-91 150 0 55 27 91 91 132 64-41 91-77 91-132 0-58-27-108-91-150Z" fill="#6d7d45" opacity=".9"/>
+  <path d="M400 316v205M400 410c-37-31-70-41-101-36M400 449c37-31 70-41 101-36" fill="none" stroke="#f7f5ed" stroke-width="12" stroke-linecap="round"/>
+  <text x="400" y="650" text-anchor="middle" fill="#3f4f2f" font-family="Arial, sans-serif" font-size="42" font-weight="700">طب احمدی</text>
+  <text x="400" y="700" text-anchor="middle" fill="#737968" font-family="Arial, sans-serif" font-size="22">تصویر محصول</text>
+</svg>

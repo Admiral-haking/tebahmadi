@@ -219,7 +219,7 @@ function buildInvoiceTrackerPayload(invoice: InvoiceDocument) {
       variantId: item.variantId,
       title: item.variantSummary || item.title || "xxx",
       quantity: item.qty ?? item.requestedQty ?? 0,
-      src: item.mediaId ? `/api/media/${item.mediaId}` : '/placeholder.jpg',
+      src: item.mediaId ? `/api/media/${item.mediaId}` : '/product-placeholder.svg',
       url: `/product/${item.productSlug}`,
       trackingCode,
       city: invoice.addressSnapshot?.city,

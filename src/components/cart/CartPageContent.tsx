@@ -49,7 +49,7 @@ type UpsellProductResponse = {
   products: UpsellProduct[];
 };
 
-const UPSELL_FALLBACK_IMAGE = "/sample.jpg";
+const UPSELL_FALLBACK_IMAGE = "/product-placeholder.svg";
 const PRICE_FORMATTER = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 });
 
 const formatPrice = (value: number) => `${PRICE_FORMATTER.format(Math.max(0, Math.floor(value)))} تومان`;

@@ -37,7 +37,7 @@ async function ProductGrid({ products }: { products: ProductCardProps[] }) {
         <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3 }}>
           <Link href={`/product/${item.slug}`} style={{ display: 'block', height: '100%', color: 'inherit' }}>
             <Box sx={{ height: '100%', overflow: 'hidden', border: '1px solid', borderColor: 'divider', borderRadius: { xs: 3, md: 4 }, bgcolor: 'background.paper', transition: 'transform .2s ease, box-shadow .2s ease', '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 14px 30px rgba(42,90,68,.12)' } }}>
-              <Box component="img" src={item.imageUrl ?? '/sample.jpg'} alt={item.title} loading={index < 2 ? 'eager' : 'lazy'} sx={{ display: 'block', width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', bgcolor: 'rgba(42,90,68,.06)' }} />
+              <Box component="img" src={item.imageUrl ?? '/product-placeholder.svg'} alt={item.title} loading={index < 2 ? 'eager' : 'lazy'} sx={{ display: 'block', width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', bgcolor: 'rgba(42,90,68,.06)' }} />
               <Box sx={{ p: { xs: 1.25, md: 1.75 } }}>
                 <Typography sx={{ fontWeight: 700, lineHeight: 1.7, minHeight: { xs: 44, md: 52 } }}>{item.title}</Typography>
                 <Typography color="primary.main" sx={{ mt: 1, fontWeight: 800 }}>{new Intl.NumberFormat('fa-IR').format(item.finalPrice)} تومان</Typography>

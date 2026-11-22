@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
+import OptimizedImage from "@/components/image";
 import {
     Box,
     Button,
@@ -29,10 +29,9 @@ import type {
     VariantAttributeDefinition,
 } from "../data";
 import Link from "next/link";
-import ImageZoom from "react-image-zooom";
 
 
-const FALLBACK_IMAGE = "/sample.jpg";
+const FALLBACK_IMAGE = "/product-placeholder.svg";
 const FORMATTER = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 });
 
 const formatPrice = (value: number) => `${FORMATTER.format(Math.max(0, Math.floor(value)))} تومان`;
@@ -868,21 +867,16 @@ export default function ProductDetailClient({
                             }}
                         >
 
-                            {
-                                isMobile ?
-                                    <Image
-                                        alt={product.title}
-                                        src={activeImage}
-                                        fill
-                                        objectFit="contain"
-                                    />
-                                    :
-                                    <ImageZoom
-                                        alt={product.title}
-                                        src={activeImage}
-                                        fullWidth
-                                    />
-                            }
+                            <OptimizedImage
+                                alt={product.title}
+                                src={activeImage}
+                                fallbackSrc={FALLBACK_IMAGE}
+                                fill
+                                priority
+                                transparentBackground
+                                style={{ objectFit: "contain", padding: isMobile ? "4%" : "2%" }}
+                                containerStyle={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
+                            />
                         </Box>
 
                         {thumbnails.length > 1 && (
@@ -906,11 +900,13 @@ export default function ProductDetailClient({
                                                 cursor: "pointer",
                                             }}
                                         >
-                                            <Image
+                                            <OptimizedImage
                                                 alt={`${product.title} thumbnail ${index + 1}`}
                                                 src={thumbSrc}
+                                                fallbackSrc={FALLBACK_IMAGE}
                                                 width={72}
                                                 height={72}
+                                                transparentBackground
                                                 style={{ objectFit: "cover" }}
                                             />
                                         </Box>
