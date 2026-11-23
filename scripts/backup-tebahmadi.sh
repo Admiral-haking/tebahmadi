@@ -69,7 +69,10 @@ gzip -t "$archive_path" || die 'mongodump archive failed gzip validation'
   printf 'application_commit=%s\n' "$(git -C "$APP_DIR" rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
   printf 'archive=mongodb.archive.gz\n'
 } > "$temporary_dir/metadata.txt"
-sha256sum "$archive_path" > "$temporary_dir/SHA256SUMS"
+(
+  cd "$temporary_dir"
+  sha256sum mongodb.archive.gz > SHA256SUMS
+)
 chmod 600 "$temporary_dir"/*
 
 mv -- "$temporary_dir" "$final_dir"
