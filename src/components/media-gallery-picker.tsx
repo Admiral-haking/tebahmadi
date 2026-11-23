@@ -13,7 +13,7 @@ type MediaItem = { id: string; filename: string; thumbId?: string; originalId?: 
 
 const faDate = (iso?: string) => {
   if (!iso) return "";
-  try { return new Intl.DateTimeFormat("fa-IR", { dateStyle: "short" }).format(new Date(iso)); } catch { return ""; }
+  try { return new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "short" }).format(new Date(iso)); } catch { return ""; }
 };
 
 /**

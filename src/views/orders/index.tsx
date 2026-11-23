@@ -97,7 +97,7 @@ interface Invoice {
 }
 
 const tomanFormatter = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 });
-const dateTimeFormatter = new Intl.DateTimeFormat('fa-IR', {
+const dateTimeFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
   dateStyle: 'medium',
   timeStyle: 'short',
 });

@@ -392,7 +392,7 @@ export default function ProductsDgk({ vendorId }: { vendorId: string }) {
           {lastUpdatedAt && (
             <Typography variant="caption" color="text.secondary">
               بروزرسانی:{" "}
-              {new Intl.DateTimeFormat("fa-IR", {
+              {new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",

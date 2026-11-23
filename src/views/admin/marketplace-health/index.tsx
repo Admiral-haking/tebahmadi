@@ -36,7 +36,7 @@ import useSWR from "swr";
 import type { MarketplaceHealthResponse, MarketplaceHealthItem } from "@/marketplace/health";
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
-const dateFormatter = new Intl.DateTimeFormat("fa-IR", {
+const dateFormatter = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
   dateStyle: "medium",
   timeStyle: "short",
 });

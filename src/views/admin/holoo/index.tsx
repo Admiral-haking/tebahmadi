@@ -245,7 +245,7 @@ function tomanAmount(toman: number): string {
 function faDate(iso: string | null): string {
     if (!iso) return "—";
     try {
-        return new Intl.DateTimeFormat("fa-IR", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
     } catch {
         return "—";
     }

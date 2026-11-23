@@ -90,7 +90,7 @@ export default function CategoriesTable({ categories }: CategoriesTableProps) {
                       </Stack>
                       {category.updatedAt && (
                         <Typography variant="caption" color="text.secondary">
-                          آخرین بروزرسانی: {new Date(category.updatedAt).toLocaleString("fa-IR")}
+                          آخرین بروزرسانی: {new Date(category.updatedAt).toLocaleString("fa-IR-u-ca-persian")}
                         </Typography>
                       )}
                     </Stack>

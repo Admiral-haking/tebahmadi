@@ -46,7 +46,7 @@ const percentFormatter = new Intl.NumberFormat("fa-IR", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 1
 });
-const dateFormatter = new Intl.DateTimeFormat("fa-IR", {
+const dateFormatter = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
     weekday: "long",
     month: "long",
     day: "numeric"

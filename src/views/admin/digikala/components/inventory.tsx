@@ -370,7 +370,7 @@ export default function Inventory({ vendorId }: { vendorId: string }) {
                 {lastUpdated && (
                     <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                         آخرین بروزرسانی:{" "}
-                        {new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(lastUpdated))}
+                        {new Intl.DateTimeFormat("fa-IR-u-ca-persian", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(lastUpdated))}
                         {autoRefresh && " · هر ۳۰ ثانیه"}
                     </Typography>
                 )}

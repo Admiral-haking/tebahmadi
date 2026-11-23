@@ -12,7 +12,7 @@ import {
 
 import type { BlogPostListItem } from "../data";
 
-const DATE_FORMATTER = new Intl.DateTimeFormat("fa-IR", {
+const DATE_FORMATTER = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
     dateStyle: "medium",
 });
 

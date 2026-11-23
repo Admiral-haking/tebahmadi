@@ -63,7 +63,7 @@ function formatDate(dateStr: string) {
     try {
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
-        return new Intl.DateTimeFormat("fa-IR", { year: "numeric", month: "short", day: "numeric" }).format(d);
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric", month: "short", day: "numeric" }).format(d);
     } catch {
         return dateStr;
     }

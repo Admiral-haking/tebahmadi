@@ -40,7 +40,7 @@ function formatDate(value?: string | null): string {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return "—";
-  return date.toLocaleString("fa-IR", {
+  return date.toLocaleString("fa-IR-u-ca-persian", {
     dateStyle: "medium",
     timeStyle: "short",
   });

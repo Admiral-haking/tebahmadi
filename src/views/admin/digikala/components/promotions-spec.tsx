@@ -17,7 +17,7 @@ import { PageJumper } from "@/components/search/pagination";
 
 function formatDate(iso: string) {
     try {
-        return new Intl.DateTimeFormat("fa-IR", { year: "numeric", month: "short", day: "numeric" }).format(new Date(iso));
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric", month: "short", day: "numeric" }).format(new Date(iso));
     } catch { return iso; }
 }
 

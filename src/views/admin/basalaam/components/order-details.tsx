@@ -75,7 +75,7 @@ export function BslOrderDetails({ order_id, vendorId, items, refresh }: { order_
     const transportOptions = Object.values(BSL_TRANSPORTS).filter((value): value is BSL_TRANSPORTS => typeof value === "number");
 
     const formatPrice = (value?: number) => typeof value === "number" ? `${(value / 10).toLocaleString()} تومان` : "-";
-    const formatDate = (value?: string) => value ? new Date(value).toLocaleString("fa-IR") : "-";
+    const formatDate = (value?: string) => value ? new Date(value).toLocaleString("fa-IR-u-ca-persian") : "-";
 
     return <Box>
 

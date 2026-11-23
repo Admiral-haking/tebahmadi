@@ -173,7 +173,7 @@ function gatewayLabel(method?: string): string {
 
 function faDateTime(d: Date): string {
     try {
-        return new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(d);
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "medium", timeStyle: "short" }).format(d);
     } catch {
         return d.toISOString().slice(0, 16);
     }

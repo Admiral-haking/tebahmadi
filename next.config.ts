@@ -8,8 +8,9 @@ const nextConfig: NextConfig = {
         root: process.cwd(),
     },
 
+    // Keep production builds honest: type errors must fail the build.
     typescript: {
-        ignoreBuildErrors: true,
+        ignoreBuildErrors: false,
     },
 
     // Enable compression (built-in)
@@ -23,6 +24,9 @@ const nextConfig: NextConfig = {
         minimumCacheTTL: 604800, // 7 days
         dangerouslyAllowSVG: false,
         contentDispositionType: 'attachment',
+        // Media thumbnails use query parameters such as ?type=thumb/original.
+        // Declaring the local path keeps the app compatible with Next.js 16.
+        localPatterns: [{ pathname: '/api/media/**' }],
     },
 
     // Production optimizations

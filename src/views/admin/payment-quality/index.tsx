@@ -42,7 +42,7 @@ type ApiResponse = { data: PaymentQualityResponse };
 type EligibilityResponse = { data: SnappPayEligibilityCheckResult };
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
-const dateFormatter = new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" });
+const dateFormatter = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "medium", timeStyle: "short" });
 
 const statusMeta = {
   healthy: { label: "سالم", colorKey: "success", icon: CheckCircleRounded },

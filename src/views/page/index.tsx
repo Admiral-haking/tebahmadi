@@ -10,11 +10,11 @@ type PageViewProps = {
   jsonLd?: unknown;
 };
 
-const DATE_FORMATTER = new Intl.DateTimeFormat("fa-IR", {
+const DATE_FORMATTER = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
   dateStyle: "long",
 });
 
-const TIME_FORMATTER = new Intl.DateTimeFormat("fa-IR", {
+const TIME_FORMATTER = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
   dateStyle: "long",
   timeStyle: "short",
 });

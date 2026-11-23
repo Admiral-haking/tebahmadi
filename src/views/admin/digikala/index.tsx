@@ -18,7 +18,7 @@ type Vendor = {
     expires: string;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("fa-IR", {
+const dateFormatter = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
     dateStyle: "medium",
     timeStyle: "short",
 });

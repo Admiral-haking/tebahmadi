@@ -81,7 +81,7 @@ function formatDate(value: string): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? 'نامشخص'
-    : new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    : new Intl.DateTimeFormat('fa-IR-u-ca-persian', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
 export default function SupportPageClient({ config }: { config: SupportPageConfig }) {

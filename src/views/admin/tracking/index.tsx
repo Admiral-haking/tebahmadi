@@ -46,7 +46,7 @@ import { blue, green, orange, pink, purple, red } from "@mui/material/colors";
 import { PATCH } from "@/utils/fetch";
 import { buildShippingCopyText } from "@/orders/utils/shippingText";
 
-const dateFormatter = new Intl.DateTimeFormat("fa-IR", {
+const dateFormatter = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
   dateStyle: "medium",
   timeStyle: "short",
 });

@@ -22,7 +22,7 @@ type OrderItem = IDgkOrderResponse["data"]["items"][number];
 
 function formatDate(iso: string) {
     try {
-        return new Intl.DateTimeFormat("fa-IR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
     } catch { return iso; }
 }
 
@@ -379,7 +379,7 @@ export default function ActiveOrders({
                                 </TableCell>
                                 <TableCell align="center">
                                     {item.commitment_date ? (
-                                        <Tooltip title={new Date(item.commitment_date).toLocaleString("fa-IR")}>
+                                        <Tooltip title={new Date(item.commitment_date).toLocaleString("fa-IR-u-ca-persian")}>
                                             <Chip
                                                 size="small"
                                                 label={formatDate(item.commitment_date)}

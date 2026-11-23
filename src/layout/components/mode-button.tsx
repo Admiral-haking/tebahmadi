@@ -12,7 +12,10 @@ export default function ModeButton() {
         document.cookie = `mui-mode=${mode}; path=/; max-age=31536000; SameSite=Lax`;
     }, [mode]);
 
-    return <IconButton onClick={() => setMode(mode === 'dark' ? "light" : "dark")}>
+    return <IconButton
+        aria-label={mode === 'dark' ? "فعال‌کردن حالت روشن" : "فعال‌کردن حالت تاریک"}
+        onClick={() => setMode(mode === 'dark' ? "light" : "dark")}
+    >
         {
             mode === "dark" ?
                 <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">

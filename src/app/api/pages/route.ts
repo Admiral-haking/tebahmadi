@@ -47,7 +47,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const DATE_FORMAT = new Intl.DateTimeFormat('fa-IR', {
+const DATE_FORMAT = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
   dateStyle: 'medium',
   timeStyle: 'short',
 });

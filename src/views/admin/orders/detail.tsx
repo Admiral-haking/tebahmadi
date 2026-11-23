@@ -65,12 +65,12 @@ import {
   updateSnappPayInvoiceAction,
 } from '@/app/admin/orders/[id]/actions';
 
-const dateFormatter = new Intl.DateTimeFormat('fa-IR', {
+const dateFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
   dateStyle: 'full',
   timeStyle: 'short',
 });
 
-const receiptDateFormatter = new Intl.DateTimeFormat('fa-IR', {
+const receiptDateFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
   dateStyle: 'medium',
   timeStyle: 'short',
 });

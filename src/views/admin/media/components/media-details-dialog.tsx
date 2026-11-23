@@ -47,7 +47,7 @@ function formatDateTime(input?: string): string | undefined {
   if (Number.isNaN(date.getTime())) {
     return undefined;
   }
-  return new Intl.DateTimeFormat('fa-IR', {
+  return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date);

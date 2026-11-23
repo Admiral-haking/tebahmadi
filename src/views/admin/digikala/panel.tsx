@@ -208,7 +208,7 @@ function SyncControls({ vendorId, onSyncDone }: { vendorId: string; onSyncDone: 
         <Stack direction="row" gap={1} alignItems="center">
             {lastSync && (
                 <Typography variant="caption" color="text.disabled">
-                    {new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit" }).format(lastSync)}
+                    {new Intl.DateTimeFormat("fa-IR-u-ca-persian", { hour: "2-digit", minute: "2-digit" }).format(lastSync)}
                 </Typography>
             )}
             <Tooltip title="همگام‌سازی سفارشات از دیجی‌کالا">

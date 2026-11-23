@@ -19,7 +19,7 @@ import {
 } from '@/orders/constants/progress';
 import { PROGRESS_LABELS, STATUS_LABELS, type InvoiceStatus } from '../constants';
 
-const stepDateFormatter = new Intl.DateTimeFormat('fa-IR', {
+const stepDateFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
   dateStyle: 'medium',
   timeStyle: 'short',
 });

@@ -13,8 +13,8 @@ import BlogPostCard from "./components/post-card";
 import { loadBlogPost, type BlogPostListItem } from "./data";
 import { resolveSiteBaseUrl, toAbsoluteUrl } from "@/seo/utils/url";
 
-const DATE_FORMATTER = new Intl.DateTimeFormat("fa-IR", { dateStyle: "long" });
-const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("fa-IR", { dateStyle: "long", timeStyle: "short" });
+const DATE_FORMATTER = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "long" });
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "long", timeStyle: "short" });
 
 function formatDate(value: string | null, withTime = false): string | null {
     if (!value) return null;

@@ -48,7 +48,7 @@ type ApiResponse = {
   error?: unknown;
 };
 
-const DATE_FORMATTER = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE_FORMATTER = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { dateStyle: 'medium', timeStyle: 'short' });
 
 const fetcher = (url: string) =>
   fetch(url, { credentials: 'include' }).then(async (res) => {

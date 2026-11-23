@@ -92,10 +92,10 @@ export default function OffersTable({ items }: OffersTableProps) {
                 <TableCell>
                   <Stack spacing={0.5}>
                     <Typography variant="body2">
-                      از: {item.startsAt ? new Date(item.startsAt).toLocaleDateString('fa-IR') : '---'}
+                      از: {item.startsAt ? new Date(item.startsAt).toLocaleDateString('fa-IR-u-ca-persian') : '---'}
                     </Typography>
                     <Typography variant="body2">
-                      تا: {item.endsAt ? new Date(item.endsAt).toLocaleDateString('fa-IR') : '---'}
+                      تا: {item.endsAt ? new Date(item.endsAt).toLocaleDateString('fa-IR-u-ca-persian') : '---'}
                     </Typography>
                   </Stack>
                 </TableCell>

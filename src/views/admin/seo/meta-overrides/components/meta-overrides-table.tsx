@@ -82,7 +82,7 @@ export default function MetaOverridesTable({ items }: MetaOverridesTableProps) {
                 </TableCell>
                 <TableCell align="right" width="15%">
                   <Typography variant="body2" color="text.secondary">
-                    {item.updatedAt ? new Date(item.updatedAt).toLocaleString('fa-IR') : '-'}
+                    {item.updatedAt ? new Date(item.updatedAt).toLocaleString('fa-IR-u-ca-persian') : '-'}
                   </Typography>
                 </TableCell>
                 <TableCell align="right" width="15%">

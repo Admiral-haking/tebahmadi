@@ -49,7 +49,7 @@ type SupportResponse = {
   stats: { total: number; open: number; inProgress: number; waitingForCustomer: number; resolved: number; closed: number };
 };
 
-const dateFormatter = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' });
+const dateFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { dateStyle: 'medium', timeStyle: 'short' });
 
 async function fetcher(url: string): Promise<SupportResponse> {
   const response = await fetch(url, { credentials: 'include' });

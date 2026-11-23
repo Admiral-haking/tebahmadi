@@ -36,7 +36,7 @@ export function formatPersianDate(iso?: string | null): string | null {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return null;
     try {
-        return new Intl.DateTimeFormat("fa-IR", {
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
             year: "numeric",
             month: "long",
             day: "numeric",

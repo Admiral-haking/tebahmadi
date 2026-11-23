@@ -106,7 +106,7 @@ export default function BarcodeFinder() {
 
 
     return <>
-        <IconButton onClick={() => setOpen(true)}>
+        <IconButton aria-label="باز کردن بارکدخوان" onClick={() => setOpen(true)}>
             <BarcodeReader />
         </IconButton>
         <Dialog
@@ -153,11 +153,13 @@ export default function BarcodeFinder() {
 
                         <Box flex="1 1 auto" />
                         <IconButton
+                            aria-label={`کپی کد ${item.name}`}
                             disabled={loading}
                             onClick={() => void copyNextBarcode(item)}>
                             <ContentCopyRounded />
                         </IconButton>
                         <IconButton
+                            aria-label={`حذف پیشوند ${item.name}`}
                             disabled={loading}
                             onClick={() => {
                                 setLoading(true);

@@ -84,7 +84,7 @@ type ErrorLogsResponse = {
 };
 
 const numberFormatter = new Intl.NumberFormat("fa-IR");
-const dateFormatter = new Intl.DateTimeFormat("fa-IR", {
+const dateFormatter = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
   dateStyle: "medium",
   timeStyle: "short",
 });
@@ -187,7 +187,7 @@ function StatCard({ title, value, colorKey, icon }: { title: string; value: numb
 /** Tiny dependency-free 7-day bar chart: total logs (grey) + errors (red) per day. */
 function WeeklyTrendChart({ daily }: { daily: Array<{ date: string; total: number; error: number }> }) {
   const max = Math.max(1, ...daily.map((d) => d.total));
-  const dayFmt = new Intl.DateTimeFormat("fa-IR", { weekday: "short" });
+  const dayFmt = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { weekday: "short" });
 
   return (
     <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: 1, borderColor: "divider" }}>

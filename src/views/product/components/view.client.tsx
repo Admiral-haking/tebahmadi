@@ -37,7 +37,7 @@ const FORMATTER = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 });
 const formatPrice = (value: number) => `${FORMATTER.format(Math.max(0, Math.floor(value)))} تومان`;
 const QUANTITY_FORMATTER = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 2, minimumFractionDigits: 0 });
 const formatQuantity = (value: number) => QUANTITY_FORMATTER.format(value);
-const REVIEW_DATE_FORMATTER = new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" });
+const REVIEW_DATE_FORMATTER = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "medium" });
 
 type AttributeSelection = Record<string, string | undefined>;
 

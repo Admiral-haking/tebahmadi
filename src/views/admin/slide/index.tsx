@@ -81,7 +81,7 @@ function formatDate(value?: string): string {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return '—';
-  return new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  return new Intl.DateTimeFormat('fa-IR-u-ca-persian', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
 function renderPreview(mediaId?: string) {

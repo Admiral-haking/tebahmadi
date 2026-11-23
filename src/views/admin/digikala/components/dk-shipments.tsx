@@ -52,7 +52,7 @@ const STATUS_LABEL: Record<string, { label: string; color: "default" | "info" | 
 function formatDate(iso?: string) {
     if (!iso) return "—";
     try {
-        return new Intl.DateTimeFormat("fa-IR", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
     } catch { return iso; }
 }
 
