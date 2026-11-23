@@ -132,6 +132,9 @@ function toStringId(value: unknown): string | undefined {
 const PRODUCT_FACT_LABELS: Record<string, string> = {
     ingredients: 'ترکیبات',
     usage: 'روش مصرف',
+    applicationArea: 'ناحیه مصرف',
+    claimedDurationHours: 'ماندگاری اعلامی (ساعت)',
+    skinNote: 'راهنمای سازگاری با پوست',
     brewing: 'روش دم‌آوری',
     origin: 'خاستگاه',
     source: 'منبع محصول',
