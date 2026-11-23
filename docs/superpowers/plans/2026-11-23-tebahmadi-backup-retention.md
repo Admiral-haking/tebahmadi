@@ -35,8 +35,8 @@
 - Consumes: `MONGO_URI`, `MONGO_DB`, `BACKUP_ROOT`, `RETENTION_HOURS`.
 - Produces: `<timestamp>/mongodb.archive.gz`, `<timestamp>/SHA256SUMS`, `<timestamp>/metadata.txt`.
 
-- [ ] Implement strict mode, umask, command checks, lock acquisition, atomic temporary directory, scoped `mongodump`, checksum/metadata, and 48-hour pruning.
-- [ ] Validate shell syntax and run a controlled live backup on the server.
+- [x] Implement strict mode, umask, command checks, lock acquisition, atomic temporary directory, scoped `mongodump`, checksum/metadata, and 48-hour pruning.
+- [x] Validate shell syntax and run a controlled live backup on the server.
 
 ### Task 2: systemd scheduling
 
@@ -48,14 +48,14 @@
 - Consumes: the runner from Task 1 and `/home/ali/tebahmadi/.env.local`.
 - Produces: a daily systemd timer with `Persistent=true`.
 
-- [ ] Define a least-privilege oneshot service with `/var/backups/tebahmadi` as the only write path.
-- [ ] Define a daily UTC timer with a bounded randomized delay.
+- [x] Define a least-privilege oneshot service with `/var/backups/tebahmadi` as the only write path.
+- [x] Define a daily UTC timer with a bounded randomized delay.
 
 ### Task 3: Operational verification and handoff
 
 **Files:**
 - Modify: `README.md` with installation, manual run, verification, restore, and retention notes.
 
-- [ ] Run `bash -n`, install the units, enable the timer, and run the service once manually.
-- [ ] Verify checksum, backup contents, timer status, PM2 health, and public health endpoint.
-- [ ] Preserve the server backup branch and record the exact rollback/restore commands.
+- [x] Run `bash -n`, install the units, enable the timer, and run the service once manually.
+- [x] Verify checksum, backup contents, timer status, PM2 health, and public health endpoint.
+- [x] Preserve the server backup branch and record the exact rollback/restore commands.
