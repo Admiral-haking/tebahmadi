@@ -327,7 +327,9 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
         }))
         .filter((category) => category.id && category.name);
 
-    const activeVariants = (product.variants ?? []).filter((variant) => variant?.active !== false);
+    const activeVariants = (product.variants ?? []).filter(
+        (variant) => variant?.active !== false && Boolean(toStringId((variant as { _id?: unknown })._id)),
+    );
 
     const mediaIds = new Set<string>();
     activeVariants.forEach((variant) => {
@@ -363,7 +365,7 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
     const now = new Date();
 
     const variants: ProductVariantDetail[] = activeVariants.map((variant) => {
-        const variantId = toStringId((variant as { _id?: unknown })._id) ?? variant.sku ?? Math.random().toString(36).slice(2);
+        const variantId = toStringId((variant as { _id?: unknown })._id)!;
         const priceModel = variant.price?.model === "per_unit" ? "per_unit" : "fixed";
         const unitPrice = Number(variant.price?.amount ?? 0);
         const finalPrice = effectiveUnitPrice(variant as ProductDocument['variants'][number], now);

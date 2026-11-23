@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import CartPageContent from "@/components/cart/CartPageContent";
+import BuyLinkHandler from "@/components/cart/BuyLinkHandler";
 import { generatePageMetadata } from "@/seo/services/metadataGenerator";
-import { requireAuthenticatedUser } from "@/lib/require-auth";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-    await requireAuthenticatedUser("/cart");
     return <>
+        <BuyLinkHandler />
         <CartPageContent />
     </>
 }

@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { Types } from 'mongoose';
 
 import { AUTH_COOKIE_NAME, verifyJwt } from '@/lib/auth';
 import { connectMongoose } from '@/lib/mongoose';
@@ -53,6 +54,11 @@ const cartAddressSchema = z.object({
 });
 
 const shippingPaymentSchema = z.enum(['online', 'on_delivery']);
+const attributionSchema = z.object({
+  campaign: z.string().trim().max(160).optional(),
+  source: z.string().trim().max(120).optional(),
+  medium: z.string().trim().max(120).optional(),
+});
 
 const cartStateSchema = z.object({
   lines: z.array(cartLineSchema),
@@ -61,6 +67,7 @@ const cartStateSchema = z.object({
   transportId: z.string().nullable().optional(),
   address: cartAddressSchema.nullable().optional(),
   shippingPaymentMethod: shippingPaymentSchema.default('online'),
+  attribution: attributionSchema.optional(),
 });
 
 type CartStateInput = z.infer<typeof cartStateSchema>;
@@ -378,7 +385,7 @@ export async function loadCartAvailabilityAction(variantIds: string[]): Promise<
 export async function reconcileCartAvailabilityAction(
   variantIds: string[],
 ): Promise<{ ok: boolean; unavailableVariantIds: string[] }> {
-  const ids = normalizeCartVariantIds(variantIds);
+  const ids = normalizeCartVariantIds(variantIds).filter((id) => Types.ObjectId.isValid(id));
   if (ids.length === 0) return { ok: true, unavailableVariantIds: [] };
   try {
     await connectMongoose();
@@ -476,6 +483,7 @@ export async function priceCartAction(rawState: CartStateInput): Promise<PriceCa
     address: normalizeAddress(parsed.address)!,
     offerCode: parsed.offerCode?.trim() ? parsed.offerCode.trim().toUpperCase() : undefined,
     shippingPaymentMethod: parsed.shippingPaymentMethod,
+    attribution: parsed.attribution,
   };
 
   try {
@@ -597,6 +605,7 @@ export async function checkoutAndPayAction(
     shippingPaymentMethod: parsed.shippingPaymentMethod,
     checkoutAttemptKey: checkoutAttemptKey?.trim() || undefined,
     paymentMethod: gateway,
+    attribution: parsed.attribution,
   };
 
   try {

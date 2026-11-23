@@ -1,5 +1,7 @@
 export const CHECKOUT_ATTEMPT_KEY_MAX_LENGTH = 128;
 export const CHECKOUT_ATTEMPT_STORAGE_KEY = 'tebahmadi.checkout.attempt-key';
+export const CHECKOUT_STEP_STORAGE_KEY = 'tebahmadi.checkout.active-step';
+export const CHECKOUT_GATEWAY_STORAGE_KEY = 'tebahmadi.checkout.gateway';
 
 export function normalizeCheckoutAttemptKey(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -17,6 +19,14 @@ export function createCheckoutAttemptKey(input?: { now?: number; random?: string
 
 export function shouldReuseCheckoutAttempt(value: unknown): boolean {
   return normalizeCheckoutAttemptKey(value) !== null;
+}
+
+export function clearCheckoutSession(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+  window.sessionStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+  window.sessionStorage.removeItem(CHECKOUT_STEP_STORAGE_KEY);
+  window.sessionStorage.removeItem(CHECKOUT_GATEWAY_STORAGE_KEY);
 }
 
 export function getOrCreateCheckoutAttemptKey(

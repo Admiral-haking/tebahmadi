@@ -17,6 +17,7 @@ import { useCart } from './useCart';
 import { useLoginDialog } from '@/auth';
 import {
   CHECKOUT_ATTEMPT_STORAGE_KEY,
+  CHECKOUT_GATEWAY_STORAGE_KEY,
   getOrCreateCheckoutAttemptKey,
 } from './checkout-session';
 
@@ -67,8 +68,32 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
   const [availableGateways, setAvailableGateways] = useState<PaymentGateway[]>([]);
   const [paymentGatewaysLoading, setPaymentGatewaysLoading] = useState(true);
   const redirectTimerRef = useRef<number | null>(null);
+  const gatewayRestoredRef = useRef(false);
+  const gatewayPersistenceInitializedRef = useRef(false);
 
   const [snappPayEligibility, setSnappPayEligibility] = useState<SnappPayEligibilityResult | null>(null);
+
+  useEffect(() => {
+    if (gatewayRestoredRef.current || typeof window === 'undefined') return;
+    gatewayRestoredRef.current = true;
+    const storedGateway = window.sessionStorage.getItem(CHECKOUT_GATEWAY_STORAGE_KEY);
+    if (storedGateway) {
+      setSelectedGateway(storedGateway as PaymentGateway);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!gatewayRestoredRef.current || typeof window === 'undefined') return;
+    if (!gatewayPersistenceInitializedRef.current) {
+      gatewayPersistenceInitializedRef.current = true;
+      return;
+    }
+    if (selectedGateway) {
+      window.sessionStorage.setItem(CHECKOUT_GATEWAY_STORAGE_KEY, selectedGateway);
+    } else {
+      window.sessionStorage.removeItem(CHECKOUT_GATEWAY_STORAGE_KEY);
+    }
+  }, [selectedGateway]);
 
   useEffect(() => {
     let cancelled = false;

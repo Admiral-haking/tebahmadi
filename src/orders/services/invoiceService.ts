@@ -53,6 +53,7 @@ export interface AddressInput {
 }
 
 export type ShippingPaymentMethod = 'online' | 'on_delivery';
+export type CampaignAttribution = { campaign?: string; source?: string; medium?: string };
 
 export interface InvoicePricingInput {
   userId?: string;
@@ -65,6 +66,7 @@ export interface InvoicePricingInput {
   torobClid?: string;
   checkoutAttemptKey?: string;
   paymentMethod?: string;
+  attribution?: CampaignAttribution;
 }
 
 interface InvoiceLineSnapshot {
@@ -123,6 +125,7 @@ type InvoiceCreatePayload = {
     offerSnapshot?: OfferSnapshot;
   };
   torobClid?: string;
+  attribution?: CampaignAttribution;
 };
 
 interface PricingComputation {
@@ -1172,6 +1175,7 @@ async function executeInvoiceCreation(
     paymentMethod: input.paymentMethod?.trim() || 'zarinpal',
     paymentMethodData: undefined,
     torobClid: input.torobClid || undefined,
+    attribution: input.attribution,
     pricingContext: {
       productTypeVersions: pricing.productTypeVersions,
       transportRowLabel: pricing.shipping.rowLabel,

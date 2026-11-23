@@ -14,7 +14,8 @@
     "digikala:fetch": "node scripts/fetch-dgk.js",
     "digikala:import": "node scripts/import-from-digikala.js",
     "digikala:sync-daily": "node scripts/sync-dgk-daily.js",
-    "catalog:seed:local": "node scripts/seed-natural-catalog.mjs"
+    "catalog:seed:local": "node scripts/seed-natural-catalog.mjs",
+    "catalog:backfill-variant-ids": "node scripts/backfill-variant-ids.mjs"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

@@ -97,6 +97,13 @@ for (const item of sampleProducts) {
   const type = typeIds.get(item.type);
   const categoryId = categoryIds.get(item.category);
   const now = new Date();
+  const sku = `TA-${item.slug.toUpperCase()}`;
+  const existingProduct = await products.findOne(
+    { slug: item.slug },
+    { projection: { variants: 1 } },
+  );
+  const existingVariant = existingProduct?.variants?.find((variant) => variant?.sku === sku);
+  const variantId = existingVariant?._id ?? new mongoose.Types.ObjectId();
   await products.updateOne(
     { slug: item.slug },
     { $set: {
@@ -105,7 +112,7 @@ for (const item of sampleProducts) {
       attributeValues: [{ key: 'weightGrams', value: item.weight }], attrs: { ...item.attrs, weightGrams: item.weight },
       categories: categoryId ? [categoryId] : [], searchableText: `${item.title} ${Object.values(item.attrs).join(' ')}`,
       status: 'active', showInCart: true, seoTitle: `${item.title} | طب احمدی`, seoDescription: `خرید ${item.title} از فروشگاه طب احمدی.`,
-      variants: [{ sku: `TA-${item.slug.toUpperCase()}`, attributeValues: [{ key: 'weightGrams', value: item.weight }], price: { model: 'fixed', amount: item.price, unitOfMeasure: 'unit' }, inventory: { trackingUnit: 'unit', quantity: 25, lowStockThreshold: 5 }, active: true, updatedAt: now, createdAt: now }], updatedAt: now,
+      variants: [{ _id: variantId, sku, attributeValues: [{ key: 'weightGrams', value: item.weight }], price: { model: 'fixed', amount: item.price, unitOfMeasure: 'unit' }, inventory: { trackingUnit: 'unit', quantity: 25, lowStockThreshold: 5 }, active: true, updatedAt: now, createdAt: now }], updatedAt: now,
     }, $setOnInsert: { createdAt: now } },
     { upsert: true },
   );

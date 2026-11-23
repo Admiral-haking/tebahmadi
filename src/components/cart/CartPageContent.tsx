@@ -28,13 +28,16 @@ import OfferInput from "./OfferInput";
 import CarrierSelect from "./CarrierSelect";
 import AddressForm from "./AddressForm";
 import CartSummary from "./CartSummary";
+import CartPaymentContext from "./CartPaymentContext";
 import SavedCartLines from "./SavedCartLines";
 import { useCartAvailability } from "./useCartAvailability";
 import { usePaymentCleanup } from "./usePaymentCleanup";
+import { CHECKOUT_STEP_STORAGE_KEY } from "./checkout-session";
 import { EmptyState } from "@/components/ui";
 import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
+import { logCartRecommendationEvents } from "./cart-suggestions.api";
 
-type UpsellProduct = {
+export type UpsellProduct = {
   id: string;
   slug: string;
   title: string;
@@ -43,6 +46,7 @@ type UpsellProduct = {
   discountPercent?: number;
   inStock: boolean;
   imageUrl?: string;
+  algo?: "copurchase" | "category" | "curated" | "explicit_bundle";
   line: CartLine;
 };
 
@@ -78,7 +82,7 @@ const collectVariantIdentityKeys = (variant: Record<string, unknown>): string[] 
 
 export default function CartPageContent() {
   usePaymentCleanup();
-  const { lines, savedLines, clear, addFixedLine, addPerUnitLine, syncLineConstraints } = useCart();
+  const { state, lines, savedLines, clear, addFixedLine, addPerUnitLine, syncLineConstraints } = useCart();
   const [upsellProducts, setUpsellProducts] = React.useState<UpsellProduct[]>([]);
   const [isUpsellLoading, setIsUpsellLoading] = React.useState(false);
   const carouselRef = React.useRef<HTMLDivElement | null>(null);
@@ -89,6 +93,7 @@ export default function CartPageContent() {
   const [recentlyAddedId, setRecentlyAddedId] = React.useState<string | null>(null);
   const variantConstraintsCache = React.useRef<Map<string, VariantConstraint | null>>(new Map());
   const productConstraintsInFlight = React.useRef<Set<string>>(new Set());
+  const loggedImpressionIds = React.useRef<Set<string>>(new Set());
 
   const updateCarouselControls = React.useCallback(() => {
     const container = carouselRef.current;
@@ -105,18 +110,27 @@ export default function CartPageContent() {
     });
   }, []);
 
+  const cartProductIdsKey = React.useMemo(
+    () => Array.from(new Set(lines.map((line) => line.productId).filter(Boolean))).sort().join(','),
+    [lines],
+  );
+
   React.useEffect(() => {
     let active = true;
     setIsUpsellLoading(true);
-    fetch("/api/cart/suggestions?limit=20", { cache: "no-store" })
+    const cartParam = cartProductIdsKey ? `&cart=${encodeURIComponent(cartProductIdsKey)}` : "";
+    fetch(`/api/cart/suggestions?limit=20${cartParam}`, { cache: "no-store" })
       .then((res) => {
+        if (res.status === 401 || res.status === 403) {
+          return null;
+        }
         if (!res.ok) {
           throw new Error(`Failed to load cart suggestions: ${res.status}`);
         }
         return res.json();
       })
-      .then((data: UpsellProductResponse) => {
-        if (!active) return;
+      .then((data: UpsellProductResponse | null) => {
+        if (!active || !data) return;
         const items = Array.isArray(data?.products)
           ? data.products.filter(
             (product): product is UpsellProduct =>
@@ -124,6 +138,16 @@ export default function CartPageContent() {
           )
           : [];
         setUpsellProducts(items);
+        const freshImpressions = items.filter((item) => !loggedImpressionIds.current.has(item.id));
+        freshImpressions.forEach((item) => loggedImpressionIds.current.add(item.id));
+        void logCartRecommendationEvents(
+          freshImpressions.map((item) => ({
+            event: "impression" as const,
+            algo: item.algo ?? "curated",
+            productId: item.id,
+          })),
+          cartProductIdsKey,
+        ).catch(() => undefined);
         requestAnimationFrame(() => updateCarouselControls());
       })
       .catch((error) => {
@@ -142,7 +166,7 @@ export default function CartPageContent() {
     return () => {
       active = false;
     };
-  }, [updateCarouselControls]);
+  }, [cartProductIdsKey, updateCarouselControls]);
 
   React.useEffect(() => {
     const container = carouselRef.current;
@@ -297,13 +321,20 @@ export default function CartPageContent() {
       } else {
         addFixedLine(product.line, 1);
       }
+      void logCartRecommendationEvents(
+        [
+          { event: "click", algo: product.algo ?? "curated", productId: product.id },
+          { event: "add", algo: product.algo ?? "curated", productId: product.id },
+        ],
+        cartProductIdsKey,
+      ).catch(() => undefined);
       setRecentlyAddedId(product.line.variantId);
       if (recentlyAddedTimer.current) {
         window.clearTimeout(recentlyAddedTimer.current);
       }
       recentlyAddedTimer.current = window.setTimeout(() => setRecentlyAddedId(null), 1500);
     },
-    [addFixedLine, addPerUnitLine],
+    [addFixedLine, addPerUnitLine, cartProductIdsKey],
   );
 
   const scrollCarousel = React.useCallback((direction: number) => {
@@ -313,14 +344,71 @@ export default function CartPageContent() {
     container.scrollBy({ left: distance * direction, behavior: "smooth" });
   }, []);
 
-  const steps = ["سبد خرید", "آدرس و ارسال"];
+  const steps = ["سبد خرید", "آدرس و ارسال", "پرداخت"];
   const [activeStep, setActiveStep] = React.useState(0);
+  const [stepMessage, setStepMessage] = React.useState<string | null>(null);
 
-  const handleNext = () => setActiveStep((s) => Math.min(s + 1, steps.length - 1));
-  const handleBack = () => setActiveStep((s) => Math.max(s - 1, 0));
+  const hasAddressForCheckout = Boolean(
+    state.address?.fname?.trim() &&
+    state.address?.lname?.trim() &&
+    state.address?.phone?.trim(),
+  );
+
+  const addressSummary = React.useMemo(
+    () =>
+      [state.address?.state, state.address?.city, state.address?.address]
+        .filter((value): value is string => Boolean(value?.trim()))
+        .join("، "),
+    [state.address],
+  );
+  const shippingSummary = state.transportId
+    ? state.shippingPaymentMethod === "on_delivery"
+      ? "روش ارسال انتخاب شده؛ هزینهٔ ارسال هنگام تحویل پرداخت می‌شود."
+      : "روش ارسال انتخاب شده؛ هزینهٔ ارسال در همین سایت پرداخت می‌شود."
+    : "روش ارسال انتخاب نشده است.";
+
+  React.useEffect(() => {
+    const storedStep = Number(window.sessionStorage.getItem(CHECKOUT_STEP_STORAGE_KEY));
+    if (storedStep >= 2 && lines.length > 0 && hasAddressForCheckout && state.transportId) {
+      setActiveStep(2);
+    } else if (storedStep >= 1 && lines.length > 0) {
+      setActiveStep(1);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!lines.length) {
+      window.sessionStorage.removeItem(CHECKOUT_STEP_STORAGE_KEY);
+      if (activeStep !== 0) setActiveStep(0);
+      return;
+    }
+    window.sessionStorage.setItem(CHECKOUT_STEP_STORAGE_KEY, String(activeStep));
+  }, [activeStep, lines.length]);
+
+  const handleNext = () => {
+    if (!lines.length) {
+      setStepMessage("برای ادامه، حداقل یک کالا در سبد لازم است.");
+      return;
+    }
+    if (activeStep === 1 && !hasAddressForCheckout) {
+      setStepMessage("لطفاً نام، نام خانوادگی و شماره تماس گیرنده را کامل کنید.");
+      return;
+    }
+    if (activeStep === 1 && !state.transportId) {
+      setStepMessage("لطفاً روش ارسال را انتخاب کنید.");
+      return;
+    }
+    setStepMessage(null);
+    setActiveStep((s) => Math.min(s + 1, steps.length - 1));
+  };
+  const handleBack = () => {
+    setStepMessage(null);
+    setActiveStep((s) => Math.max(s - 1, 0));
+  };
 
   const showCart = activeStep === 0;
   const showAddress = activeStep === 1;
+  const showPayment = activeStep === 2;
 
   const renderStepper = (
     <Stack direction="row" gap={1.25} alignItems="center" sx={{ flex: "1 1 auto" }}>
@@ -338,7 +426,7 @@ export default function CartPageContent() {
           مرحله قبل
         </Button>
       )}
-      {activeStep !== 1 && (
+      {activeStep < steps.length - 1 && (
         <Button
           sx={{
             flex: "1 1 auto",
@@ -352,7 +440,7 @@ export default function CartPageContent() {
           disabled={lines.length === 0}
           onClick={handleNext}
         >
-          ادامه و ثبت آدرس
+          {activeStep === 0 ? "ادامه و ثبت آدرس" : "ادامه و پرداخت"}
         </Button>
       )}
     </Stack>
@@ -395,6 +483,24 @@ export default function CartPageContent() {
             ))}
           </Stepper>
         </Paper>
+        {stepMessage ? (
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 2,
+              px: 2,
+              py: 1.25,
+              borderRadius: `${TEB_RADII.md}px`,
+              border: `1px solid ${TEB_COLORS.warning}`,
+              bgcolor: TEB_COLORS.surfaceSoft,
+              color: TEB_COLORS.textPrimary,
+            }}
+          >
+            <Typography variant="body2" fontWeight={700}>
+              {stepMessage}
+            </Typography>
+          </Paper>
+        ) : null}
 
         {/* Main Content */}
         <Grid container spacing={2.5}>
@@ -706,8 +812,44 @@ export default function CartPageContent() {
             </Grid>
           )}
 
+          {showPayment && (
+            <>
+              <CartPaymentContext
+                addressSummary={addressSummary}
+                shippingSummary={shippingSummary}
+                onEditShipping={() => {
+                  setStepMessage(null);
+                  setActiveStep(1);
+                }}
+              />
+              <Grid size={{ xs: 12, md: 8 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 1, md: 1.5 },
+                  borderRadius: `${TEB_RADII.lg}px`,
+                  border: `1px solid ${TEB_COLORS.border}`,
+                  bgcolor: "#FFFFFF",
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack sx={{ px: 1.5, pt: 1 }} spacing={0.5}>
+                    <Typography variant="h6" fontWeight={800} color={TEB_COLORS.textPrimary}>
+                      پرداخت سفارش
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      مبلغ نهایی و درگاه پرداخت موردنظر را بررسی و انتخاب کنید.
+                    </Typography>
+                  </Stack>
+                  <CartSummary show action={renderStepper} />
+                </Stack>
+              </Paper>
+              </Grid>
+            </>
+          )}
+
           {/* Summary Sidebar */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          {!showPayment && <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={{ position: { md: "sticky" }, top: { md: 108 }, zIndex: 1 }}>
               <Paper
                 elevation={0}
@@ -727,7 +869,7 @@ export default function CartPageContent() {
                     <Divider sx={{ pt: 1, borderColor: TEB_COLORS.border }} />
                   </Stack>
                 )}
-                <CartSummary show={activeStep === 1} action={renderStepper} />
+                <CartSummary show={false} action={renderStepper} />
                 {lines.length > 0 && (
                   <Box sx={{ px: 2, pb: 1.5 }}>
                     <Button
@@ -744,7 +886,7 @@ export default function CartPageContent() {
                 )}
               </Paper>
             </Box>
-          </Grid>
+          </Grid>}
         </Grid>
       </Box>
     </Container>

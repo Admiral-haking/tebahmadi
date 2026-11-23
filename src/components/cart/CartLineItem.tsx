@@ -14,6 +14,7 @@ import {
 
 import { BookmarkPlus, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { TEB_COLORS, TEB_RADII } from '@/theme/tokens';
+import { roundInventoryQuantity } from '@/lib/inventory-state';
 import { useCart, type CartLine } from './useCart';
 import type { CartAvailabilityRow } from './cart-availability';
 
@@ -22,8 +23,13 @@ const FALLBACK_IMAGE = '/product-placeholder.svg';
 const formatToman = (value: number) =>
   `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.max(0, Math.floor(value)))} تومان`;
 
-const QUANTITY_FORMATTER = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+const QUANTITY_FORMATTER = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 3, minimumFractionDigits: 0 });
 const formatQuantity = (value: number) => QUANTITY_FORMATTER.format(value);
+
+const toLatinDigits = (value: string) =>
+  value
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
 
 interface CartLineItemProps {
   line: CartLine;
@@ -54,7 +60,9 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
     typeof line.maximumOrderQuantity === 'number' && line.maximumOrderQuantity > 0
       ? line.maximumOrderQuantity
       : undefined;
-  const clientStockMax = availability?.sellable ? Math.max(0, availability.available) : undefined;
+  const clientStockMax = availability?.sellable
+    ? roundInventoryQuantity(Math.max(0, availability.available))
+    : undefined;
   const boundedRawMax = rawMax !== undefined && clientStockMax !== undefined
     ? Math.min(rawMax, clientStockMax)
     : clientStockMax ?? rawMax;
@@ -64,14 +72,14 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
     if (Number.isNaN(value) || value <= 0) {
       return undefined;
     }
-    let next = Number(value.toFixed(2));
+    let next = roundInventoryQuantity(value);
     if (min !== undefined && next < min) {
       next = min;
     }
     if (max !== undefined && next > max) {
       next = max;
     }
-    return Number(next.toFixed(2));
+    return roundInventoryQuantity(next);
   };
 
   const clampFixed = (value: number): number | undefined => {
@@ -150,14 +158,15 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
   };
 
   const handleManualChange = (value: string) => {
+    const normalizedValue = toLatinDigits(value);
     if (line.priceModel === 'per_unit') {
-      const parsed = Number(value);
+      const parsed = Number(normalizedValue);
       if (Number.isNaN(parsed) || parsed <= 0) return;
       const next = clampPerUnit(parsed);
       if (next === undefined) return;
       updateRequestedQty(line.variantId, next);
     } else {
-      const parsed = parseInt(value, 10);
+      const parsed = parseInt(normalizedValue, 10);
       if (Number.isNaN(parsed) || parsed <= 0) return;
       const next = clampFixed(parsed);
       if (next === undefined) return;
@@ -166,8 +175,33 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
   };
 
   const qtyDisplay = line.priceModel === 'per_unit' ? line.requestedQty ?? 0 : line.qty ?? 1;
-  const qtyStep = line.priceModel === 'per_unit' ? 0.5 : 1;
+  const qtyStep = line.priceModel === 'per_unit' ? 0.001 : 1;
   const unitLabel = line.priceModel === 'per_unit' ? (line.requestedUnit ?? line.unitOfMeasure ?? '') : '';
+  const canDecrease =
+    line.priceModel === 'per_unit'
+      ? qtyDisplay > (min ?? 0)
+      : qtyDisplay > Math.max(1, Math.ceil(min ?? 1));
+  const canIncrease = max === undefined || qtyDisplay < max;
+  const stockNotice = (() => {
+    if (mode !== 'cart' || !availability) return null;
+    const unit = line.priceModel === 'per_unit' ? (line.requestedUnit ?? line.unitOfMeasure ?? '') : 'عدد';
+    if (!availability.sellable || availability.available <= 0) {
+      return { color: TEB_COLORS.error, text: 'این کالا در حال حاضر موجود نیست.' };
+    }
+    if (qtyDisplay > availability.available) {
+      return {
+        color: TEB_COLORS.error,
+        text: `فقط ${formatQuantity(availability.available)} ${unit} قابل خرید است.`,
+      };
+    }
+    if (availability.available <= 3 && availability.available - qtyDisplay <= 2) {
+      return {
+        color: TEB_COLORS.warning,
+        text: `تنها ${formatQuantity(availability.available)} ${unit} در انبار باقی مانده است.`,
+      };
+    }
+    return null;
+  })();
 
   const thumbSrc = line.mediaThumbId
     ? line.mediaThumbId.startsWith('/') || line.mediaThumbId.startsWith('http')
@@ -248,6 +282,7 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
                 size="small"
                 aria-label={`کاهش تعداد ${line.title}`}
                 onClick={handleDecrease}
+                disabled={!canDecrease}
                 sx={{ width: 38, height: 38, color: TEB_COLORS.primary }}
               >
                 <Minus size={16} />
@@ -295,6 +330,7 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
                 size="small"
                 aria-label={`افزایش تعداد ${line.title}`}
                 onClick={handleIncrease}
+                disabled={!canIncrease}
                 sx={{ width: 38, height: 38, color: TEB_COLORS.primary }}
               >
                 <Plus size={16} />
@@ -305,13 +341,9 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
                 {quantityConstraintLabel}
               </Typography>
             ) : null}
-            {availability && (!availability.sellable || availability.available <= 0) ? (
-              <Typography variant="caption" color={TEB_COLORS.error} sx={{ mt: 0.5 }}>
-                این کالا فعلاً قابل خرید نیست.
-              </Typography>
-            ) : availability && max !== undefined && qtyDisplay > max ? (
-              <Typography variant="caption" color={TEB_COLORS.warning} sx={{ mt: 0.5 }}>
-                فقط {max.toLocaleString('fa-IR')} مورد قابل خرید است.
+            {stockNotice ? (
+              <Typography variant="caption" color={stockNotice.color} sx={{ mt: 0.5 }}>
+                {stockNotice.text}
               </Typography>
             ) : null}
           </Stack>

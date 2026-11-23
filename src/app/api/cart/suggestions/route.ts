@@ -26,7 +26,7 @@ type LeanInventory = {
 };
 
 type LeanVariant = {
-  _id: Types.ObjectId;
+  _id?: Types.ObjectId;
   sku: string;
   attributeValues?: LeanAttributeValue[];
   price: {
@@ -212,7 +212,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const products = rawProducts
     .map((product) => {
       const variant = pickPrimaryVariant(product.variants, now);
-      if (!variant) {
+      if (!variant || !variant._id) {
+        // Legacy raw imports may contain variants without Mongo subdocument
+        // ids. Do not emit an SKU as variantId: checkout requires a stable
+        // ObjectId and otherwise the cart would fail later with a 500.
         return null;
       }
       const inventoryQty = toNumber(variant.inventory?.quantity) ?? 0;

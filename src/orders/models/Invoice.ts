@@ -127,6 +127,11 @@ const invoiceSchema = new Schema(
   {
     number: { type: String, required: true, trim: true },
     checkoutAttemptKey: { type: String, trim: true, maxlength: 128 },
+    attribution: {
+      campaign: { type: String, trim: true, maxlength: 160 },
+      source: { type: String, trim: true, maxlength: 120 },
+      medium: { type: String, trim: true, maxlength: 120 },
+    },
     status: {
       type: String,
       enum: ['draft', 'pending', 'paid', 'canceled', 'refunded'],

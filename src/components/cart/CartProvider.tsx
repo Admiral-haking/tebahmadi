@@ -11,55 +11,47 @@ import {
   type ReactNode,
 } from 'react';
 
-export type Unit = 'unit' | 'pair' | 'kg' | 'g' | 'lb' | 'oz' | 'l' | 'ml';
+import {
+  applyQuantityConstraints,
+  type CartAddress,
+  type CartAttribution,
+  type CartLine,
+  type CartState,
+  type ShippingPaymentMethod,
+  type Unit,
+} from '@/features/cart/cart-domain';
+import { reconcileCartAvailabilityAction } from '@/app/(public)/cart/actions';
+import { toast } from 'sonner';
 
-export type CartLine = {
-  productId: string;
-  productSlug: string;
-  title: string;
-  variantId: string;
-  sku: string;
-  priceModel: 'fixed' | 'per_unit';
-  unitOfMeasure?: Unit;
-  qty?: number;
-  requestedQty?: number;
-  requestedUnit?: Unit;
-  unitPriceBase: number;
-  variantOfferAmount?: number;
-  mediaThumbId?: string;
-  attributesSummary?: string;
-  weightGramsPerUnit?: number;
-  minimumOrderQuantity?: number;
-  maximumOrderQuantity?: number;
-};
-
-export type CartAddress = {
-  fname: string;
-  lname: string;
-  phone: string;
-  state?: string;
-  city?: string;
-  address?: string;
-  postalCode?: string;
-};
-
-export type ShippingPaymentMethod = 'online' | 'on_delivery';
-
-export type CartState = {
-  lines: CartLine[];
-  savedLines: CartLine[];
-  offerCode?: string | null;
-  transportId?: string | null;
-  address?: CartAddress | null;
-  shippingPaymentMethod: ShippingPaymentMethod;
-};
+export type {
+  CartAddress,
+  CartAttribution,
+  CartLine,
+  CartState,
+  ShippingPaymentMethod,
+  Unit,
+} from '@/features/cart/cart-domain';
 
 export const CART_STORAGE_KEY = 'app:cart:v1';
+export const CART_UPDATED_AT_STORAGE_KEY = 'app:cart:updated-at:v1';
+export const CART_RECOVERY_DISMISSED_UNTIL_STORAGE_KEY = 'app:cart:recovery-dismissed-until:v1';
+
+const isMongoObjectId = (value: string) => /^[a-f\d]{24}$/i.test(value);
 
 const normalizeOfferCode = (code: string | null | undefined): string | null => {
   const normalized = code?.trim().toUpperCase().slice(0, 40);
   return normalized || null;
 };
+
+function normalizeAttribution(value: unknown): CartAttribution | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const record = value as Record<string, unknown>;
+  const campaign = typeof record.campaign === 'string' ? record.campaign.trim().slice(0, 120) : undefined;
+  const source = typeof record.source === 'string' ? record.source.trim().slice(0, 120) : undefined;
+  const medium = typeof record.medium === 'string' ? record.medium.trim().slice(0, 120) : undefined;
+  if (!campaign && !source && !medium) return undefined;
+  return { campaign, source, medium };
+}
 
 const defaultState: CartState = {
   lines: [],
@@ -89,70 +81,10 @@ type CartAction =
   | { type: 'SET_OFFER_CODE'; code: string | null }
   | { type: 'SET_TRANSPORT_ID'; transportId: string | null }
   | { type: 'SET_ADDRESS'; address: CartAddress | null }
-  | { type: 'SET_SHIPPING_PAYMENT_METHOD'; method: ShippingPaymentMethod };
+  | { type: 'SET_SHIPPING_PAYMENT_METHOD'; method: ShippingPaymentMethod }
+  | { type: 'SET_ATTRIBUTION'; attribution: CartAttribution | undefined };
 
 const isPerUnit = (line: CartLine) => line.priceModel === 'per_unit';
-
-const sanitizeConstraint = (value?: number): number | undefined => {
-  if (typeof value !== 'number') return undefined;
-  if (!Number.isFinite(value)) return undefined;
-  if (value <= 0) return undefined;
-  return value;
-};
-
-const normalizeConstraints = (line: CartLine) => {
-  const min = sanitizeConstraint(line.minimumOrderQuantity);
-  const rawMax = sanitizeConstraint(line.maximumOrderQuantity);
-  const max = rawMax !== undefined && min !== undefined && rawMax < min ? min : rawMax;
-  return { min, max };
-};
-
-export function applyQuantityConstraints(line: CartLine): CartLine {
-  const { min, max } = normalizeConstraints(line);
-  if (isPerUnit(line)) {
-    let qty = line.requestedQty ?? 0;
-    if (qty <= 0) {
-      return {
-        ...line,
-        requestedQty: qty,
-        minimumOrderQuantity: min,
-        maximumOrderQuantity: max,
-      };
-    }
-    if (min !== undefined && qty < min) {
-      qty = min;
-    }
-    if (max !== undefined && qty > max) {
-      qty = max;
-    }
-    return {
-      ...line,
-      requestedQty: Number(qty.toFixed(2)),
-      minimumOrderQuantity: min,
-      maximumOrderQuantity: max,
-    };
-  }
-
-  let qty = line.qty ?? 1;
-  qty = Math.max(1, Math.floor(qty));
-  if (min !== undefined && qty < min) {
-    qty = Math.max(qty, Math.ceil(min));
-  }
-  if (max !== undefined && qty > max) {
-    qty = Math.min(qty, Math.floor(max));
-  }
-
-  if (qty <= 0) {
-    qty = 1;
-  }
-
-  return {
-    ...line,
-    qty,
-    minimumOrderQuantity: min,
-    maximumOrderQuantity: max,
-  };
-}
 
 function mergeLines(existing: CartLine, incoming: CartLine): CartLine {
   if (isPerUnit(existing)) {
@@ -323,6 +255,9 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case 'SET_SHIPPING_PAYMENT_METHOD': {
       return { ...state, shippingPaymentMethod: action.method };
     }
+    case 'SET_ATTRIBUTION': {
+      return { ...state, attribution: action.attribution };
+    }
     default:
       return state;
   }
@@ -366,6 +301,7 @@ function readStoredState(): CartState {
       transportId: parsed.transportId ?? null,
       address: parsed.address ?? null,
       shippingPaymentMethod,
+      attribution: normalizeAttribution(parsed.attribution),
     };
     return state;
   } catch (error) {
@@ -393,6 +329,7 @@ type CartContextValue = {
   setTransportId: (transportId: string | null) => void;
   setAddress: (address: CartAddress | null) => void;
   setShippingPaymentMethod: (method: ShippingPaymentMethod) => void;
+  setAttribution: (attribution: CartAttribution | undefined) => void;
   syncLineConstraints: (
     variantId: string,
     constraints: { minimumOrderQuantity?: number; maximumOrderQuantity?: number },
@@ -414,10 +351,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (typeof window === 'undefined') return;
     try {
       window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state));
+      window.localStorage.setItem(CART_UPDATED_AT_STORAGE_KEY, String(Date.now()));
     } catch (error) {
       console.warn('Failed to persist cart state', error);
     }
   }, [state, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || state.lines.length === 0) return;
+    let cancelled = false;
+    const reconcile = async () => {
+      const variantIds = state.lines
+        .map((line) => line.variantId)
+        .filter((variantId) => isMongoObjectId(variantId));
+      if (variantIds.length === 0) return;
+      const result = await reconcileCartAvailabilityAction(variantIds);
+      if (!cancelled && result.ok && result.unavailableVariantIds.length > 0) {
+        dispatch({ type: 'REMOVE_UNAVAILABLE_LINES', variantIds: result.unavailableVariantIds });
+        toast.error('برخی کالاهای ناموجود از سبد خرید حذف شدند.');
+      }
+    };
+    void reconcile().catch(() => undefined);
+    const onFocus = () => void reconcile().catch(() => undefined);
+    window.addEventListener('focus', onFocus);
+    const timer = window.setInterval(onFocus, 60_000);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', onFocus);
+      window.clearInterval(timer);
+    };
+  }, [hydrated, state.lines]);
 
   const addLine = useCallback((line: CartLine) => dispatch({ type: 'ADD_LINE', payload: line }), []);
   const updateQty = useCallback((variantId: string, qty: number) => dispatch({ type: 'UPDATE_QTY', variantId, qty }), []);
@@ -435,6 +398,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const setAddress = useCallback((address: CartAddress | null) => dispatch({ type: 'SET_ADDRESS', address }), []);
   const setShippingPaymentMethod = useCallback(
     (method: ShippingPaymentMethod) => dispatch({ type: 'SET_SHIPPING_PAYMENT_METHOD', method }),
+    [],
+  );
+  const setAttribution = useCallback(
+    (attribution: CartAttribution | undefined) => dispatch({ type: 'SET_ATTRIBUTION', attribution: normalizeAttribution(attribution) }),
     [],
   );
   const syncLineConstraints = useCallback(
@@ -481,6 +448,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setTransportId,
       setAddress,
       setShippingPaymentMethod,
+      setAttribution,
       syncLineConstraints,
     }),
     [
@@ -498,6 +466,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setTransportId,
       setAddress,
       setShippingPaymentMethod,
+      setAttribution,
       syncLineConstraints,
     ],
   );

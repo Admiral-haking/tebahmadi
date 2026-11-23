@@ -3,6 +3,24 @@ import { describe, expect, it } from 'vitest';
 import { middleware } from './middleware';
 
 describe('disabled integration middleware boundary', () => {
+  it('allows guest cart recommendations to load on the public cart page', async () => {
+    const response = await middleware(new NextRequest('http://localhost/api/cart/suggestions?limit=20', { method: 'GET' }));
+
+    expect(response.status).toBe(200);
+  });
+
+  it('allows anonymous cart recommendation events through the guarded public endpoint', async () => {
+    const response = await middleware(new NextRequest('http://localhost/api/cart/suggestions/events', { method: 'POST' }));
+
+    expect(response.status).toBe(200);
+  });
+
+  it('allows public purchase-link lookups before a guest adds the item to cart', async () => {
+    const response = await middleware(new NextRequest('http://localhost/api/store/buy-link?variant=sku-1', { method: 'GET' }));
+
+    expect(response.status).toBe(200);
+  });
+
   it.each([
     ['/api/digikala/webhook', 'digikala'],
     ['/api/basalaam/webhook', 'basalaam'],
