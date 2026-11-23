@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -19,6 +20,8 @@ import {
   type CartState,
   type ShippingPaymentMethod,
   type Unit,
+  isMongoObjectId,
+  isStaleCartLine,
 } from '@/features/cart/cart-domain';
 import { reconcileCartAvailabilityAction } from '@/app/(public)/cart/actions';
 import { toast } from 'sonner';
@@ -35,8 +38,6 @@ export type {
 export const CART_STORAGE_KEY = 'app:cart:v1';
 export const CART_UPDATED_AT_STORAGE_KEY = 'app:cart:updated-at:v1';
 export const CART_RECOVERY_DISMISSED_UNTIL_STORAGE_KEY = 'app:cart:recovery-dismissed-until:v1';
-
-const isMongoObjectId = (value: string) => /^[a-f\d]{24}$/i.test(value);
 
 const normalizeOfferCode = (code: string | null | undefined): string | null => {
   const normalized = code?.trim().toUpperCase().slice(0, 40);
@@ -263,13 +264,18 @@ function cartReducer(state: CartState, action: CartAction): CartState {
   }
 }
 
-function readStoredState(): CartState {
-  if (typeof window === 'undefined') return defaultState;
+type StoredCartState = {
+  state: CartState;
+  removedLegacyLines: number;
+};
+
+function readStoredState(): StoredCartState {
+  if (typeof window === 'undefined') return { state: defaultState, removedLegacyLines: 0 };
   try {
     const stored = window.localStorage.getItem(CART_STORAGE_KEY);
-    if (!stored) return defaultState;
+    if (!stored) return { state: defaultState, removedLegacyLines: 0 };
     const parsed = JSON.parse(stored) as CartState;
-    const lines = Array.isArray(parsed.lines)
+    const parsedLines = Array.isArray(parsed.lines)
       ? parsed.lines
           .map((line) => {
             try {
@@ -280,7 +286,7 @@ function readStoredState(): CartState {
           })
           .filter((line): line is CartLine => Boolean(line))
       : [];
-    const savedLines = Array.isArray(parsed.savedLines)
+    const parsedSavedLines = Array.isArray(parsed.savedLines)
       ? parsed.savedLines
           .map((line) => {
             try {
@@ -291,6 +297,8 @@ function readStoredState(): CartState {
           })
           .filter((line): line is CartLine => Boolean(line))
       : [];
+    const lines = parsedLines.filter((line) => !isStaleCartLine(line));
+    const savedLines = parsedSavedLines.filter((line) => !isStaleCartLine(line));
     const shippingPaymentMethod: ShippingPaymentMethod =
       parsed.shippingPaymentMethod === 'on_delivery' ? 'on_delivery' : 'online';
 
@@ -303,10 +311,13 @@ function readStoredState(): CartState {
       shippingPaymentMethod,
       attribution: normalizeAttribution(parsed.attribution),
     };
-    return state;
+    return {
+      state,
+      removedLegacyLines: parsedLines.length - lines.length + parsedSavedLines.length - savedLines.length,
+    };
   } catch (error) {
     console.warn('Failed to parse stored cart state', error);
-    return defaultState;
+    return { state: defaultState, removedLegacyLines: 0 };
   }
 }
 
@@ -340,11 +351,17 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
-  const [state, dispatch] = useReducer(cartReducer, defaultState, () => readStoredState());
+  const [restoredCart] = useState(() => readStoredState());
+  const [state, dispatch] = useReducer(cartReducer, restoredCart.state);
+  const staleNoticeShown = useRef(false);
 
   useEffect(() => {
     setHydrated(true);
-  }, []);
+    if (!staleNoticeShown.current && restoredCart.removedLegacyLines > 0) {
+      staleNoticeShown.current = true;
+      toast.info('سبد خرید شما به‌روزرسانی شد و کالاهای قدیمی حذف شدند.');
+    }
+  }, [restoredCart.removedLegacyLines]);
 
   useEffect(() => {
     if (!hydrated) return;

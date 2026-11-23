@@ -12,6 +12,7 @@ import {
   Typography,
   CircularProgress,
   Stack,
+  Button,
 } from '@mui/material';
 
 import { useCart } from './useCart';
@@ -20,12 +21,13 @@ import { useEffect } from 'react';
 
 export default function CarrierSelect() {
   const { state, setTransportId, setShippingPaymentMethod } = useCart();
-  const { options, isLoading, error } = useTransportOptions();
+  const { options, isLoading, error, retry } = useTransportOptions();
 
   const value = state.transportId ?? '';
   const singleOption = options.length === 1;
   const paymentMethod = state.shippingPaymentMethod ?? 'online';
   const hasOptions = options.length > 0;
+  const showLoadError = Boolean(error) && !hasOptions;
   const selectedCarrier =
     options.find((carrier) => carrier.id === value) ?? (singleOption ? options[0] : undefined);
 
@@ -79,8 +81,15 @@ export default function CarrierSelect() {
               </MenuItem>
             ))}
           </Select>
-          {error ? (
-            <FormHelperText error>خطا در دریافت روش‌های ارسال</FormHelperText>
+          {showLoadError ? (
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <FormHelperText error sx={{ mr: 0 }}>
+                روش‌های ارسال موقتاً در دسترس نیست؛ لطفاً دوباره تلاش کنید.
+              </FormHelperText>
+              <Button type="button" size="small" onClick={retry} sx={{ minWidth: 'auto' }}>
+                تلاش دوباره
+              </Button>
+            </Stack>
           ) : !hasOptions && !isLoading ? (
             <FormHelperText>فعلاً روشی برای ارسال ثبت نشده است.</FormHelperText>
           ) : null}

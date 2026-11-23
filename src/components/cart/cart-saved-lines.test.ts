@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { moveLineToSaved, moveSavedLineToCart, type CartState } from './CartProvider';
+import { isStaleCartLine } from '@/features/cart/cart-domain';
 
 const line = {
   productId: 'p-1',
@@ -38,5 +39,28 @@ describe('saved cart lines', () => {
 
     expect(next.savedLines).toEqual([]);
     expect(next.lines[0].qty).toBe(3);
+  });
+
+  it('detects legacy persisted lines that contain a SKU instead of a variant id', () => {
+    expect(
+      isStaleCartLine({
+        productId: '6b01b31e53c87c42ebaf6e9b',
+        variantId: 'TA-HONEY-MOUNTAIN',
+      }),
+    ).toBe(true);
+
+    expect(
+      isStaleCartLine({
+        productId: 'preview-honey-mountain',
+        variantId: 'TA-HONEY-MOUNTAIN',
+      }),
+    ).toBe(false);
+
+    expect(
+      isStaleCartLine({
+        productId: '6b01b31e53c87c42ebaf6e9b',
+        variantId: '6b01b31e53c87c42ebaf6e9c',
+      }),
+    ).toBe(false);
   });
 });

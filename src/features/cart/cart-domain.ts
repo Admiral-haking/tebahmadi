@@ -45,6 +45,21 @@ export type CartState = {
   attribution?: CartAttribution;
 };
 
+const MONGO_OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+
+export function isMongoObjectId(value: string): boolean {
+  return MONGO_OBJECT_ID_PATTERN.test(value);
+}
+
+/**
+ * Older browser carts sometimes persisted a SKU in variantId. Those lines are
+ * only stale when their product already has a persistent Mongo id; preview
+ * catalog lines intentionally use stable non-Mongo ids and must be preserved.
+ */
+export function isStaleCartLine(line: Pick<CartLine, 'productId' | 'variantId'>): boolean {
+  return isMongoObjectId(line.productId) && !isMongoObjectId(line.variantId);
+}
+
 const sanitizeConstraint = (value?: number): number | undefined => {
   if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined;
   return value;

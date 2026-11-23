@@ -5,8 +5,8 @@ import { quoteShipping } from '@/orders/services/transportService';
 import { transportQuoteSchema } from '@/orders/validation/transportSchemas';
 
 export async function POST(request: NextRequest) {
-  await connectMongoose();
   try {
+    await connectMongoose();
     const json = await request.json();
     const parsed = transportQuoteSchema.parse(json);
     const quote = await quoteShipping({
@@ -36,6 +36,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.flatten() }, { status: 400 });
     }
     console.error('Failed to quote transport', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'transport_unavailable' },
+      { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '3' } },
+    );
   }
 }

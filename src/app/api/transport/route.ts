@@ -6,37 +6,62 @@ import { TransportModel } from '@/orders/models/Transport';
 import { transportCreateSchema } from '@/orders/validation/transportSchemas';
 import { requirePermission } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
-  if (!isMongoConfigured()) {
-    return NextResponse.json({
-      data: [
-        {
-          id: 'preview-pishtaz',
-          _id: 'preview-pishtaz',
-          name: 'پست پیشتاز سراسر کشور',
-          description: 'ارسال مطمئن به تمام شهرهای ایران در ۲ تا ۴ روز کاری',
-          isActive: true,
-        },
-        {
-          id: 'preview-tipax',
-          _id: 'preview-tipax',
-          name: 'تیپاکس (تحویل سریع)',
-          description: 'تحویل درب منزل با بسته‌بندی ایمن',
-          isActive: true,
-        },
-      ],
-    });
-  }
-  await connectMongoose();
-  const url = new URL(request.url);
-  const isActiveParam = url.searchParams.get('isActive');
-  const query: Record<string, unknown> = {};
-  if (isActiveParam !== null) {
-    query.isActive = isActiveParam === 'true';
-  }
+export const runtime = 'nodejs';
 
-  const carriers = await TransportModel.find(query).sort({ createdAt: -1 }).lean();
-  return NextResponse.json({ data: carriers });
+const PREVIEW_TRANSPORTS = [
+  {
+    id: 'preview-pishtaz',
+    _id: 'preview-pishtaz',
+    name: 'پست پیشتاز سراسر کشور',
+    description: 'ارسال مطمئن به تمام شهرهای ایران در ۲ تا ۴ روز کاری',
+    isActive: true,
+  },
+  {
+    id: 'preview-tipax',
+    _id: 'preview-tipax',
+    name: 'تیپاکس (تحویل سریع)',
+    description: 'تحویل درب منزل با بسته‌بندی ایمن',
+    isActive: true,
+  },
+];
+
+export async function GET(request: NextRequest) {
+  try {
+    if (!isMongoConfigured()) {
+      return NextResponse.json(
+        { data: PREVIEW_TRANSPORTS },
+        { headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    await connectMongoose();
+    const url = new URL(request.url);
+    const isActiveParam = url.searchParams.get('isActive');
+    const query: Record<string, unknown> = {};
+    if (isActiveParam !== null) {
+      query.isActive = isActiveParam === 'true';
+    }
+
+    const carriers = await TransportModel.find(query).sort({ createdAt: -1 }).lean();
+    const data = carriers.map((carrier) => ({
+      ...carrier,
+      _id: carrier._id.toString(),
+      id: carrier._id.toString(),
+    }));
+    return NextResponse.json({ data }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) {
+    console.error('Failed to load transport methods', error);
+    return NextResponse.json(
+      { data: [], error: 'transport_unavailable' },
+      {
+        status: 503,
+        headers: {
+          'Cache-Control': 'no-store',
+          'Retry-After': '3',
+        },
+      },
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
