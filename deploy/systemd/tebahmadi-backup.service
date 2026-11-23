@@ -1,0 +1,26 @@
+[Unit]
+Description=Tab Ahmadi MongoDB and GridFS backup
+Wants=network-online.target
+After=network-online.target mongod.service
+RequiresMountsFor=/home/ali/tebahmadi /var/backups/tebahmadi
+
+[Service]
+Type=oneshot
+User=ali
+Group=ali
+WorkingDirectory=/home/ali/tebahmadi
+EnvironmentFile=/home/ali/tebahmadi/.env.local
+Environment=MONGO_DB=tebahmadi
+Environment=BACKUP_ROOT=/var/backups/tebahmadi
+Environment=RETENTION_HOURS=48
+ExecStart=/usr/bin/bash /home/ali/tebahmadi/scripts/backup-tebahmadi.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/var/backups/tebahmadi
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=30min

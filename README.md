@@ -555,6 +555,39 @@ variables, database/media transfer, PM2, Nginx, and cron automation) lives in
 - **Automation:** `./cron.sh` installs the inventory/order sync cron jobs that hit
   `/api/sync/*`.
 
+### Tab Ahmadi backup service
+
+The production backup service stores a compressed dump of only the `tebahmadi`
+database. GridFS media is included automatically because it lives in the same
+database. Backups are written to `/var/backups/tebahmadi`, protected with a
+checksum, and directories older than 48 hours are pruned.
+
+Install the versioned units as root on the production host:
+
+```bash
+install -m 0755 scripts/backup-tebahmadi.sh /home/ali/tebahmadi/scripts/backup-tebahmadi.sh
+install -m 0644 deploy/systemd/tebahmadi-backup.service /etc/systemd/system/tebahmadi-backup.service
+install -m 0644 deploy/systemd/tebahmadi-backup.timer /etc/systemd/system/tebahmadi-backup.timer
+install -d -o ali -g ali -m 0700 /var/backups/tebahmadi
+systemctl daemon-reload
+systemctl enable --now tebahmadi-backup.timer
+systemctl start tebahmadi-backup.service
+```
+
+Inspect the timer and verify the latest archive without printing environment
+values:
+
+```bash
+systemctl status tebahmadi-backup.timer --no-pager
+systemctl list-timers tebahmadi-backup.timer --no-pager
+journalctl -u tebahmadi-backup.service -n 80 --no-pager
+sha256sum -c /var/backups/tebahmadi/<timestamp>/SHA256SUMS
+```
+
+For a planned restore, stop application writes first and use the matching
+archive with `mongorestore --gzip --archive=...`; never use `--drop` without a
+fresh backup of the current database.
+
 ### Scripts (`package.json`)
 
 | Script | Purpose |
