@@ -1,4 +1,5 @@
 import mongoose, { Schema, type InferSchemaType } from 'mongoose';
+import type { SitePageContent } from '@/settings/site-pages';
 
 const COLLECTION = 'site_info';
 
@@ -26,6 +27,35 @@ const socialSchema = new Schema(
   { _id: false }
 );
 
+const contentPageSchema = new Schema<SitePageContent>(
+  {
+    title: { type: String, trim: true },
+    description: { type: String, trim: true },
+    content: { type: String, trim: true },
+  },
+  { _id: false },
+);
+
+const contentPagesSchema = new Schema(
+  {
+    about: { type: contentPageSchema, default: undefined },
+    terms: { type: contentPageSchema, default: undefined },
+    privacy: { type: contentPageSchema, default: undefined },
+  },
+  { _id: false },
+);
+
+const supportSchema = new Schema(
+  {
+    title: { type: String, trim: true },
+    description: { type: String, trim: true },
+    hours: { type: String, trim: true },
+    responseTime: { type: String, trim: true },
+    ticketEnabled: { type: Boolean, default: true },
+  },
+  { _id: false },
+);
+
 const imageVariantSchema = new Schema(
   {
     originalId: { type: Schema.Types.ObjectId, required: true },
@@ -44,6 +74,8 @@ const siteInfoSchema = new Schema(
     bio: { type: String },
     phones: { type: [phoneSchema], default: undefined },
     socials: { type: [socialSchema], default: undefined },
+    contentPages: { type: contentPagesSchema, default: undefined },
+    support: { type: supportSchema, default: undefined },
     customData: { type: Schema.Types.Mixed },
     logo: { type: imageVariantSchema, default: undefined },
   },

@@ -7,6 +7,7 @@ describe('Tab Ahmadi brand defaults', () => {
     expect(BRAND.url).toBe('https://tebahmadi.ir');
     expect(BRAND.description).toContain('محصولات طبیعی');
     expect(DEFAULT_SITE_INFO.appName).toBe(BRAND.name);
-    expect(DEFAULT_SITE_INFO.phones?.[0]?.number).toBe('09354395264');
+    expect(DEFAULT_SITE_INFO.phones).toEqual([]);
+    expect(DEFAULT_SITE_INFO.support?.ticketEnabled).toBe(true);
   });
 });

@@ -212,7 +212,7 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
                       setPhone(plus + latin.replace(/\D/g, ""));
                     }}
                     fullWidth autoFocus required
-                    placeholder="مثال: 09031234567"
+                    placeholder="شماره موبایل خود را وارد کنید"
                     disabled={isSubmitting}
                     inputProps={{ inputMode: "numeric", dir: "ltr", style: { direction: "ltr", textAlign: "left", letterSpacing: 1, unicodeBidi: "plaintext" } }}
                   />

@@ -4,7 +4,16 @@ import { SiteConfigModel, type SiteConfigDocument } from '@/settings/models/Site
 import { connectMongoose } from '@/lib/mongoose';
 import { DEFAULT_SITE_INFO } from '@/config/brand';
 
-const SITE_REVALIDATE_PATHS = ['/', '/blog', '/store'];
+const SITE_REVALIDATE_PATHS = [
+  '/',
+  '/blog',
+  '/store',
+  '/page/about',
+  '/page/contact',
+  '/page/terms',
+  '/page/privacy',
+  '/social',
+];
 const CONFIG_REVALIDATE_PATHS = ['/', '/store', '/payments/verify'];
 
 function cleanupPayload<T extends Record<string, unknown>>(payload: T): T {

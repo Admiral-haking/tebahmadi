@@ -116,7 +116,7 @@ function normalizePhoneNumber(input: string): { phone?: string; error?: string }
     return { phone: `+98${digitsOnly}` };
   }
 
-  return { error: 'فرمت شماره موبایل صحیح نیست. مثال: +989123456789' };
+  return { error: 'فرمت شماره موبایل صحیح نیست.' };
 }
 
 async function extractErrorMessage(response: Response, fallback: string): Promise<string> {

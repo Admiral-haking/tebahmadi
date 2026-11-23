@@ -27,8 +27,7 @@ const contentLinks = [
 export default async function Footer() {
   const siteInfo = await loadSiteInfo();
   const appName = siteInfo?.appName ?? BRAND.name;
-  const configuredPhones = siteInfo?.phones?.filter((phone) => phone.number && phone.number !== "021000000") ?? [];
-  const phones = configuredPhones.length > 0 ? configuredPhones : [{ number: BRAND.phone, label: "پشتیبانی خرید" }];
+  const phones = siteInfo?.phones?.filter((phone) => phone.number?.trim()) ?? [];
   const addresses = siteInfo?.addresses ?? [];
   const socials = siteInfo?.socials ?? [];
   const bio = siteInfo?.bio ?? siteInfo?.description ?? BRAND.bio;
@@ -71,7 +70,7 @@ export default async function Footer() {
           <Grid size={{ xs: 12, md: 4 }}>
             <Stack gap={1.5} alignItems="flex-start">
               <Typography fontWeight={700}>ارتباط با طب احمدی</Typography>
-              {phones.map((phone, index) => (
+              {phones.length > 0 ? phones.map((phone, index) => (
                 <Typography
                   key={`${phone.number}-${index}`}
                   component="a"
@@ -79,9 +78,13 @@ export default async function Footer() {
                   dir="ltr"
                   sx={{ color: "primary.main", fontWeight: 700 }}
                 >
-                  {phone.number}
+                  {phone.label ? `${phone.label}: ` : ""}{phone.number}
                 </Typography>
-              ))}
+              )) : (
+                <Typography component={Link} href="/page/contact" color="text.secondary">
+                  مشاهده راه‌های ارتباطی و ثبت تیکت
+                </Typography>
+              )}
               {addresses.map((item, index) => (
                 <Typography key={`${item.address}-${index}`} variant="body2" color="text.secondary" sx={{ lineHeight: 1.9 }}>
                   {item.label ? `${item.label}: ` : ""}{item.address}

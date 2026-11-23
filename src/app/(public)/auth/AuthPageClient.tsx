@@ -343,7 +343,7 @@ export default function AuthPageClient() {
                                         fullWidth
                                         autoFocus
                                         disabled={isSubmitting && step === "requesting"}
-                                        placeholder="مثال: 09031234567"
+                                        placeholder="شماره موبایل خود را وارد کنید"
                                         helperText="می‌توانید شماره را با 0 یا +98 وارد کنید."
                                         FormHelperTextProps={{ sx: { textAlign: "right" } }}
                                         inputProps={{

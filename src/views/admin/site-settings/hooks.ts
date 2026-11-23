@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { AvatarVariantIds } from '@/types';
+import type { SitePages } from '@/settings/site-pages';
 
 export type SmsTemplateKind =
   | 'loginCode'
@@ -26,6 +27,14 @@ export interface SiteInfoDTO {
   bio?: string;
   phones?: { label?: string; number: string }[];
   socials?: { platform: string; url: string }[];
+  contentPages?: SitePages;
+  support?: {
+    title?: string;
+    description?: string;
+    hours?: string;
+    responseTime?: string;
+    ticketEnabled?: boolean;
+  };
   customData?: Record<string, unknown>;
   logo?: AvatarVariantIds | null;
   createdAt?: string;

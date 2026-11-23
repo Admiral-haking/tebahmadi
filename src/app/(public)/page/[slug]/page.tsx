@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { loadPageBySlug } from "@/lib/cache";
+import { loadPageBySlug, loadSiteInfo } from "@/lib/cache";
 import { generatePageMetadata } from "@/seo/services/metadataGenerator";
+import { resolveConfiguredSitePage, SITE_PAGE_KEYS } from "@/settings/site-pages";
 import PageView from "@/views/page";
+import SupportPage from "@/views/support";
 
 const FALLBACK_PAGES: Record<string, { title: string; content: string; description: string }> = {
   about: {
@@ -14,7 +16,7 @@ const FALLBACK_PAGES: Record<string, { title: string; content: string; descripti
   contact: {
     title: "تماس با طب احمدی",
     description: "راه‌های ارتباط با فروشگاه طب احمدی.",
-    content: "<h2>در ارتباط بمانید</h2><p>برای پیگیری سفارش، پرسش درباره محصولات یا دریافت راهنمایی با ما در تماس باشید.</p><p><strong>شماره تماس:</strong> <a href=\"tel:09354395264\">۰۹۳۵۴۳۹۵۲۶۴</a></p><p>پاسخ‌گویی در روزهای کاری انجام می‌شود.</p>",
+    content: "<h2>در ارتباط بمانید</h2><p>برای پیگیری سفارش، پرسش درباره محصولات یا دریافت راهنمایی، از راه‌های ارتباطی ثبت‌شده در صفحه استفاده کنید.</p><p>اگر پاسخ خود را پیدا نکردید، یک تیکت پشتیبانی ثبت کنید.</p>",
   },
   terms: {
     title: "شرایط خرید",
@@ -59,13 +61,39 @@ function createExcerpt(html: string | null | undefined, limit = 160): string | u
   return `${text.slice(0, limit - 1)}…`;
 }
 
+async function loadPublicPage(slug: string) {
+  if (SITE_PAGE_KEYS.includes(slug as (typeof SITE_PAGE_KEYS)[number])) {
+    const siteInfo = await loadSiteInfo();
+    const configured = resolveConfiguredSitePage(siteInfo?.contentPages, slug);
+    if (configured) {
+      const updatedAt = siteInfo?.updatedAt ?? new Date();
+      return {
+        ...configured,
+        seo: { title: configured.title, description: configured.description, jsonLd: undefined },
+        publishedAt: updatedAt,
+        updatedAt,
+        createdAt: siteInfo?.createdAt ?? updatedAt,
+      };
+    }
+  }
+
+  return (await loadPageBySlug(slug)) ?? fallbackPage(slug);
+}
+
 export async function generateMetadata({ params }: Pick<PageRouteProps, "params">): Promise<Metadata> {
   const { slug } = await params;
   if (!slug) {
     notFound();
   }
 
-  const page = (await loadPageBySlug(slug)) ?? fallbackPage(slug);
+  if (slug === 'contact') {
+    return {
+      title: 'تماس با طب احمدی',
+      description: 'راه‌های ارتباطی و ثبت تیکت پشتیبانی فروشگاه طب احمدی.',
+    };
+  }
+
+  const page = await loadPublicPage(slug);
   if (!page) {
     notFound();
   }
@@ -90,7 +118,11 @@ export default async function Page({ params }: PageRouteProps) {
     notFound();
   }
 
-  const page = (await loadPageBySlug(slug)) ?? fallbackPage(slug);
+  if (slug === 'contact') {
+    return <SupportPage />;
+  }
+
+  const page = await loadPublicPage(slug);
   if (!page) {
     notFound();
   }

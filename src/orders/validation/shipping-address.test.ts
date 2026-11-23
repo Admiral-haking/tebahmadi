@@ -7,7 +7,7 @@ describe('normalizeAndValidateShippingAddress', () => {
     const result = normalizeAndValidateShippingAddress({
       fname: ' علی ',
       lname: ' احمدی ',
-      phone: '۰۹۳۵۴۳۹۵۲۶۴',
+      phone: '۰۹۱۲۰۰۰۰۰۰۰',
       state: ' خراسان رضوی ',
       city: ' مشهد ',
       address: ' بلوار سجاد، پلاک ۱۲ ',
@@ -16,7 +16,7 @@ describe('normalizeAndValidateShippingAddress', () => {
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.phone).toBe('+989354395264');
+      expect(result.data.phone).toBe('+989120000000');
       expect(result.data.postalCode).toBe('9187654321');
       expect(result.data.fname).toBe('علی');
     }
@@ -24,7 +24,7 @@ describe('normalizeAndValidateShippingAddress', () => {
 
   it('accepts the +98 mobile form', () => {
     const result = normalizeAndValidateShippingAddress({
-      fname: 'علی', lname: 'احمدی', phone: '+989354395264',
+      fname: 'علی', lname: 'احمدی', phone: '+989120000000',
       state: 'تهران', city: 'تهران', address: 'خیابان ولیعصر، پلاک ۲۴', postalCode: '1234567890',
     });
 
@@ -39,7 +39,7 @@ describe('normalizeAndValidateShippingAddress', () => {
     ['invalid phone', { phone: '02112345678' }],
   ])('rejects %s', (_label, override) => {
     const result = normalizeAndValidateShippingAddress({
-      fname: 'علی', lname: 'احمدی', phone: '09354395264',
+      fname: 'علی', lname: 'احمدی', phone: '09120000000',
       state: 'تهران', city: 'تهران', address: 'خیابان ولیعصر، پلاک ۲۴', postalCode: '1234567890',
       ...override,
     });

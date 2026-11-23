@@ -6,6 +6,7 @@ import { getSiteInfo, updateSiteInfo } from '@/settings/services/settingsService
 import type { SiteInfoDocument } from '@/settings/models/SiteInfo';
 import { zStringNonEmpty } from '@/lib/z';
 import { requirePermission } from '@/lib/auth';
+import { sitePagesSchema } from '@/settings/site-pages';
 
 const addressSchema = z.object({
   label: z.string().optional(),
@@ -20,6 +21,14 @@ const phoneSchema = z.object({
 const socialSchema = z.object({
   platform: z.string().min(1),
   url: z.string(),
+});
+
+const supportSchema = z.object({
+  title: z.string().trim().max(160).optional(),
+  description: z.string().trim().max(500).optional(),
+  hours: z.string().trim().max(160).optional(),
+  responseTime: z.string().trim().max(160).optional(),
+  ticketEnabled: z.boolean().optional(),
 });
 
 const objectIdString = z
@@ -40,6 +49,8 @@ const updateSchema = z.object({
   bio: z.string().optional(),
   phones: z.array(phoneSchema).optional(),
   socials: z.array(socialSchema).optional(),
+  contentPages: sitePagesSchema.partial().optional(),
+  support: supportSchema.optional(),
   customData: z.record(z.string(), z.unknown()).optional(),
   logo: z.union([logoSchema, z.null()]).optional(),
 });

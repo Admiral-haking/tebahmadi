@@ -51,7 +51,7 @@ export default function PhonesField({ disabled }: PhonesFieldProps) {
                   <RHFTextField
                     name={`phones.${index}.number`}
                     label="شماره تماس"
-                    placeholder="مثال: 021-12345678"
+                    placeholder="شماره تماس را وارد کنید"
                     fullWidth
                     disabled={disabled}
                     inputProps={{ dir: 'ltr' }}

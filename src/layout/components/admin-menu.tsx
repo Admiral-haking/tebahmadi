@@ -14,7 +14,7 @@ import { ReactNode } from "react";
 import digikala from "../assets/digikala.jpeg";
 import snapp from "../assets/snapp.jpg";
 import basalaam from "../assets/basalaam.png";
-import { AccountBalanceRounded, Category, CreditCardRounded, Inventory2Rounded, SchoolRounded } from "@mui/icons-material";
+import { AccountBalanceRounded, Category, CreditCardRounded, Inventory2Rounded, SchoolRounded, SupportAgentRounded } from "@mui/icons-material";
 import { usePathname } from "next/navigation";
 
 type MenuItem = {
@@ -135,6 +135,11 @@ export const menu: MenuItem[] = [
         />
       </svg>
     ),
+  },
+  {
+    title: "تیکت‌های پشتیبانی",
+    href: "/admin/support",
+    icon: <SupportAgentRounded />,
   },
   {
     title: "محصولات",

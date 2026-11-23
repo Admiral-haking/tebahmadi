@@ -83,6 +83,8 @@ export default async function RootLayout({
 
   const appName = info?.appName ?? BRAND.name;
   const description = info?.description ?? BRAND.description;
+  const configuredPhones = info?.phones?.map((phone) => phone.number?.trim()).filter(Boolean) ?? [];
+  const publisherTelephone = configuredPhones.length === 1 ? configuredPhones[0] : configuredPhones;
 
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
@@ -103,7 +105,7 @@ export default async function RootLayout({
               "@type": "Organization",
               name: appName,
               url: baseUrl,
-              telephone: BRAND.phone,
+              ...(configuredPhones.length > 0 ? { telephone: publisherTelephone } : {}),
             },
             potentialAction: {
               "@type": "SearchAction",

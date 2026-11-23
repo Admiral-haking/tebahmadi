@@ -10,6 +10,8 @@ import NewestProducts from "./components/newest";
 import ConfigurableBanner from "./components/configurable-banner";
 import TrustBar from "./components/trust-bar";
 import InstagramBanner from "@/layout/components/instagram-banner";
+import SocialFollowBanner from "./components/social-follow-banner";
+import HomeBlogSection from "./components/blog";
 
 function CategoriesFallback() {
   return (
@@ -109,6 +111,7 @@ export default async function HomeView() {
   return (
     <>
       <InstagramBanner />
+      <SocialFollowBanner links={siteInfo?.socials} brandName={siteInfo?.appName} />
       <Container
         maxWidth="lg"
         sx={{ position: "relative", px: { xs: 1.5, sm: 2 } }}
@@ -138,6 +141,7 @@ export default async function HomeView() {
         alt={homeBannerAlt}
       />
       <TrustBar />
+      <HomeBlogSection authorLabel={siteInfo?.appName} />
     </>
   );
 }
