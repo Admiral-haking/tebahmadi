@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 
 import { HttpError, requirePermission } from "@/lib/auth";
+import { hasDeveloperAccess } from "@/lib/developer-access";
 import { jsonError } from "@/lib/http";
 import { connectMongoose } from "@/lib/mongoose";
 import { ErrorLogModel } from "@/observability/models/ErrorLog";
@@ -50,6 +51,7 @@ function buildQuery(url: URL) {
 
 export async function GET(req: NextRequest) {
   try {
+    if (!hasDeveloperAccess(req)) return jsonError(401, "developer_access_required");
     await requirePermission(req, "orders:read");
     await connectMongoose();
 
@@ -160,6 +162,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    if (!hasDeveloperAccess(req)) return jsonError(401, "developer_access_required");
     const user = await requirePermission(req, "orders:write");
     await connectMongoose();
 
@@ -194,6 +197,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    if (!hasDeveloperAccess(req)) return jsonError(401, "developer_access_required");
     await requirePermission(req, "orders:write");
     await connectMongoose();
 

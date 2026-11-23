@@ -14,9 +14,11 @@ import { ReactNode } from "react";
 import digikala from "../assets/digikala.jpeg";
 import snapp from "../assets/snapp.jpg";
 import basalaam from "../assets/basalaam.png";
-import { AccountBalanceRounded, AssessmentRounded, Category, CreditCardRounded, Inventory2Rounded, LocalShippingRounded, SchoolRounded, SupportAgentRounded } from "@mui/icons-material";
+import { AccountBalanceRounded, AssessmentRounded, Category, Inventory2Rounded, LocalShippingRounded, SchoolRounded, SupportAgentRounded } from "@mui/icons-material";
 import { isAdminFeatureEnabled, type AdminFeature } from "@/config/admin-features";
 import { usePathname } from "next/navigation";
+import DeveloperMenu from "./developer-menu";
+import { isDeveloperMenuHref } from "./developer-menu-data";
 
 type MenuItem = {
   title: string;
@@ -82,38 +84,6 @@ const allMenu: MenuItem[] = [
     href: "/admin/help",
     feature: "help",
     icon: <SchoolRounded />,
-  },
-  {
-    title: "کنترل کیفیت پرداخت‌ها",
-    href: "/admin/payment-quality",
-    icon: <CreditCardRounded />,
-  },
-  {
-    title: "مدیریت درگاه‌های پرداخت",
-    href: "/admin/payment-gateways",
-    icon: <CreditCardRounded />,
-  },
-  {
-    title: "لاگ خطاها",
-    href: "/admin/error-logs",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-      >
-        <path
-          fill="currentColor"
-          d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20"
-          opacity="0.35"
-        />
-        <path
-          fill="currentColor"
-          d="M11.25 6.75a.75.75 0 0 1 1.5 0v6a.75.75 0 0 1-1.5 0zm0 9.5a.75.75 0 0 1 .75-.75h.01a.75.75 0 0 1 0 1.5H12a.75.75 0 0 1-.75-.75"
-        />
-      </svg>
-    ),
   },
   {
     title: "کاربران",
@@ -635,7 +605,8 @@ const allMenu: MenuItem[] = [
 ];
 
 export const menu = allMenu.filter(
-  (item) => !item.feature || isAdminFeatureEnabled(item.feature),
+  (item) =>
+    !isDeveloperMenuHref(item.href) && (!item.feature || isAdminFeatureEnabled(item.feature)),
 );
 
 export default function AdminMenu() {
@@ -675,6 +646,7 @@ export default function AdminMenu() {
           </ListItemButton>
         </ListItem>
       ))}
+      <DeveloperMenu />
     </List>
   );
 }
