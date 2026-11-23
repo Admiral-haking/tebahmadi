@@ -150,6 +150,10 @@ function isPublic(pathname: string, method: string): boolean {
     return true;
   }
 
+  if (pathname === '/api/transport' && upper === 'GET') {
+    return true;
+  }
+
   if (pathname.startsWith('/api/cart/suggestions') && (upper === 'GET' || upper === 'POST')) {
     return true;
   }

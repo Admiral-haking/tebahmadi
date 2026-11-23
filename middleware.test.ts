@@ -21,6 +21,12 @@ describe('disabled integration middleware boundary', () => {
     expect(response.status).toBe(200);
   });
 
+  it('allows guests to load active shipping methods for checkout', async () => {
+    const response = await middleware(new NextRequest('http://localhost/api/transport?isActive=true', { method: 'GET' }));
+
+    expect(response.status).toBe(200);
+  });
+
   it.each([
     ['/api/digikala/webhook', 'digikala'],
     ['/api/basalaam/webhook', 'basalaam'],
