@@ -13,7 +13,9 @@ const paymentSchema = new Schema(
     email: { type: String },
     mobile: { type: String },
     callbackURL: { type: String, required: true },
-    gateway: { type: String, required: true, enum: ['zarinpal', 'torob', 'azkivam', 'digipay', 'snapppay'], default: 'zarinpal' },
+    gateway: { type: String, required: true, enum: ['zarinpal', 'torob', 'azkivam', 'digipay', 'snapppay', 'bajetpay'], default: 'zarinpal' },
+    requestKey: { type: String, trim: true, maxlength: 128 },
+    gatewayUrl: { type: String },
     status: {
       type: String,
       required: true,
@@ -32,6 +34,10 @@ paymentSchema.index({ invoiceId: 1, createdAt: -1 });
 paymentSchema.index({ authority: 1 }, { unique: true, sparse: true });
 paymentSchema.index({ refId: 1 }, { unique: true, sparse: true });
 paymentSchema.index({ userId: 1, createdAt: -1 });
+paymentSchema.index(
+  { invoiceId: 1, gateway: 1, requestKey: 1 },
+  { unique: true, partialFilterExpression: { requestKey: { $type: 'string' } } },
+);
 
 export type PaymentTransactionDocument = InferSchemaType<typeof paymentSchema> & {
   _id: mongoose.Types.ObjectId;

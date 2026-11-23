@@ -8,6 +8,7 @@ import { connectMongoose } from "@/lib/mongoose";
 import { effectiveUnitPrice } from "@/catalog/services/productService";
 import { Types } from "mongoose";
 import { ProductReviewModel } from "@/reviews/models/ProductReview";
+import { isMongoConfigured, getPreviewProductDetail } from "@/lib/preview-fallback";
 
 const ALLOWED_UNITS = ['unit', 'pair', 'kg', 'g', 'lb', 'oz', 'l', 'ml'] as const;
 export type Unit = typeof ALLOWED_UNITS[number];
@@ -249,11 +250,14 @@ function buildMediaUrls(media: ProductVariantMedia) {
 }
 
 export async function loadProductDetail(slug: string): Promise<ProductDetailData | null> {
+    if (!isMongoConfigured()) {
+        return getPreviewProductDetail(slug);
+    }
     await connectMongoose();
 
     const product = await ProductModel.findOne({ slug, status: "active" }).lean();
     if (!product) {
-        return null;
+        return getPreviewProductDetail(slug);
     }
 
     const productTypeId = toStringId(product.productTypeId);
@@ -323,7 +327,9 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
         }))
         .filter((category) => category.id && category.name);
 
-    const activeVariants = (product.variants ?? []).filter((variant) => variant?.active !== false);
+    const activeVariants = (product.variants ?? []).filter(
+        (variant) => variant?.active !== false && Boolean(toStringId((variant as { _id?: unknown })._id)),
+    );
 
     const mediaIds = new Set<string>();
     activeVariants.forEach((variant) => {
@@ -359,7 +365,7 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
     const now = new Date();
 
     const variants: ProductVariantDetail[] = activeVariants.map((variant) => {
-        const variantId = toStringId((variant as { _id?: unknown })._id) ?? variant.sku ?? Math.random().toString(36).slice(2);
+        const variantId = toStringId((variant as { _id?: unknown })._id)!;
         const priceModel = variant.price?.model === "per_unit" ? "per_unit" : "fixed";
         const unitPrice = Number(variant.price?.amount ?? 0);
         const finalPrice = effectiveUnitPrice(variant as ProductDocument['variants'][number], now);

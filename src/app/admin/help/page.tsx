@@ -1,12 +1,13 @@
 import AdminHelpView from "@/views/admin/help";
 import { buildAdminMetadata } from "@/lib/admin-metadata";
-
-const PAGE_TITLE = "آموزش کار با پنل مدیریت";
+import { isAdminFeatureEnabled } from "@/config/admin-features";
+import { notFound } from "next/navigation";
 
 export async function generateMetadata() {
-  return buildAdminMetadata(PAGE_TITLE);
+  return buildAdminMetadata("صفحه پیدا نشد");
 }
 
 export default function Page() {
+  if (!isAdminFeatureEnabled("help")) notFound();
   return <AdminHelpView />;
 }

@@ -2,7 +2,7 @@
 
 import { Types, type FilterQuery } from "mongoose";
 
-import { connectMongoose } from "@/lib/mongoose";
+import { connectMongoose, isMongoConfigured } from "@/lib/mongoose";
 import { BlogPostModel, type BlogPostDocument } from "@/content/models/BlogPost";
 import { BlogCategoryModel, type BlogCategoryDocument } from "@/content/models/BlogCategory";
 import MediaModel from "@/models/Media";
@@ -149,11 +149,32 @@ function mapPosts(
 }
 
 export async function loadBlogIndex(searchParams: RawSearchParams): Promise<BlogIndexData> {
-    await connectMongoose();
-
     const page = parsePage(searchParams.page);
     const searchTerm = (singleValue(searchParams.q) ?? "").trim();
     const categoryParam = (singleValue(searchParams.category) ?? "").trim();
+
+    const emptyResult: BlogIndexData = {
+        searchTerm,
+        page,
+        pages: 1,
+        total: 0,
+        pageSize: PAGE_SIZE,
+        posts: [],
+        categories: [],
+        selectedCategory: null,
+        allPostsCount: 0,
+    };
+
+    if (!isMongoConfigured()) {
+        return emptyResult;
+    }
+
+    try {
+        await connectMongoose();
+    } catch (error) {
+        console.warn("loadBlogIndex failed to connect to MongoDB; returning empty blog index", error);
+        return emptyResult;
+    }
 
     const baseMatch: FilterQuery<BlogPostDocument> = {
         status: "published",

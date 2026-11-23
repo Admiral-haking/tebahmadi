@@ -1,10 +1,11 @@
 "use client";
 
 import { Badge, IconButton, NoSsr, Tooltip } from "@mui/material";
-import ShoppingCartCheckoutRoundedIcon from "@mui/icons-material/ShoppingCartCheckoutRounded";
+import { ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
-
 import { useCart } from "@/components/cart/useCart";
+import { TEB_COLORS } from "@/theme/tokens";
+import { formatFaNumber } from "@/lib/format";
 
 export default function CartButton() {
     const router = useRouter();
@@ -14,35 +15,37 @@ export default function CartButton() {
         <NoSsr>
             <Tooltip title="سبد خرید">
                 <IconButton
-                    color="inherit"
                     onClick={() => router.push("/cart")}
                     aria-label="مشاهده سبد خرید"
                     sx={{
-                        width: 42,
-                        height: 42,
-                        border: 1,
-                        borderColor: "divider",
-                        bgcolor: "background.paper",
-                        boxShadow: "0 8px 20px rgba(var(--mui-palette-text-primaryChannel) / 0.08)",
+                        width: 44,
+                        height: 44,
+                        borderRadius: "10px",
+                        border: `1px solid ${TEB_COLORS.border}`,
+                        bgcolor: TEB_COLORS.softSurface,
+                        color: TEB_COLORS.primary,
+                        transition: "background-color 0.18s ease, border-color 0.18s ease",
                         "&:hover": {
-                            bgcolor: "action.hover",
+                            bgcolor: TEB_COLORS.surface,
+                            borderColor: TEB_COLORS.primary,
                         },
                     }}
                 >
                     <Badge
-                        color="primary"
-                        badgeContent={itemsCount > 0 ? itemsCount : null}
+                        badgeContent={itemsCount > 0 ? formatFaNumber(itemsCount) : null}
                         overlap="circular"
                         sx={{
                             "& .MuiBadge-badge": {
                                 minWidth: 18,
                                 height: 18,
-                                fontSize: 11,
-                                fontWeight: 800,
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                bgcolor: TEB_COLORS.error,
+                                color: "#FFFFFF",
                             },
                         }}
                     >
-                        <ShoppingCartCheckoutRoundedIcon fontSize="small" />
+                        <ShoppingBag size={19} strokeWidth={2} />
                     </Badge>
                 </IconButton>
             </Tooltip>

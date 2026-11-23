@@ -53,9 +53,10 @@ export interface AddressInput {
 }
 
 export type ShippingPaymentMethod = 'online' | 'on_delivery';
+export type CampaignAttribution = { campaign?: string; source?: string; medium?: string };
 
 export interface InvoicePricingInput {
-  userId: string;
+  userId?: string;
   lines: InvoiceLineInput[];
   transportId: string;
   address: AddressInput;
@@ -63,6 +64,9 @@ export interface InvoicePricingInput {
   now?: Date;
   shippingPaymentMethod?: ShippingPaymentMethod;
   torobClid?: string;
+  checkoutAttemptKey?: string;
+  paymentMethod?: string;
+  attribution?: CampaignAttribution;
 }
 
 interface InvoiceLineSnapshot {
@@ -95,6 +99,7 @@ interface BuiltLine {
 
 type InvoiceCreatePayload = {
   number: string;
+  checkoutAttemptKey?: string;
   status: InvoiceStatus;
   userId: Types.ObjectId;
   lines: InvoiceLineSnapshot[];
@@ -120,6 +125,7 @@ type InvoiceCreatePayload = {
     offerSnapshot?: OfferSnapshot;
   };
   torobClid?: string;
+  attribution?: CampaignAttribution;
 };
 
 interface PricingComputation {
@@ -1128,6 +1134,9 @@ async function executeInvoiceCreation(
   input: InvoicePricingInput,
   session?: ClientSession,
 ): Promise<{ created: InvoiceDocument; appliedOfferCode?: string }> {
+  if (!input.userId) {
+    throw new Error('invoice_user_required');
+  }
   const pricing = await computePricing(input, session ? { session } : {});
 
   if (pricing.offer) {
@@ -1145,6 +1154,7 @@ async function executeInvoiceCreation(
 
   const invoiceDoc: InvoiceCreatePayload = {
     number,
+    checkoutAttemptKey: input.checkoutAttemptKey?.trim() || undefined,
     status: 'pending' as const,
     userId: toObjectId(input.userId),
     lines: pricing.lines,
@@ -1162,9 +1172,10 @@ async function executeInvoiceCreation(
     discountTotal: pricing.discountTotal,
     shippingTotal: pricing.shippingTotal,
     grandTotal: pricing.grandTotal,
-    paymentMethod: 'zarinpal',
+    paymentMethod: input.paymentMethod?.trim() || 'zarinpal',
     paymentMethodData: undefined,
     torobClid: input.torobClid || undefined,
+    attribution: input.attribution,
     pricingContext: {
       productTypeVersions: pricing.productTypeVersions,
       transportRowLabel: pricing.shipping.rowLabel,
@@ -1234,8 +1245,23 @@ async function createInvoiceWithoutTransactions(input: InvoicePricingInput): Pro
 }
 
 export async function createInvoice(input: InvoicePricingInput): Promise<InvoiceDocument> {
+  const attemptKey = input.checkoutAttemptKey?.trim();
+  const findExistingAttempt = async () => {
+    if (!attemptKey || !input.userId) return null;
+    return InvoiceModel.findOne({ userId: input.userId, checkoutAttemptKey: attemptKey }).exec();
+  };
+
+  const existing = await findExistingAttempt();
+  if (existing) return existing;
+
   if (!supportsMongoTransactions()) {
-    return createInvoiceWithoutTransactions(input);
+    try {
+      return await createInvoiceWithoutTransactions(input);
+    } catch (error) {
+      const raced = await findExistingAttempt();
+      if (raced) return raced;
+      throw error;
+    }
   }
 
   const session = await mongoose.startSession();
@@ -1254,6 +1280,8 @@ export async function createInvoice(input: InvoicePricingInput): Promise<Invoice
       return createInvoiceWithoutTransactions(input);
     }
     await session.endSession();
+    const raced = await findExistingAttempt();
+    if (raced) return raced;
     throw error;
   }
 
@@ -1720,12 +1748,6 @@ async function runInvoiceMaintenanceSweep(): Promise<void> {
 
 function ensureInvoiceMaintenanceScheduler(): void {
   if (typeof window !== 'undefined') {
-    return;
-  }
-  // Importing route modules during `next build` must not start background work.
-  // The scheduler also has nothing useful to do until a Mongo connection is
-  // configured (local tests and static analysis intentionally omit it).
-  if (process.env.NEXT_PHASE === 'phase-production-build' || !process.env.MONGO_URI?.trim()) {
     return;
   }
   // Opt-out flag: the public-facing instance sets DISABLE_BACKGROUND_JOBS=1 so

@@ -14,9 +14,12 @@ export async function getServiceInfo<T = any>(service: IServiceType, id: string,
 export async function setServiceInfo<T = any>(service: IServiceType, id: string, vendorId: string, data: T) {
     await connectMongoose();
 
-    const item = await ServiceInfoModel.findOne({ service, id, vendorId }).lean();
-
-    if (!item) return await ServiceInfoModel.create({ service, id, vendorId, data });
-
-    return await ServiceInfoModel.updateOne({ service, id, vendorId }, { $set: { data } });
+    // Let MongoDB perform registration as one atomic upsert. A read-then-create
+    // sequence can race when an operator retries credential registration and
+    // surface a duplicate-key error even though the credentials are valid.
+    return ServiceInfoModel.findOneAndUpdate(
+        { service, id, vendorId },
+        { $set: { data } },
+        { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
 }

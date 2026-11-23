@@ -8,6 +8,7 @@ import { connectMongoose } from "@/lib/mongoose";
 import type { ProductCardProps } from "@/components/product";
 import { Types, type PipelineStage } from "mongoose";
 import type { RawSearchParams } from "./search-params";
+import { isMongoConfigured, queryPreviewStoreProducts } from "@/lib/preview-fallback";
 
 const STORE_PAGE_SIZE = 24;
 
@@ -372,10 +373,31 @@ export async function loadStoreProducts(
   searchParams: RawSearchParams,
   context: LoadStoreProductsContext,
 ) {
-  await connectMongoose();
-
   const sort = parseSort(searchParams.sort);
   const page = parsePage(searchParams.page);
+
+  if (!isMongoConfigured()) {
+    const q = singleValue(searchParams.q);
+    const discountOnly = singleValue(searchParams.discount) === "1" || singleValue(searchParams.discount) === "true";
+    const inStockOnly = singleValue(searchParams.inStock) === "1" || singleValue(searchParams.inStock) === "true";
+    const minPriceRaw = singleValue(searchParams.minPrice);
+    const maxPriceRaw = singleValue(searchParams.maxPrice);
+    const minPrice = minPriceRaw ? Number(minPriceRaw) : undefined;
+    const maxPrice = maxPriceRaw ? Number(maxPriceRaw) : undefined;
+    return queryPreviewStoreProducts({
+      categoryId: context.activeCategoryId || undefined,
+      q,
+      sort,
+      discountOnly,
+      inStockOnly,
+      minPrice: Number.isFinite(minPrice) ? minPrice : undefined,
+      maxPrice: Number.isFinite(maxPrice) ? maxPrice : undefined,
+      page,
+      pageSize: STORE_PAGE_SIZE,
+    });
+  }
+
+  await connectMongoose();
 
   const { activeCategoryId, productTypeIds } = context;
   let categoryIds: Types.ObjectId[] | undefined;
@@ -418,6 +440,31 @@ export async function loadStoreProducts(
     { $count: "total" },
   ])) as Array<{ total: number }>;
   const total = countResult[0]?.total ?? 0;
+
+  if (total === 0) {
+    const q = singleValue(searchParams.q);
+    const discountOnly = singleValue(searchParams.discount) === "1" || singleValue(searchParams.discount) === "true";
+    const inStockOnly = singleValue(searchParams.inStock) === "1" || singleValue(searchParams.inStock) === "true";
+    const minPriceRaw = singleValue(searchParams.minPrice);
+    const maxPriceRaw = singleValue(searchParams.maxPrice);
+    const minPrice = minPriceRaw ? Number(minPriceRaw) : undefined;
+    const maxPrice = maxPriceRaw ? Number(maxPriceRaw) : undefined;
+    const previewResult = queryPreviewStoreProducts({
+      categoryId: context.activeCategoryId || undefined,
+      q,
+      sort,
+      discountOnly,
+      inStockOnly,
+      minPrice: Number.isFinite(minPrice) ? minPrice : undefined,
+      maxPrice: Number.isFinite(maxPrice) ? maxPrice : undefined,
+      page,
+      pageSize: STORE_PAGE_SIZE,
+    });
+    if (previewResult.total > 0) {
+      return previewResult;
+    }
+  }
+
   const pages = Math.max(1, Math.ceil(total / STORE_PAGE_SIZE));
   const currentPage = Math.min(Math.max(1, page), pages);
   const skip = (currentPage - 1) * STORE_PAGE_SIZE;

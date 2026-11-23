@@ -192,7 +192,7 @@ export default async function ProductView({
 
     return (
         <>
-            <Container maxWidth="lg" sx={{ my: { xs: 2, md: 5 }, px: { xs: 1.5, sm: 2 } }}>
+            <Container maxWidth="lg" sx={{ my: 4 }}>
                 <ProductDetailView product={product} initialVariantId={initialVariantId} />
 
                 <Suspense>

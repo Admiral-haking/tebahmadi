@@ -8,7 +8,7 @@ import { generatePageMetadata } from "@/seo/services/metadataGenerator";
 import Image from "next/image";
 import MediaModel from "@/models/Media";
 
-export const experimental_ppr = true;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
     const { metadata } = await generatePageMetadata({ slug: "/store" });
@@ -30,7 +30,7 @@ export default async function Page() {
             </Box>
             <Stack direction="row" justifyContent={{ xs: 'center', md: 'start' }} flexWrap="wrap" gap={2} sx={{ my: 4 }}>
 
-                {categories.map(async (category) => (
+                {categories.map((category) => (
                     <Button
                         key={category.id}
                         component={Link}

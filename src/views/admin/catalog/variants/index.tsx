@@ -15,6 +15,7 @@ import { normalizeStock } from "@/lib/stock";
 import ZoomableImage from "@/components/zoomable-image";
 import { ContentCopyRounded, PriceChange, TuneRounded } from "@mui/icons-material";
 import MarketplaceControls, { MarketplaceBadges } from "./marketplace-controls";
+import { MARKETPLACE_INTEGRATIONS_ENABLED } from "@/config/admin-features";
 
 
 type Props = {
@@ -45,7 +46,7 @@ export function VariantsView({ onSelect, search }: Props) {
     const [variantsHard, setVariantsHard] = useState<WithPage<VariantResponse>[]>([]);
     const [tab, setTab] = useState(0)
 
-    const [sync, setSync] = useState(true);
+    const [sync, setSync] = useState<boolean>(MARKETPLACE_INTEGRATIONS_ENABLED);
     const [controlsId, setControlsId] = useState<string | null>(null);
 
     // ── Bulk selection (current page only) + group actions ────────────────────
@@ -219,10 +220,12 @@ export function VariantsView({ onSelect, search }: Props) {
         <Container maxWidth="xl" sx={{ py: 4 }}>
             {!onSelect && <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ mb: 3 }}>
                 <Typography variant="h4">مدیریت تنوع محصول</Typography>
-                <FormControlLabel
-                    label="هنگام سازی"
-                    control={<Switch checked={sync} onChange={(_, c) => setSync(c)} />}
-                />
+                {MARKETPLACE_INTEGRATIONS_ENABLED ? (
+                    <FormControlLabel
+                        label="هنگام سازی"
+                        control={<Switch checked={sync} onChange={(_, c) => setSync(c)} />}
+                    />
+                ) : null}
             </Stack>}
 
             {onSelect ? (
@@ -254,10 +257,10 @@ export function VariantsView({ onSelect, search }: Props) {
                         { key: "discount", label: "تخفیف", value: facets.discount, options: [
                             { value: "has", label: "تخفیف‌دار" }, { value: "none", label: "بدون تخفیف" },
                         ] },
-                        { key: "connection", label: "اتصال به مارکت‌پلیس", value: facets.connection, options: [
+                        ...(MARKETPLACE_INTEGRATIONS_ENABLED ? [{ key: "connection", label: "اتصال به مارکت‌پلیس", value: facets.connection, options: [
                             { value: "dgk", label: "دیجی‌کالا" }, { value: "snp", label: "اسنپ‌شاپ" },
                             { value: "bsl", label: "باسلام" }, { value: "none", label: "بدون اتصال" },
-                        ] },
+                        ] }] : []),
                     ]}
                     ranges={[
                         { key: "price", label: "قیمت", min: ranges.price.min, max: ranges.price.max, unit: "تومان" },
@@ -321,7 +324,7 @@ export function VariantsView({ onSelect, search }: Props) {
                                     <TableCell>قیمت</TableCell>
                                     <TableCell>تخفیف</TableCell>
                                     <TableCell>وضعیت</TableCell>
-                                    <TableCell>سرویس ها</TableCell>
+                                    {MARKETPLACE_INTEGRATIONS_ENABLED ? <TableCell>سرویس ها</TableCell> : null}
                                 </>
                             }
                             <TableCell>کد محصول</TableCell>
@@ -419,9 +422,11 @@ export function VariantsView({ onSelect, search }: Props) {
                                                 />
                                             </Tooltip>
                                         </TableCell>
-                                        <TableCell>
-                                            <MarketplaceBadges variant={item} />
-                                        </TableCell>
+                                        {MARKETPLACE_INTEGRATIONS_ENABLED ? (
+                                            <TableCell>
+                                                <MarketplaceBadges variant={item} />
+                                            </TableCell>
+                                        ) : null}
                                     </>
                                 }
                                 <TableCell>
@@ -475,15 +480,17 @@ export function VariantsView({ onSelect, search }: Props) {
                                                     <PriceChange />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip title="کنترل جداگانهٔ مارکت‌پلیس‌ها">
-                                                <IconButton
-                                                    aria-label="marketplace-controls"
-                                                    color={controlsId === item._id ? "primary" : "default"}
-                                                    onClick={() => setControlsId((v) => v === item._id ? null : item._id)}
-                                                >
-                                                    <TuneRounded />
-                                                </IconButton>
-                                            </Tooltip>
+                                            {MARKETPLACE_INTEGRATIONS_ENABLED ? (
+                                                <Tooltip title="کنترل جداگانهٔ مارکت‌پلیس‌ها">
+                                                    <IconButton
+                                                        aria-label="marketplace-controls"
+                                                        color={controlsId === item._id ? "primary" : "default"}
+                                                        onClick={() => setControlsId((v) => v === item._id ? null : item._id)}
+                                                    >
+                                                        <TuneRounded />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            ) : null}
                                         </>
                                             :
                                             <Button onClick={() => onSelect(item)}>
@@ -492,9 +499,9 @@ export function VariantsView({ onSelect, search }: Props) {
                                     }
                                 </TableCell>
                             </TableRow>,
-                            !onSelect && controlsId === item._id && (
+                            MARKETPLACE_INTEGRATIONS_ENABLED && !onSelect && controlsId === item._id && (
                                 <TableRow key={item._id + item.sku + "-controls"}>
-                                    <TableCell colSpan={10} sx={{ bgcolor: "action.hover", py: 2 }}>
+                                    <TableCell colSpan={MARKETPLACE_INTEGRATIONS_ENABLED ? 10 : 9} sx={{ bgcolor: "action.hover", py: 2 }}>
                                         <MarketplaceControls
                                             variant={item}
                                             onUpdated={(service, vendorId, barcode, patch) =>
@@ -539,29 +546,23 @@ export function VariantsView({ onSelect, search }: Props) {
                             label="قیمت سایت"
                             value={selectedVariant?.price.amount}
                         />
-                        {
-                            selectedVariant?.dgk.map(x => <TextField
+                        {MARKETPLACE_INTEGRATIONS_ENABLED ? selectedVariant?.dgk.map(x => <TextField
                                 key={`dgk-${x.dgkVariantId}`}
                                 label={`قیمت دیجی کالا ${x.vendorId}`}
                                 value={x.price}
-                            />)
-                        }
-                        {
-                            selectedVariant?.bsl.map(x => <TextField
+                            />) : null}
+                        {MARKETPLACE_INTEGRATIONS_ENABLED ? selectedVariant?.bsl.map(x => <TextField
                                 key={`bsl-${x.bslProductId}-${x.bslVariantId}`}
 
                                 label={`قیمت باسلام ${x.vendorId}`}
                                 value={x.price}
-                            />)
-                        }
-                        {
-                            selectedVariant?.snp.map(x => <TextField
+                            />) : null}
+                        {MARKETPLACE_INTEGRATIONS_ENABLED ? selectedVariant?.snp.map(x => <TextField
                                 key={`snp-${x.snpProductId}`}
 
                                 label={`قیمت اسنپ ${x.vendorId}`}
                                 value={x.price}
-                            />)
-                        }
+                            />) : null}
                     </Stack>
                 </DialogContent>
                 <DialogActions>

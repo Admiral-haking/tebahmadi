@@ -1,7 +1,8 @@
 "use client";
 
-import { Get, POST } from "@/utils/fetch";
+import { Get } from "@/utils/fetch";
 import {
+  Alert,
   Box,
   Button,
   CircularProgress,
@@ -24,58 +25,63 @@ import Image from "next/image";
 import Orderly from "@/components/orderly";
 import Link from "next/link";
 import { SaveDigikalaVendor } from "../digikala/components/save-vendor";
+import SnappCredentialsDialog from "./components/snapp-credentials-dialog";
+import { snappConnectionFetchUrl } from "@/snapp/connection-cache";
+import { summarizeSnappConnection, type SnappConnectionSummary } from "@/snapp/connection-status";
+import { isSnappVendorActive, normalizeSnappVendorStatus } from "@/snapp/vendor-status";
 
-type Vendor = {
+export type SnappVendor = {
   id: string;
   title: string;
   title_en: string;
   status: "ACTIVE" | string;
-}[];
+};
+type Vendor = SnappVendor[];
 export default function SnappHomeView() {
   const [vendors, setVendors] = useState<Record<string, Vendor>>({});
+  const [connectionErrors, setConnectionErrors] = useState<Record<string, { code: string; message: string }>>({});
+  const [connectionNotice, setConnectionNotice] = useState<SnappConnectionSummary | null>(null);
 
   const [loading, setLoading] = useState(false);
 
   const [save, setSave] = useState(false);
+  const [authVendor, setAuthVendor] = useState<string | null>(null);
 
   function handleLoadVendors() {
     setLoading(true);
-    Get("/api/snapp")
-      .then((res) => {
-        setVendors(res);
+    Get(snappConnectionFetchUrl())
+      .then((res: any) => {
+        const nextVendors = res && typeof res === "object" && "vendors" in res ? res.vendors : res;
+        setVendors(nextVendors && typeof nextVendors === "object" ? nextVendors : {});
+        setConnectionErrors(
+          res && typeof res === "object" && res.errors && typeof res.errors === "object" ? res.errors : {},
+        );
       })
       .catch(() => toast.error("خطا در بارگیری شعبه‌های اسنپ‌شاپ"))
       .finally(() => setLoading(false));
   }
 
   function handleAuthToken(vendorId: string) {
-    const token = window.prompt("لطفا توکن اسنپ‌شاپ را وارد کنید.");
-    if (!token) return;
-
-    const client_secret = window.prompt(
-      "لطفا کلاینت سکرت اسنپ‌شاپ را وارد کنید.",
-    );
-    if (!client_secret) return;
-
-    setLoading(true);
-    POST("/api/snapp/auth", { vendorId, token, client_secret })
-      .then(() => {
-        toast.success("اعتبار سنجی انجام شد.");
-        handleLoadVendors();
-      })
-      .catch((err) =>
-        toast.error(err.data.message || "خطا در اعتبارسنجی اسنپ‌شاپ"),
-      )
-      .finally(() => setLoading(false));
+    setAuthVendor(vendorId);
   }
 
-  const vendorNames = useMemo(() => Object.keys(vendors), [loading]);
+  const vendorNames = useMemo(() => Object.keys(vendors), [vendors]);
 
   useEffect(handleLoadVendors, []);
 
   return (
     <Container maxWidth="lg" sx={{ my: 4 }}>
       {loading && <LinearProgress />}
+      {Object.entries(connectionErrors).map(([vendorId, failure]) => (
+        <Alert key={vendorId} severity="warning" sx={{ mb: 1 }}>
+          اتصال «{vendorId}» فعال نشد: {failure.message}
+        </Alert>
+      ))}
+      {connectionNotice && (
+        <Alert severity={connectionNotice.severity} sx={{ mb: 1 }}>
+          {connectionNotice.message}
+        </Alert>
+      )}
       <Stack direction="row" gap={2} alignItems="center">
         <Box
           component={Image}
@@ -114,7 +120,11 @@ export default function SnappHomeView() {
               <TableCell>{i + 1}</TableCell>
               <TableCell>{item}</TableCell>
               <TableCell align="center">
-                {vendors[item].map((x) => x.status).join(", ")}
+                {vendors[item].length
+                  ? vendors[item]
+                    .map((x) => isSnappVendorActive(x.status) ? "فعال" : `غیرفعال (${normalizeSnappVendorStatus(x.status) || "نامشخص"})`)
+                    .join(", ")
+                  : "توکن ثبت است؛ شعبه‌ای دریافت نشد"}
               </TableCell>
               <TableCell align="center">
                 {vendors[item].map((x) => x.title).join(", ")}
@@ -153,7 +163,7 @@ export default function SnappHomeView() {
                         <Grid size={{ xs: 12 }} key={x.id}>
                           <Button
                             variant="contained"
-                            disabled={x.status !== "ACTIVE"}
+                            disabled={!isSnappVendorActive(x.status)}
                             LinkComponent={Link}
                             href={`/admin/snapp/${item}/${x.id}`}
                             fullWidth
@@ -180,6 +190,17 @@ export default function SnappHomeView() {
         }}
         service="snapp"
       />
+      {authVendor && (
+        <SnappCredentialsDialog
+          open
+          vendorId={authVendor}
+          onClose={() => setAuthVendor(null)}
+          onSuccess={(response) => {
+            setConnectionNotice(summarizeSnappConnection(response as { status?: unknown; data?: unknown }));
+            handleLoadVendors();
+          }}
+        />
+      )}
     </Container>
   );
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectMongoose } from '@/lib/mongoose';
+import { isMongoConfigured, PREVIEW_PRODUCTS } from '@/lib/preview-fallback';
 import { jsonError } from '@/lib/http';
 import { getProduct, updateProduct, archiveProduct } from '@/catalog/services/productService';
 import { requirePermission, HttpError } from '@/lib/auth';
@@ -69,6 +70,19 @@ export async function GET(
   context: RouteContext,
 ): Promise<NextResponse> {
   const params = await context.params;
+  if (!isMongoConfigured()) {
+    const match = PREVIEW_PRODUCTS.find(
+      (item) =>
+        item.card.id === params.id ||
+        item.card.slug === params.id ||
+        item.detail.id === params.id ||
+        item.detail.slug === params.id,
+    );
+    if (!match) {
+      return jsonError(404, 'Product not found');
+    }
+    return NextResponse.json({ product: match.detail });
+  }
   await connectMongoose();
   const product = await getProduct(params.id);
   if (!product) {

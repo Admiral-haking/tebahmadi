@@ -8,6 +8,7 @@ import { requirePermission } from '@/lib/auth';
 import ProductTypeModel from '@/catalog/models/ProductType';
 import MediaModel from '@/models/Media';
 import DgkVariantModel from '@/digikala/models/variants';
+import { isMongoConfigured, PREVIEW_PRODUCTS } from '@/lib/preview-fallback';
 
 export const runtime = 'nodejs';
 
@@ -93,6 +94,38 @@ async function linkDgkImportToProduct(product: any, dgkImport: DgkImportPayload 
 
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
+  if (!isMongoConfigured()) {
+    const params = req.nextUrl.searchParams;
+    const q = (params.get('q') ?? '').trim().toLowerCase();
+    const limit = Math.max(1, Number(params.get('limit') ?? 20) || 20);
+    const skip = Math.max(0, Number(params.get('skip') ?? 0) || 0);
+    const filtered = PREVIEW_PRODUCTS.filter((item) => {
+      if (!q) return true;
+      return (
+        item.card.title.toLowerCase().includes(q) ||
+        item.categoryName.toLowerCase().includes(q) ||
+        (item.card.variantSubtitle ?? '').toLowerCase().includes(q)
+      );
+    });
+    const sliced = filtered.slice(skip, skip + limit).map((item) => ({
+      id: item.card.id,
+      title: item.card.title,
+      slug: item.card.slug,
+      status: 'active',
+      productTypeId: item.detail.productTypeId ?? '',
+      productTypeName: item.categoryName,
+      variantCount: item.detail.variants.length,
+      activeInStockVariantCount: item.detail.variants.length,
+      inactiveOrOutOfStockVariantCount: 0,
+      minPrice: item.card.finalPrice,
+      maxPrice: item.card.originalPrice ?? item.card.finalPrice,
+      inventoryTotal: item.card.stockCount ?? 10,
+      createdAt: item.createdAt,
+      updatedAt: item.createdAt,
+      images: item.card.imageUrl ? [item.card.imageUrl] : [],
+    }));
+    return NextResponse.json({ products: sliced, total: filtered.length });
+  }
   await connectMongoose();
   const params = req.nextUrl.searchParams;
   const productTypeId = params.get('productTypeId') ?? undefined;

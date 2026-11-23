@@ -1,9 +1,16 @@
 'use client';
 
 import { useMemo } from 'react';
-import { type CartLine, type CartAddress, type ShippingPaymentMethod, useCartContext } from './CartProvider';
+import {
+  type CartAddress,
+  type CartAttribution,
+  type CartLine,
+  type ShippingPaymentMethod,
+  useCartContext,
+} from './CartProvider';
+import { roundInventoryQuantity } from '@/lib/inventory-state';
 
-export type { CartLine, CartAddress, ShippingPaymentMethod } from './CartProvider';
+export type { CartAttribution, CartLine, CartAddress, ShippingPaymentMethod } from './CartProvider';
 
 export function useCart() {
   const ctx = useCartContext();
@@ -58,10 +65,12 @@ export function useCart() {
     if (max !== undefined && qty > max) {
       qty = max;
     }
+    qty = roundInventoryQuantity(qty);
+    if (qty <= 0) return;
     ctx.addLine({
       ...line,
       priceModel: 'per_unit',
-      requestedQty: Number(qty.toFixed(2)),
+      requestedQty: qty,
       requestedUnit: (requestedUnit as CartLine['requestedUnit']) ?? line.requestedUnit,
       qty: undefined,
       minimumOrderQuantity: min,

@@ -2,16 +2,35 @@
 
 import { Box, Container, Grid, Skeleton, Stack } from "@mui/material";
 import { Suspense } from "react";
+import InstagramBanner from "@/layout/components/instagram-banner";
 import Categories from "./components/categories";
 import { loadSiteConfig, loadSiteInfo } from "@/lib/cache";
 import DiscountProducts from "./components/discount";
-import PopularProducts from "./components/popular";
 import NewestProducts from "./components/newest";
+import PopularProducts from "./components/popular";
 import ConfigurableBanner from "./components/configurable-banner";
 import TrustBar from "./components/trust-bar";
-import InstagramBanner from "@/layout/components/instagram-banner";
 import SocialFollowBanner from "./components/social-follow-banner";
 import HomeBlogSection from "./components/blog";
+
+function HeroBannerFallback() {
+  return (
+    <Box sx={{ width: "100%", py: { xs: 1.5, md: 2 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
+        <Skeleton
+          variant="rounded"
+          sx={{
+            width: "100%",
+            aspectRatio: { xs: "16 / 9", sm: "16 / 8.5", md: "16 / 8", lg: "16 / 7.5" },
+            minHeight: { xs: 180, sm: 240, md: 320, lg: 360 },
+            maxHeight: { xs: 300, sm: 380, md: 460, lg: 520 },
+            borderRadius: { xs: 3, sm: 4, md: 5 },
+          }}
+        />
+      </Container>
+    </Box>
+  );
+}
 
 function CategoriesFallback() {
   return (
@@ -20,7 +39,7 @@ function CategoriesFallback() {
         variant="text"
         width={220}
         height={40}
-        sx={{ mx: "auto", mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box
         sx={{
@@ -54,7 +73,7 @@ function ProductSectionFallback({ tinted = false }: { tinted?: boolean }) {
         py: { xs: 2, md: 2.5 },
       }}
     >
-      <Container maxWidth="md" sx={{ px: { xs: 1.5, sm: 2 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
         <Skeleton variant="text" width={180} height={40} sx={{ mb: 1 }} />
         <Skeleton variant="text" width={280} height={24} sx={{ mb: 2 }} />
         <Grid container spacing={{ xs: 1.25, sm: 1.75 }}>
@@ -110,7 +129,9 @@ export default async function HomeView() {
 
   return (
     <>
-      <InstagramBanner />
+      <Suspense fallback={<HeroBannerFallback />}>
+        <InstagramBanner />
+      </Suspense>
       <SocialFollowBanner links={siteInfo?.socials} brandName={siteInfo?.appName} />
       <Container
         maxWidth="lg"
@@ -125,15 +146,15 @@ export default async function HomeView() {
         <DiscountProducts />
       </Suspense>
 
-      <Suspense fallback={<ProductSectionFallback />}>
-        <PopularProducts />
-      </Suspense>
-
       <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 } }}>
         <Suspense fallback={<ProductSectionFallback />}>
           <NewestProducts />
         </Suspense>
       </Container>
+
+      <Suspense fallback={<ProductSectionFallback />}>
+        <PopularProducts />
+      </Suspense>
 
       <ConfigurableBanner
         imageUrl={homeBannerImageUrl}

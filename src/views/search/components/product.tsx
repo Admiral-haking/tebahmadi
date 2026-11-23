@@ -12,8 +12,8 @@ export default function ProductSearchLink({
     inventoryTotal, activeInStockVariantCount,
 }: ProductSearchItem) {
     const firstImage = images.find((image) => {
-        const value = image.trim();
-        return Boolean(value) && !/(^|[\\/])(?:undefined|null)(?:[/?#]|$)/i.test(value);
+        const normalized = image?.trim().toLowerCase();
+        return Boolean(normalized) && !/(^|[\\/])(?:undefined|null)(?:[/?#]|$)/.test(normalized);
     });
     const inStock = (activeInStockVariantCount ?? 0) > 0 || inventoryTotal > 0;
 

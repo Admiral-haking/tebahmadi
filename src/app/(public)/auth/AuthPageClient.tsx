@@ -13,11 +13,11 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
+import { Lock, MessageSquare } from "lucide-react";
 import { useAuth, useLogin } from "@/auth";
 import { OTP_LENGTH, OTP_PATTERN } from "@/auth/otp";
 import BrandLockup from "@/components/brand-lockup";
+import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 
 // ─── OTP Input ───────────────────────────────────────────────────────────────
 // The whole block is locked to LTR: a verification code reads left-to-right even
@@ -39,8 +39,6 @@ function OtpInput({
 }) {
     const refs = useRef<(HTMLInputElement | null)[]>([]);
     const [focused, setFocused] = useState<number | null>(null);
-    // `value` is a plain contiguous string of up to OTP_LENGTH ASCII digits. Box i shows
-    // value[i]; the code always fills left-to-right.
     const digits = Array.from({ length: OTP_LENGTH }, (_, i) => value[i] ?? '');
 
     /** Persian/Arabic-Indic digits → Latin, keep digits only. */
@@ -59,13 +57,11 @@ function OtpInput({
         const cleaned = cleanDigits(raw);
         if (!cleaned) return;
         if (cleaned.length > 1) {
-            // A whole code typed/autofilled into one box → spread from here.
             const next = (value.slice(0, i) + cleaned).slice(0, OTP_LENGTH);
             onChange(next);
             focusBox(next.length);
             return;
         }
-        // Replace this box's digit, keep the rest in place.
         const next = (value.slice(0, i) + cleaned + value.slice(i + 1)).slice(0, OTP_LENGTH);
         onChange(next);
         if (i < OTP_LENGTH - 1) focusBox(i + 1);
@@ -97,8 +93,6 @@ function OtpInput({
     return (
         <Box
             dir="ltr"
-            // Inline style — the app's stylis-plugin-rtl flips `direction` set via
-            // `sx`, which is exactly what made the boxes fill right-to-left.
             style={{ direction: 'ltr' }}
             sx={{
                 display: 'flex',
@@ -110,30 +104,28 @@ function OtpInput({
                 const isFilled = digit !== '';
                 const isFocused = focused === i;
 
-                // Palette-var based so the boxes follow the active theme (the
-                // vars swap automatically between light/dark color schemes).
-                let borderColor = 'var(--mui-palette-divider)';
-                let bgColor = 'var(--mui-palette-background-paper)';
-                let textColor = 'var(--mui-palette-text-primary)';
+                let borderColor: string = TEB_COLORS.border;
+                let bgColor = '#FFFFFF';
+                let textColor: string = TEB_COLORS.textPrimary;
                 let shadow = 'none';
 
                 if (hasError) {
-                    borderColor = 'var(--mui-palette-error-main)';
-                    bgColor = 'rgba(var(--mui-palette-error-mainChannel) / 0.08)';
-                    textColor = 'var(--mui-palette-error-main)';
-                    if (isFocused) shadow = '0 0 0 4px rgba(var(--mui-palette-error-mainChannel) / 0.15)';
+                    borderColor = TEB_COLORS.error;
+                    bgColor = 'rgba(165, 74, 76, 0.06)';
+                    textColor = TEB_COLORS.error;
+                    if (isFocused) shadow = '0 0 0 3px rgba(165, 74, 76, 0.16)';
                 } else if (isVerifying) {
-                    borderColor = 'var(--mui-palette-success-main)';
-                    bgColor = 'rgba(var(--mui-palette-success-mainChannel) / 0.08)';
-                    textColor = 'var(--mui-palette-success-main)';
-                    if (isFocused) shadow = '0 0 0 4px rgba(var(--mui-palette-success-mainChannel) / 0.15)';
+                    borderColor = TEB_COLORS.primary;
+                    bgColor = 'rgba(42, 90, 68, 0.08)';
+                    textColor = TEB_COLORS.primary;
+                    if (isFocused) shadow = '0 0 0 3px rgba(42, 90, 68, 0.18)';
                 } else if (isFocused) {
-                    borderColor = 'var(--mui-palette-primary-main)';
-                    bgColor = `rgba(var(--mui-palette-primary-mainChannel) / ${isFilled ? 0.08 : 0.04})`;
-                    shadow = '0 0 0 4px rgba(var(--mui-palette-primary-mainChannel) / 0.15)';
+                    borderColor = TEB_COLORS.primary;
+                    bgColor = 'rgba(42, 90, 68, 0.04)';
+                    shadow = '0 0 0 3px rgba(42, 90, 68, 0.15)';
                 } else if (isFilled) {
-                    borderColor = 'var(--mui-palette-primary-light)';
-                    bgColor = 'rgba(var(--mui-palette-primary-mainChannel) / 0.08)';
+                    borderColor = TEB_COLORS.primary;
+                    bgColor = TEB_COLORS.surfaceSoft;
                 }
 
                 return (
@@ -153,14 +145,14 @@ function OtpInput({
                         maxLength={1}
                         aria-label={`رقم ${i + 1}`}
                         style={{
-                            width: '48px',
+                            width: '52px',
                             height: '58px',
                             textAlign: 'center',
-                            fontSize: '1.5rem',
+                            fontSize: '1.45rem',
                             fontWeight: 700,
                             fontFamily: 'monospace',
-                            border: `2px solid ${borderColor}`,
-                            borderRadius: '14px',
+                            border: `1.5px solid ${borderColor}`,
+                            borderRadius: `${TEB_RADII.md}px`,
                             outline: 'none',
                             backgroundColor: bgColor,
                             color: textColor,
@@ -175,7 +167,6 @@ function OtpInput({
         </Box>
     );
 }
-
 const RESEND_SECONDS = 60;
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -199,8 +190,6 @@ export default function AuthPageClient() {
 
     const isCodeStep = step === "code-sent" || step === "verifying";
     const [resendIn, setResendIn] = useState(0);
-    // Remember the last auto-submitted code so a wrong code isn't resubmitted in a
-    // loop (which previously froze the page after a failed verification).
     const lastTriedRef = useRef<string>("");
 
     useEffect(() => {
@@ -210,7 +199,6 @@ export default function AuthPageClient() {
         }
     }, [status, user, router, reset, redirectTarget]);
 
-    // Start/refresh the resend cooldown whenever a code is freshly sent.
     useEffect(() => {
         if (step === "code-sent") setResendIn((s) => (s > 0 ? s : RESEND_SECONDS));
     }, [step]);
@@ -221,8 +209,6 @@ export default function AuthPageClient() {
         return () => clearInterval(t);
     }, [resendIn]);
 
-    // Auto-submit once when all OTP digits are entered. Reset the guard whenever
-    // the code drops below OTP_LENGTH so a corrected code submits again.
     useEffect(() => {
         if (code.length < OTP_LENGTH) { lastTriedRef.current = ""; return; }
         if (OTP_PATTERN.test(code) && step === "code-sent" && !isSubmitting && code !== lastTriedRef.current) {
@@ -258,26 +244,21 @@ export default function AuthPageClient() {
     return (
         <Box
             sx={{
-                minHeight: "100dvh",
+                minHeight: "calc(100dvh - 140px)",
                 display: "flex",
                 alignItems: "center",
-                // Theme-palette based so it always matches the active theme (any
-                // light/dark palette), instead of hard-coded colors.
-                bgcolor: "background.default",
-                backgroundImage:
-                    "radial-gradient(900px 520px at 50% 0%, rgba(var(--mui-palette-primary-mainChannel) / 0.10), transparent 62%)",
+                bgcolor: TEB_COLORS.background,
             }}
         >
             <Container maxWidth="xs" sx={{ py: { xs: 5, md: 8 } }}>
                 <Paper
                     elevation={0}
                     sx={{
-                        borderRadius: 5,
+                        borderRadius: `${TEB_RADII.lg}px`,
                         p: { xs: 3, sm: 4 },
-                        border: "1px solid",
-                        borderColor: "divider",
-                        boxShadow: "0 24px 70px -42px rgba(31, 70, 53, 0.52)",
-                        backgroundColor: "background.paper",
+                        border: `1px solid ${TEB_COLORS.border}`,
+                        backgroundColor: "#FFFFFF",
+                        boxShadow: "0 14px 36px rgba(33, 73, 54, 0.06)",
                     }}
                 >
                     <Stack spacing={3}>
@@ -286,39 +267,38 @@ export default function AuthPageClient() {
                             <BrandLockup size={48} compact />
                             <Box
                                 sx={{
-                                    width: 34,
-                                    height: 34,
+                                    width: 58,
+                                    height: 58,
                                     borderRadius: "50%",
                                     display: "grid",
                                     placeItems: "center",
-                                    color: "primary.main",
-                                    bgcolor: "primary.50",
-                                    border: "1px solid",
-                                    borderColor: "primary.100",
+                                    color: TEB_COLORS.primary,
+                                    bgcolor: TEB_COLORS.surfaceSoft,
+                                    border: `1px solid ${TEB_COLORS.border}`,
                                 }}
                             >
-                                {isCodeStep ? <SmsOutlinedIcon sx={{ fontSize: 18 }} /> : <LockOutlinedIcon sx={{ fontSize: 18 }} />}
+                                {isCodeStep ? <MessageSquare size={24} /> : <Lock size={24} />}
                             </Box>
-                            <Typography variant="h5" component="h1" fontWeight={800} sx={{ letterSpacing: "-0.03em" }}>
-                                {isCodeStep ? "تایید شماره موبایل" : "ورود یا ثبت‌نام"}
+                            <Typography variant="h5" component="h1" fontWeight={800} color={TEB_COLORS.textPrimary}>
+                                {isCodeStep ? "تایید شماره موبایل" : "ورود یا ثبت‌نام در طب احمدی"}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.75 }}>
                                 {isCodeStep ? (
                                     <>
                                         {manualCode ? "کد ورود ثبت‌شده را وارد کنید." : <>کد {OTP_LENGTH} رقمی ارسال‌شده به{" "}
-                                        <Box component="span" dir="ltr" sx={{ fontWeight: 700, fontFamily: "monospace" }}>
+                                        <Box component="span" dir="ltr" sx={{ fontWeight: 700, fontFamily: "monospace", color: TEB_COLORS.textPrimary }}>
                                             {phone}
                                         </Box>{" "}
                                         را وارد کنید.</>}
                                     </>
                                 ) : (
-                                    "برای ادامه، شماره موبایل خود را وارد کنید تا یک کد تایید برایتان ارسال شود."
+                                    "برای پیگیری سفارش‌ها و ثبت خرید، شماره موبایل خود را وارد کنید."
                                 )}
                             </Typography>
                         </Stack>
 
                         {error ? (
-                            <Alert severity="error" sx={{ textAlign: "right", borderRadius: 2 }}>
+                            <Alert severity="error" sx={{ textAlign: "right", borderRadius: `${TEB_RADII.md}px` }}>
                                 {error}
                             </Alert>
                         ) : null}
@@ -326,14 +306,12 @@ export default function AuthPageClient() {
                         {/* Phone step */}
                         {!isCodeStep ? (
                             <Box component="form" onSubmit={handlePhoneSubmit} textAlign="right">
-                                <Stack spacing={2}>
+                                <Stack spacing={2.25}>
                                     <TextField
                                         label="شماره موبایل"
                                         type="tel"
                                         value={phone}
                                         onChange={e => {
-                                            // Persian/Arabic digits → Latin; keep an optional leading
-                                            // "+" then digits only. Clean and LTR so it never reverses.
                                             const latin = e.target.value
                                                 .replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
                                                 .replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
@@ -349,8 +327,6 @@ export default function AuthPageClient() {
                                         inputProps={{
                                             inputMode: "numeric",
                                             dir: "ltr",
-                                            // Inline style only — `sx` direction/textAlign get flipped
-                                            // by stylis-plugin-rtl, which reversed the number.
                                             style: { direction: "ltr", textAlign: "left", letterSpacing: 1, unicodeBidi: "plaintext" },
                                         }}
                                         required
@@ -360,7 +336,13 @@ export default function AuthPageClient() {
                                         variant="contained"
                                         size="large"
                                         disabled={isSubmitting || !phone.trim()}
-                                        sx={{ borderRadius: 99, py: 1.35, fontWeight: 700 }}
+                                        sx={{
+                                            borderRadius: `${TEB_RADII.pill}px`,
+                                            minHeight: 48,
+                                            fontWeight: 700,
+                                            bgcolor: TEB_COLORS.primary,
+                                            "&:hover": { bgcolor: TEB_COLORS.primaryDark },
+                                        }}
                                     >
                                         {step === "requesting" ? "در حال ارسال..." : "ارسال کد تایید"}
                                     </Button>
@@ -383,9 +365,14 @@ export default function AuthPageClient() {
                                         variant="contained"
                                         size="large"
                                         disabled={isSubmitting || code.trim().length !== OTP_LENGTH}
-                                        color={isVerifying ? "success" : "primary"}
                                         fullWidth
-                                        sx={{ borderRadius: 99, py: 1.35, fontWeight: 700 }}
+                                        sx={{
+                                            borderRadius: `${TEB_RADII.pill}px`,
+                                            minHeight: 48,
+                                            fontWeight: 700,
+                                            bgcolor: TEB_COLORS.primary,
+                                            "&:hover": { bgcolor: TEB_COLORS.primaryDark },
+                                        }}
                                     >
                                         {step === "verifying" ? "در حال ورود..." : "تایید و ورود"}
                                     </Button>
@@ -402,11 +389,12 @@ export default function AuthPageClient() {
                                             onClick={editPhone}
                                             underline="hover"
                                             disabled={isSubmitting}
+                                            sx={{ color: TEB_COLORS.primary, fontWeight: 600, minHeight: 44 }}
                                         >
                                             ویرایش شماره
                                         </Link>
                                         {resendIn > 0 ? (
-                                            <Typography variant="caption" color="text.secondary">
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
                                                 ارسال مجدد تا {resendIn.toLocaleString("fa-IR")} ثانیه دیگر
                                             </Typography>
                                         ) : (
@@ -417,6 +405,7 @@ export default function AuthPageClient() {
                                                 onClick={handleResend}
                                                 underline="hover"
                                                 disabled={isSubmitting}
+                                                sx={{ color: TEB_COLORS.primary, fontWeight: 600, minHeight: 44 }}
                                             >
                                                 ارسال مجدد کد
                                             </Link>
@@ -433,9 +422,9 @@ export default function AuthPageClient() {
                     color="text.secondary"
                     display="block"
                     textAlign="center"
-                    mt={3}
+                    mt={2.5}
                 >
-                    با ورود، قوانین و حریم خصوصی را می‌پذیرید.
+                    با ورود، قوانین و حریم خصوصی فروشگاه طب احمدی را می‌پذیرید.
                 </Typography>
             </Container>
         </Box>

@@ -15,11 +15,11 @@ export const brandTokens = {
     success: "#6D7D45",
   },
   radius: {
-    compact: 8,
-    control: 16,
-    card: 28,
-    panel: 34,
-    pill: 999,
+    compact: 6,
+    control: 10,
+    card: 16,
+    panel: 20,
+    pill: 10,
   },
   shadow: {
     subtle: "0 1px 2px rgba(47, 52, 40, 0.03), 0 12px 30px rgba(91, 103, 58, 0.07)",

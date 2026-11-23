@@ -1,24 +1,34 @@
+import OptimizedImage from '@/components/image';
 import { SiteInfoDocument } from '@/settings/models/SiteInfo';
 import { loadRootCategories, StoreCategorySummary } from '@/views/store/data';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Divider, Stack, Typography } from '@mui/material';
 import Link from 'next/link';
 
 export default async function Categories({ siteInfo }: { siteInfo: SiteInfoDocument }) {
   const categories = await loadRootCategories();
+  if (!categories || categories.length === 0) {
+    return null;
+  }
 
   return (
-    <Box sx={{ my: { xs: 5, md: 8 } }}>
+    <Box sx={{ my: { xs: 3, md: 5 } }}>
       <Stack
-        gap={0.75}
+        gap={2}
         alignItems="center"
-        sx={{ mb: { xs: 3, md: 4 } }}
+        direction="row"
+        sx={{ mb: { xs: 2.5, md: 3 } }}
       >
-        <Box aria-hidden sx={{ width: 34, height: 18, position: 'relative', mb: 0.5, '&::before': { content: '""', position: 'absolute', inset: 0, background: 'repeating-conic-gradient(from 0deg, #b69a68 0deg 8deg, transparent 8deg 22deg)', mask: 'radial-gradient(circle, transparent 0 5px, #000 6px)' } }} />
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h3" sx={{ fontSize: { xs: '1.45rem', md: '1.75rem' }, color: 'primary.main' }}>
+        <Box sx={{ flex: '1 1 auto' }}>
+          <Typography variant="h3" sx={{ fontSize: { xs: '1.35rem', md: '2rem' } }}>
             دسته‌بندی محصولات
           </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            انتخاب سریع از محصولات طبیعی {siteInfo.appName}
+          </Typography>
         </Box>
+        <Button LinkComponent={Link} href="/store" variant="outlined" sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>
+          همه محصولات
+        </Button>
       </Stack>
 
       <CategoryGrid categories={categories} />
@@ -31,8 +41,12 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(3, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' },
-        gap: { xs: 1.5, sm: 2, md: 2.25 },
+        gridTemplateColumns: {
+          xs: 'repeat(3, minmax(0, 1fr))',
+          sm: 'repeat(4, minmax(0, 1fr))',
+          md: 'repeat(5, minmax(0, 1fr))',
+        },
+        gap: { xs: 1.5, sm: 2, md: 2.5 },
       }}
     >
       {categories.map((category, index) => (
@@ -51,31 +65,41 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
             color: 'text.primary',
             p: 0,
             minWidth: 0,
-            '&:hover .category-icon': { transform: 'translateY(-3px)', borderColor: 'primary.main', bgcolor: '#f0f1de' },
+            '&:hover .category-icon': {
+              transform: 'translateY(-3px)',
+              borderColor: 'primary.main',
+            },
           }}
         >
           <Box
             className="category-icon"
             sx={{
               position: 'relative',
-              width: '100%',
-              aspectRatio: { xs: '1 / 1.08', sm: '1.35 / 1' },
-              maxWidth: { xs: 132, sm: 'none' },
-              borderRadius: { xs: 5, sm: 7 },
+              width: { xs: 74, sm: 88, md: 108 },
+              height: { xs: 74, sm: 88, md: 108 },
+              borderRadius: { xs: 3, md: 4 },
               overflow: 'hidden',
               mb: 1,
               border: '1px solid',
               borderColor: 'divider',
-              bgcolor: '#F4F3E8',
-              boxShadow: '0 8px 22px rgba(91,103,58,.06)',
+              bgcolor: 'background.paper',
+              boxShadow: '0 8px 24px rgba(42, 90, 68, .08)',
               transition: 'transform 180ms ease, border-color 180ms ease',
             }}
           >
-            <Box
-              component="img"
-              src="/tebahmadi-mark.svg"
+            <OptimizedImage
+              src={
+                category.mediaId
+                  ? '/api/media/' + category.mediaId
+                  : (category as unknown as { imageUrl?: string }).imageUrl || '/category.png'
+              }
+              fallbackSrc="/category.png"
               alt={category.name || 'category'}
-              sx={{ width: '100%', height: '100%', objectFit: 'contain', p: '12%' }}
+              fill
+              sizes="(max-width: 600px) 74px, (max-width: 900px) 88px, 108px"
+              priority={index < 5}
+              fetchPriority={index < 5 ? 'high' : 'auto'}
+              style={{ objectFit: 'cover' }}
             />
           </Box>
 
@@ -87,8 +111,8 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
               width: '100%',
               lineHeight: 1.45,
               px: 0.5,
-              fontSize: { xs: '0.72rem', sm: '0.9rem' },
-              fontWeight: 500,
+              fontSize: { xs: '0.78rem', sm: '0.9rem' },
+              fontWeight: 600,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',

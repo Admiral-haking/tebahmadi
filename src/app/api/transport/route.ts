@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 import { connectMongoose } from '@/lib/mongoose';
+import { isMongoConfigured } from '@/lib/preview-fallback';
 import { TransportModel } from '@/orders/models/Transport';
 import { transportCreateSchema } from '@/orders/validation/transportSchemas';
 import { requirePermission } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
+  if (!isMongoConfigured()) {
+    return NextResponse.json({
+      data: [
+        {
+          id: 'preview-pishtaz',
+          _id: 'preview-pishtaz',
+          name: 'پست پیشتاز سراسر کشور',
+          description: 'ارسال مطمئن به تمام شهرهای ایران در ۲ تا ۴ روز کاری',
+          isActive: true,
+        },
+        {
+          id: 'preview-tipax',
+          _id: 'preview-tipax',
+          name: 'تیپاکس (تحویل سریع)',
+          description: 'تحویل درب منزل با بسته‌بندی ایمن',
+          isActive: true,
+        },
+      ],
+    });
+  }
   await connectMongoose();
   const url = new URL(request.url);
   const isActiveParam = url.searchParams.get('isActive');

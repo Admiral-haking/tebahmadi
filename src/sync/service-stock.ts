@@ -11,6 +11,7 @@ import { getVendors } from "@/settings/services/vendorService";
 import { snpSyncPrice, snpSyncStock } from "@/snapp/services/sync-stock";
 import SnapVariantModel from "@/snapp/models/variants";
 import { mapConcurrent, PUSH_CONCURRENCY } from "./concurrency";
+import { MARKETPLACE_INTEGRATIONS_ENABLED } from "@/config/admin-features";
 
 export type SyncStockProps = {
     barcode: string
@@ -28,6 +29,13 @@ export type SyncServiceSummary = {
     failed: number;
     errors: string[];
 }
+
+const DISABLED_SYNC_SUMMARY: SyncServiceSummary = {
+    attempted: 0,
+    succeeded: 0,
+    failed: 0,
+    errors: [],
+};
 
 function normalizeStockPayload(variants: SyncStockProps): SyncStockProps {
     return variants
@@ -92,6 +100,7 @@ async function runSingleCall(call: Promise<unknown>): Promise<SyncServiceSummary
 }
 
 export async function syncServiceStock(variants: SyncStockProps): Promise<SyncServiceSummary> {
+    if (!MARKETPLACE_INTEGRATIONS_ENABLED) return DISABLED_SYNC_SUMMARY;
     await connectMongoose();
 
     const payload = normalizeStockPayload(variants);
@@ -117,6 +126,7 @@ export async function syncServiceStock(variants: SyncStockProps): Promise<SyncSe
 }
 
 export async function syncServicePrice(variants: SyncPriceProps): Promise<SyncServiceSummary> {
+    if (!MARKETPLACE_INTEGRATIONS_ENABLED) return DISABLED_SYNC_SUMMARY;
     await connectMongoose();
 
     const payload = normalizePricePayload(variants);
@@ -144,6 +154,7 @@ export async function syncServicePrice(variants: SyncPriceProps): Promise<SyncSe
  * permanent discrepancy. This surfaces those so they can be reconciled.
  */
 export async function findStockDiscrepancies(limit = 200): Promise<SyncStockProps> {
+    if (!MARKETPLACE_INTEGRATIONS_ENABLED) return [];
     await connectMongoose();
 
     const rows = await ProductModel.aggregate([
@@ -222,6 +233,7 @@ export async function syncLinkedVariantToServices(
     siteBarcode: string | undefined,
     payload: { stock?: number; price?: number },
 ): Promise<SyncServiceSummary> {
+    if (!MARKETPLACE_INTEGRATIONS_ENABLED) return DISABLED_SYNC_SUMMARY;
     const stock = payload.stock === undefined ? undefined : Math.max(0, Number(payload.stock) || 0);
     const price = payload.price === undefined ? undefined : Math.max(0, Number(payload.price) || 0);
     if (stock === undefined && price === undefined) {
@@ -267,7 +279,7 @@ export async function syncLinkedVariantToServices(
 }
 
 export async function syncVariantStockById(variantId: unknown) {
-    if (!variantId) return;
+    if (!MARKETPLACE_INTEGRATIONS_ENABLED || !variantId) return;
 
     const product = await ProductModel.findOne({ "variants._id": variantId }, { variants: 1 }).lean();
     const variant = product?.variants?.find((item) => `${item._id}` === `${variantId}`);

@@ -481,7 +481,7 @@ function EmptyState() {
         href="/store"
         variant="contained"
         size="large"
-        sx={{ px: 5, borderRadius: 999 }}
+        sx={{ px: 5, borderRadius: "10px" }}
       >
         شروع خرید
       </Button>
@@ -802,7 +802,7 @@ export default function OrdersView() {
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             وضعیت سفارش‌ها، رسید پرداخت و جزئیات ارسال فقط برای کاربران وارد شده قابل مشاهده است.
           </Typography>
-          <Button onClick={() => openLogin()} variant="contained" size="large" sx={{ px: 6, borderRadius: 999 }}>
+          <Button onClick={() => openLogin()} variant="contained" size="large" sx={{ px: 6, borderRadius: "10px" }}>
             ورود به حساب کاربری
           </Button>
         </Paper>
@@ -1043,7 +1043,7 @@ export default function OrdersView() {
                               variant="contained"
                               size="small"
                               endIcon={<OpenInNewRoundedIcon />}
-                              sx={{ alignSelf: { xs: 'stretch', sm: 'center' }, borderRadius: 999 }}
+                              sx={{ alignSelf: { xs: 'stretch', sm: 'center' }, borderRadius: "10px" }}
                             >
                               پیگیری مرسوله
                             </Button>
@@ -1295,7 +1295,7 @@ export default function OrdersView() {
                             }
                             onClick={() => copyAddress(order)}
                             sx={{
-                              borderRadius: 999,
+                              borderRadius: "10px",
                               borderColor: 'rgba(var(--mui-palette-dividerChannel) / 0.8)',
                               color: copiedOrderId === (order._id || order.number)
                                 ? 'var(--mui-palette-success-main)'
@@ -1314,7 +1314,7 @@ export default function OrdersView() {
                           size="small"
                           startIcon={<DownloadRoundedIcon />}
                           onClick={() => downloadInvoice(order)}
-                          sx={{ borderRadius: 999 }}
+                          sx={{ borderRadius: "10px" }}
                         >
                           دانلود فاکتور
                         </Button>
@@ -1327,7 +1327,7 @@ export default function OrdersView() {
                             variant="outlined"
                             size="small"
                             endIcon={<OpenInNewRoundedIcon />}
-                            sx={{ borderRadius: 999 }}
+                            sx={{ borderRadius: "10px" }}
                           >
                             رهگیری دکاپست
                           </Button>

@@ -9,7 +9,7 @@ import { loadSiteInfo } from "@/lib/cache";
 import { resolveSiteBaseUrl, buildMediaUrl } from "@/seo/utils/url";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import JsonLd from "@/components/seo/json-ld";
-import CookieConsent from "@/components/cookie-consent";
+import ChunkLoadRecovery from "@/components/chunk-load-recovery-client";
 import { BRAND } from "@/config/brand";
 
 const ProgressBar = dynamic(() => import("@/components/progress"))
@@ -120,6 +120,7 @@ export default async function RootLayout({
 
         <AppRouterCacheProvider options={{ enableCssLayer: true, speedy: true, prepend: true }}>
           <AppTheme>
+            <ChunkLoadRecovery />
             <ProgressBar />
             <AuthProvider>
               <LoginProvider>
@@ -136,8 +137,6 @@ export default async function RootLayout({
           </AppTheme>
         </AppRouterCacheProvider>
 
-        {/* Essential-cookie notice; no third-party analytics is loaded. */}
-        <CookieConsent />
       </body>
     </html>
   );

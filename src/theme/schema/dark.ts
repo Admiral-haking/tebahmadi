@@ -1,41 +1,44 @@
 import { ColorSystemOptions } from "@mui/material";
-import { brandTokens } from "../design-system";
+import { TEB_COLORS } from "../tokens";
 
 export const dark: ColorSystemOptions = {
     palette: {
         mode: "dark",
         primary: {
-            main: "#9DC1A7",
-            contrastText: "#10271D"
+            main: "#4E8D6F",
+            dark: TEB_COLORS.primary,
+            light: "#69A98B",
+            contrastText: "#FFFFFF",
         },
         secondary: {
-            main: brandTokens.color.accent,
-            contrastText: "#FFFFFF"
+            main: "#262C27",
+            contrastText: "#F4F3E5",
         },
         info: {
-            main: "#5da8e6ff",
-            contrastText: "#111111"
+            main: TEB_COLORS.gold,
+            contrastText: "#1A1D1A",
         },
         warning: {
-            main: "#e6c15dff",
-            contrastText: "#111111"
+            main: TEB_COLORS.gold,
+            contrastText: "#1A1D1A",
         },
         success: {
-            main: "#71B78B",
-            contrastText: "#ffffff"
+            main: "#4E8D6F",
+            contrastText: "#FFFFFF",
         },
         error: {
-            main: "#D87A7C",
-            contrastText: "#ffffff"
+            main: "#C96A6C",
+            contrastText: "#FFFFFF",
         },
         text: {
-            primary: "#FFFFFF",
-            secondary: "#eeeeeebe"
+            primary: "#F4F3E5",
+            secondary: "#C6C8BC",
+            disabled: "#7F847B",
         },
         background: {
-            default: "#101813",
-            paper: "#17231C"
+            default: "#161B18",
+            paper: "#1E2420",
         },
-        divider: "#DCE8E033",
-    }
-}
+        divider: "#303831",
+    },
+};

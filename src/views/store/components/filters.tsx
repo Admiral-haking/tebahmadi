@@ -137,7 +137,7 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
                         </g>
                     </svg>
                 }
-                variant="outlined"
+                variant="text"
                 size="large"
                 onClick={handleOpen}
                 sx={{
@@ -146,8 +146,6 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
                     display: "flex",
                     gap: 1,
                     alignItems: "center",
-                    borderColor: "divider",
-                    minWidth: 112,
                 }}
             >
                 فیلتر
@@ -224,7 +222,18 @@ export default function StoreFilters({ attributes, searchParams }: Props) {
 
                     <Divider />
 
-                    <Stack direction="row" spacing={2}>
+                    <Stack
+                        direction="row"
+                        spacing={2}
+                        sx={{
+                            pt: 1.5,
+                            pb: "calc(16px + env(safe-area-inset-bottom, 0px))",
+                            position: "sticky",
+                            bottom: 0,
+                            bgcolor: "background.paper",
+                            zIndex: 1,
+                        }}
+                    >
                         <Button fullWidth variant="contained" onClick={applyFilters} disabled={attributes.length === 0 && appliedCount === 0}>
                             اعمال فیلتر
                         </Button>

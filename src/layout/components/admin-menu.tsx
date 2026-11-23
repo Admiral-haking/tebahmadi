@@ -14,16 +14,18 @@ import { ReactNode } from "react";
 import digikala from "../assets/digikala.jpeg";
 import snapp from "../assets/snapp.jpg";
 import basalaam from "../assets/basalaam.png";
-import { AccountBalanceRounded, Category, CreditCardRounded, Inventory2Rounded, SchoolRounded, SupportAgentRounded } from "@mui/icons-material";
+import { AccountBalanceRounded, AssessmentRounded, Category, CreditCardRounded, Inventory2Rounded, LocalShippingRounded, SchoolRounded, SupportAgentRounded } from "@mui/icons-material";
+import { isAdminFeatureEnabled, type AdminFeature } from "@/config/admin-features";
 import { usePathname } from "next/navigation";
 
 type MenuItem = {
   title: string;
   href: string;
   icon: ReactNode;
+  feature?: AdminFeature;
 };
 
-export const menu: MenuItem[] = [
+const allMenu: MenuItem[] = [
   {
     title: "داشبورد",
     href: "/admin",
@@ -49,6 +51,7 @@ export const menu: MenuItem[] = [
   {
     title: "سلامت مارکت‌پلیس‌ها",
     href: "/admin/marketplace-health",
+    feature: "marketplaceHealth",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -71,16 +74,23 @@ export const menu: MenuItem[] = [
   {
     title: "مقایسه موجودی",
     href: "/admin/inventory-comparison",
+    feature: "inventoryComparison",
     icon: <Inventory2Rounded />,
   },
   {
     title: "آموزش پنل",
     href: "/admin/help",
+    feature: "help",
     icon: <SchoolRounded />,
   },
   {
     title: "کنترل کیفیت پرداخت‌ها",
     href: "/admin/payment-quality",
+    icon: <CreditCardRounded />,
+  },
+  {
+    title: "مدیریت درگاه‌های پرداخت",
+    href: "/admin/payment-gateways",
     icon: <CreditCardRounded />,
   },
   {
@@ -268,6 +278,7 @@ export const menu: MenuItem[] = [
   {
     title: "دیجی‌کالا",
     href: "/admin/digikala",
+    feature: "digikala",
     icon: (
       <Box
         component={Image}
@@ -282,6 +293,7 @@ export const menu: MenuItem[] = [
   {
     title: "اسنپ‌شاپ",
     href: "/admin/snapp",
+    feature: "snapp",
     icon: (
       <Box
         component={Image}
@@ -296,6 +308,7 @@ export const menu: MenuItem[] = [
   {
     title: "باسلام",
     href: "/admin/basalaam",
+    feature: "basalaam",
     icon: (
       <Box
         component={Image}
@@ -310,7 +323,18 @@ export const menu: MenuItem[] = [
   {
     title: "حسابداری هلو",
     href: "/admin/holoo",
+    feature: "holoo",
     icon: <AccountBalanceRounded />,
+  },
+  {
+    title: "مدیریت تاپین",
+    href: "/admin/tapin",
+    icon: <LocalShippingRounded />,
+  },
+  {
+    title: "گزارش‌های حسابداری",
+    href: "/admin/accounting",
+    icon: <AssessmentRounded />,
   },
   {
     title: "پیگیری سفارش‌ها",
@@ -609,6 +633,10 @@ export const menu: MenuItem[] = [
     ),
   },
 ];
+
+export const menu = allMenu.filter(
+  (item) => !item.feature || isAdminFeatureEnabled(item.feature),
+);
 
 export default function AdminMenu() {
   const pathname = usePathname();

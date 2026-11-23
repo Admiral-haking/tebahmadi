@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, type JWTPayload } from 'jose';
+import type { Permission } from './src/types';
+import { requiredSnappPermission } from './src/auth/snapp-permissions';
+import {
+  disabledPaymentGatewayForApiPath,
+  disabledAdminFeatureForApiPath,
+  isDisabledMarketplaceIntegrationApiPath,
+  MARKETPLACE_INTEGRATIONS_ENABLED,
+} from './src/config/admin-features';
 
 type Role = 'admin' | 'manager' | 'staff' | 'customer';
-type Perm =
-  | 'users:read'
-  | 'users:write'
-  | 'media:read'
-  | 'media:write'
-  | 'media:read:all'
-  | 'products:read'
-  | 'products:write'
-  | 'orders:read'
-  | 'orders:write'
-  | 'promotions:write'
-  | 'catalog:publish';
+type Perm = Permission;
 
 const rolePerms: Record<Role, Perm[]> = {
   admin: [
@@ -26,6 +23,11 @@ const rolePerms: Record<Role, Perm[]> = {
     'products:write',
     'orders:read',
     'orders:write',
+    'accounting:read',
+    'accounting:write',
+    'accounting:admin',
+    'holoo:read',
+    'holoo:write',
     'promotions:write',
     'catalog:publish',
   ],
@@ -38,6 +40,11 @@ const rolePerms: Record<Role, Perm[]> = {
     'products:write',
     'orders:read',
     'orders:write',
+    'accounting:read',
+    'accounting:write',
+    'accounting:admin',
+    'holoo:read',
+    'holoo:write',
     'promotions:write',
     'catalog:publish',
   ],
@@ -45,12 +52,13 @@ const rolePerms: Record<Role, Perm[]> = {
   customer: ['media:read', 'orders:read', 'orders:write'],
 };
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not set');
+function getSecretKey(): Uint8Array | null {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    return null;
+  }
+  return new TextEncoder().encode(secret);
 }
-
-const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 interface AuthPayload extends JWTPayload {
   sub?: string;
@@ -72,7 +80,13 @@ function requiredPermFor(pathname: string, method: string): Perm | null {
     return 'orders:read';
   }
 
-  if (!['POST', 'PATCH', 'DELETE'].includes(upper)) {
+  if (pathname.startsWith('/api/holoo')) {
+    if (upper === 'GET') return 'holoo:read';
+    if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(upper)) return 'holoo:write';
+    return null;
+  }
+
+  if (!['POST', 'PATCH', 'DELETE', 'PUT'].includes(upper)) {
     return null;
   }
 
@@ -106,9 +120,7 @@ function requiredPermFor(pathname: string, method: string): Perm | null {
   if (pathname.startsWith('/api/digikala')) return 'orders:write';
   if (pathname.startsWith('/api/sync')) return 'orders:write';
   if (pathname.startsWith('/api/basalaam')) return 'orders:write';
-  if (pathname.startsWith('/api/snapp')) return 'orders:write';
-  if (pathname.startsWith('/api/holoo')) return 'orders:write';
-
+  if (pathname.startsWith('/api/snapp')) return requiredSnappPermission(pathname, upper);
   return null;
 }
 
@@ -123,10 +135,10 @@ function isPublic(pathname: string, method: string): boolean {
     return true;
   }
 
-  if (pathname.startsWith('/api/media/') && upper === 'GET') {
+  if (pathname.startsWith('/api/media/') && (upper === 'GET' || upper === 'HEAD')) {
     return true;
   }
-  if (pathname.startsWith('/api/slides') && upper === 'GET') {
+  if (pathname.startsWith('/api/slides') && (upper === 'GET' || upper === 'HEAD')) {
     return true;
   }
 
@@ -135,6 +147,14 @@ function isPublic(pathname: string, method: string): boolean {
   }
 
   if (pathname.startsWith('/api/transport/quote') && (upper === 'GET' || upper === 'POST')) {
+    return true;
+  }
+
+  if (pathname.startsWith('/api/cart/suggestions') && (upper === 'GET' || upper === 'POST')) {
+    return true;
+  }
+
+  if (pathname === '/api/store/buy-link' && upper === 'GET') {
     return true;
   }
 
@@ -155,6 +175,11 @@ function isPublic(pathname: string, method: string): boolean {
 }
 
 async function verifyToken(token: string): Promise<AuthPayload | null> {
+  const secretKey = getSecretKey();
+  if (!secretKey) {
+    console.warn('JWT_SECRET is not set; rejecting authenticated request');
+    return null;
+  }
   try {
     const { payload } = await jwtVerify<AuthPayload>(token, secretKey, {
       algorithms: ['HS256'],
@@ -182,6 +207,31 @@ function isValidTorobClid(value: string): boolean {
 export async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
   const method = req.method;
+
+  if (pathname.startsWith('/api')) {
+    const disabledFeature = disabledAdminFeatureForApiPath(pathname);
+    if (disabledFeature) {
+      return NextResponse.json(
+        { error: 'feature_disabled', feature: disabledFeature },
+        { status: 404, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    if (!MARKETPLACE_INTEGRATIONS_ENABLED && isDisabledMarketplaceIntegrationApiPath(pathname)) {
+      return NextResponse.json(
+        { error: 'feature_disabled', feature: 'marketplaceIntegrations' },
+        { status: 404, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    const disabledPaymentGateway = disabledPaymentGatewayForApiPath(pathname);
+    if (disabledPaymentGateway) {
+      return NextResponse.json(
+        { error: 'feature_disabled', feature: 'paymentGateway', gateway: disabledPaymentGateway },
+        { status: 404, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+  }
 
   // Capture torob_clid from URL query parameter and set as cookie
   const torobClid = captureTorobClidFromUrl(req);
@@ -234,6 +284,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   if (!pathname.startsWith('/api')) {
     return NextResponse.next();
   }
+
   // Monitoring endpoints are intentionally public and return no customer data.
   if (pathname === '/api/health' || pathname === '/api/readiness') {
     return NextResponse.next();

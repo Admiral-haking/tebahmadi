@@ -7,6 +7,7 @@ import { logErrorLater } from "@/observability/error-log";
 import { syncInvoiceTracker } from "@/orders/services/invoiceService";
 import { syncSnpVendorsOrders, syncSnpVendorsVariants } from "@/snapp";
 import { TrackerModel } from "@/tracking";
+import { MARKETPLACE_INTEGRATIONS_ENABLED } from "@/config/admin-features";
 import { reconcileStockDiscrepancies, syncServiceStock } from "./service-stock";
 
 export { default as syncLockStatus } from "./model/sync";
@@ -37,6 +38,7 @@ async function runSettledSyncTasks(source: string, tasks: Array<Promise<unknown>
 }
 
 export async function syncServicesVariants() {
+    if (!MARKETPLACE_INTEGRATIONS_ENABLED) return;
     await runSettledSyncTasks("sync.variants.services", [
         syncDgkVendorsVariants(),
         syncBslVendorsVariants(),
@@ -46,11 +48,13 @@ export async function syncServicesVariants() {
 
 
 export async function syncServicesOrders() {
-    await runSettledSyncTasks("sync.orders.services", [
-        syncDgkVendorsOrders(),
-        syncBslVendorsOrders(),
-        syncSnpVendorsOrders()
-    ])
+    if (MARKETPLACE_INTEGRATIONS_ENABLED) {
+        await runSettledSyncTasks("sync.orders.services", [
+            syncDgkVendorsOrders(),
+            syncBslVendorsOrders(),
+            syncSnpVendorsOrders()
+        ])
+    }
 
     try {
 
@@ -76,6 +80,10 @@ export async function syncServicesOrders() {
 }
 
 export async function syncInventoryBackToServices(updated_at_from?: Date) {
+    if (!MARKETPLACE_INTEGRATIONS_ENABLED) {
+        const empty = { attempted: 0, succeeded: 0, failed: 0, errors: [] as string[] };
+        return { pushedVariants: 0, pushed: empty, reconciled: empty, disabled: true };
+    }
     await connectMongoose();
 
     const { data } = await searchVariantsWithDisplayName("", 1, 1e3, updated_at_from || new Date(Date.now() - (1e3 * 60 * 60)));

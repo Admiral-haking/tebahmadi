@@ -7,6 +7,7 @@ import {
   priceCartAction,
   checkoutAndPayAction,
   checkSnappPayEligibilityAction,
+  getAvailablePaymentGatewaysAction,
   type PriceCartResult,
   type SnappPayEligibilityResult,
 } from '@/app/(public)/cart/actions';
@@ -14,8 +15,13 @@ import { useTransportOptions } from './useTransportOptions';
 
 import { useCart } from './useCart';
 import { useLoginDialog } from '@/auth';
+import {
+  CHECKOUT_ATTEMPT_STORAGE_KEY,
+  CHECKOUT_GATEWAY_STORAGE_KEY,
+  getOrCreateCheckoutAttemptKey,
+} from './checkout-session';
 
-type PaymentGateway = 'zarinpal' | 'torob' | 'azkivam' | 'digipay' | 'snapppay';
+import type { PaymentGateway } from '@/payments/paymentTypes';
 
 const formatToman = (value: number) =>
   `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Math.max(0, Math.floor(value)))} تومان`;
@@ -58,10 +64,54 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isCheckoutPending, startCheckoutTransition] = useTransition();
   const [isRedirectPending, setIsRedirectPending] = useState(false);
-  const [selectedGateway, setSelectedGateway] = useState<PaymentGateway>('zarinpal');
+  const [selectedGateway, setSelectedGateway] = useState<PaymentGateway | null>(null);
+  const [availableGateways, setAvailableGateways] = useState<PaymentGateway[]>([]);
+  const [paymentGatewaysLoading, setPaymentGatewaysLoading] = useState(true);
   const redirectTimerRef = useRef<number | null>(null);
+  const gatewayRestoredRef = useRef(false);
+  const gatewayPersistenceInitializedRef = useRef(false);
 
   const [snappPayEligibility, setSnappPayEligibility] = useState<SnappPayEligibilityResult | null>(null);
+
+  useEffect(() => {
+    if (gatewayRestoredRef.current || typeof window === 'undefined') return;
+    gatewayRestoredRef.current = true;
+    const storedGateway = window.sessionStorage.getItem(CHECKOUT_GATEWAY_STORAGE_KEY);
+    if (storedGateway) {
+      setSelectedGateway(storedGateway as PaymentGateway);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!gatewayRestoredRef.current || typeof window === 'undefined') return;
+    if (!gatewayPersistenceInitializedRef.current) {
+      gatewayPersistenceInitializedRef.current = true;
+      return;
+    }
+    if (selectedGateway) {
+      window.sessionStorage.setItem(CHECKOUT_GATEWAY_STORAGE_KEY, selectedGateway);
+    } else {
+      window.sessionStorage.removeItem(CHECKOUT_GATEWAY_STORAGE_KEY);
+    }
+  }, [selectedGateway]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAvailablePaymentGatewaysAction()
+      .then((gateways) => {
+        if (!cancelled) setAvailableGateways(gateways);
+      })
+      .catch((error) => {
+        console.error('Payment gateway list failed', error);
+        if (!cancelled) setAvailableGateways([]);
+      })
+      .finally(() => {
+        if (!cancelled) setPaymentGatewaysLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -167,11 +217,20 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
       ...state,
       lines,
     });
+    const checkoutAttemptKey = getOrCreateCheckoutAttemptKey(
+      typeof window === 'undefined' ? null : window.localStorage.getItem(CHECKOUT_ATTEMPT_STORAGE_KEY),
+    );
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(CHECKOUT_ATTEMPT_STORAGE_KEY, checkoutAttemptKey);
+    }
 
     startCheckoutTransition(() => {
-      checkoutAndPayAction(snapshot, gateway)
+      checkoutAndPayAction(snapshot, gateway, checkoutAttemptKey)
         .then((result) => {
           if (result.ok) {
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+            }
             if (result.redirectDelayMs && result.redirectDelayMs > 0) {
               setIsRedirectPending(true);
               redirectTimerRef.current = window.setTimeout(() => {
@@ -186,11 +245,17 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
             // automatically once the user signs in (no round-trip to /auth).
             openLogin(() => handleCheckout(gateway));
           } else {
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+            }
             setCheckoutError(result.error);
           }
         })
         .catch((error) => {
           console.error('checkoutAndPayAction failed', error);
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+          }
           setCheckoutError('خطا در اتصال به درگاه پرداخت');
         });
     });
@@ -198,10 +263,16 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
 
   const hasLines = lines.length > 0;
   const pricingReady = pricingResult.status === 'success';
-  const checkoutDisabled = !hasLines || !pricingReady || isCheckoutPending || isRedirectPending;
+  const checkoutDisabled =
+    !hasLines ||
+    !pricingReady ||
+    !selectedGateway ||
+    paymentGatewaysLoading ||
+    isCheckoutPending ||
+    isRedirectPending;
   const shippingInfo = pricingReady ? pricingResult.shipping : null;
 
-  const paymentOptions: Array<{
+  type PaymentOption = {
     value: PaymentGateway;
     title: string;
     subtitle: string;
@@ -210,7 +281,9 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
     accent: string;
     accentCh: string;
     disabled?: boolean;
-  }> = [
+  };
+
+  const basePaymentOptions: PaymentOption[] = [
       {
         value: 'zarinpal',
         title: 'پرداخت مستقیم',
@@ -294,9 +367,12 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
         accentCh: 'var(--mui-palette-secondary-mainChannel)',
       },
     ];
+  const paymentOptions: PaymentOption[] = basePaymentOptions.filter((option) =>
+    availableGateways.includes(option.value),
+  );
 
   const snappPayEnabled = snappPayEligibility?.enabled === true;
-  if (snappPayEnabled) {
+  if (snappPayEnabled && availableGateways.includes('snapppay')) {
     const installmentAmount = formatToman((grandTotal ?? 0) / 4);
     // Two-line label driven entirely by the eligibility response's
     // title_message / description (SnappPay certification requirement); fall back
@@ -327,11 +403,27 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
     });
   }
 
+  if (availableGateways.includes('bajetpay')) {
+    paymentOptions.push({
+      value: 'bajetpay',
+      title: 'باجت‌پی',
+      subtitle: 'پرداخت آنلاین از طریق باجت‌پی',
+      badge: 'آنلاین',
+      icon: (
+        <Typography component="span" fontWeight={900} color="inherit" sx={{ fontSize: 15 }}>
+          BP
+        </Typography>
+      ),
+      accent: 'var(--mui-palette-info-main)',
+      accentCh: 'var(--mui-palette-info-mainChannel)',
+    });
+  }
+
   useEffect(() => {
     if (!paymentOptions.some((option) => option.value === selectedGateway)) {
-      setSelectedGateway('zarinpal');
+      setSelectedGateway(paymentOptions[0]?.value ?? null);
     }
-  }, [paymentOptions, selectedGateway]);
+  }, [availableGateways, snappPayEnabled, selectedGateway]);
 
   const shippingDisplay = pricingReady
     ? shippingInfo
@@ -551,10 +643,22 @@ export default function CartSummary({ show, action }: { show: boolean, action: R
             })}
           </Box>
 
+          {paymentGatewaysLoading ? (
+            <Typography variant="caption" color="text.secondary">
+              در حال بررسی روش‌های پرداخت...
+            </Typography>
+          ) : paymentOptions.length === 0 ? (
+            <Typography variant="caption" color="warning.main">
+              فعلاً روش پرداخت فعالی برای این سفارش تنظیم نشده است.
+            </Typography>
+          ) : null}
+
           <Button
             variant="contained"
             size="large"
-            onClick={() => handleCheckout(selectedGateway)}
+            onClick={() => {
+              if (selectedGateway) handleCheckout(selectedGateway);
+            }}
             disabled={checkoutDisabled}
             sx={{
               mt: 0.5,
