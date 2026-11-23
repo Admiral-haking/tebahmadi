@@ -23,7 +23,7 @@ export default function MegaMenuMobile({ categories }: Props) {
         onClick={() => setOpen(true)}
         aria-label="باز کردن منوی محصولات"
         aria-expanded={open ? "true" : undefined}
-        sx={{ color: "primary.main", flexShrink: 0 }}
+        sx={{ color: "primary.main", flexShrink: 0, width: 40, height: 40, p: 0.5 }}
       >
         <MenuRoundedIcon />
       </IconButton>

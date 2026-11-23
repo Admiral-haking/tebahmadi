@@ -6,13 +6,22 @@ import { slideCreateSchema } from '@/content/validation/slideSchema';
 import { createSlide, listSlides } from '@/content/services/slideService';
 
 export async function GET() {
-  await connectMongoose();
-  const slides = await listSlides();
-  return NextResponse.json({ data: slides }, {
-    headers: {
-      "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
-    },
-  });
+  try {
+    await connectMongoose();
+    const slides = await listSlides();
+    return NextResponse.json({ data: slides }, {
+      headers: {
+        "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
+      },
+    });
+  } catch (error) {
+    console.warn('Public slides unavailable; returning an empty result', error);
+    return NextResponse.json({ data: [] }, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    });
+  }
 }
 
 export async function POST(request: NextRequest) {

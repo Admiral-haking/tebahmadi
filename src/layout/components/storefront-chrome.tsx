@@ -17,15 +17,15 @@ export function AnnouncementBar() {
         alignItems: "center",
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ minWidth: 0 }}>
         <Stack
           direction="row"
           alignItems="center"
           justifyContent="center"
           gap={{ xs: 1, sm: 2 }}
-          sx={{ py: 0.75, textAlign: "center" }}
+          sx={{ py: 0.75, textAlign: "center", width: "100%", minWidth: 0 }}
         >
-          <Typography sx={{ fontSize: { xs: 11, sm: 13 }, lineHeight: 1.6 }}>
+          <Typography sx={{ minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: { xs: 10.5, sm: 13 }, lineHeight: 1.6 }}>
             پیشنهادهای تازه طب احمدی را از دست ندهید
           </Typography>
           <Box

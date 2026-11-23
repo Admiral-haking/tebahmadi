@@ -3,6 +3,7 @@
 import { Types, type FilterQuery } from "mongoose";
 
 import { connectMongoose, isMongoConfigured } from "@/lib/mongoose";
+import { getPreviewBlogIndex, getPreviewBlogPost } from "@/lib/preview-fallback";
 import { BlogPostModel, type BlogPostDocument } from "@/content/models/BlogPost";
 import { BlogCategoryModel, type BlogCategoryDocument } from "@/content/models/BlogCategory";
 import MediaModel from "@/models/Media";
@@ -153,28 +154,20 @@ export async function loadBlogIndex(searchParams: RawSearchParams): Promise<Blog
     const searchTerm = (singleValue(searchParams.q) ?? "").trim();
     const categoryParam = (singleValue(searchParams.category) ?? "").trim();
 
-    const emptyResult: BlogIndexData = {
-        searchTerm,
-        page,
-        pages: 1,
-        total: 0,
-        pageSize: PAGE_SIZE,
-        posts: [],
-        categories: [],
-        selectedCategory: null,
-        allPostsCount: 0,
-    };
+    const fallbackResult = () => getPreviewBlogIndex(searchParams);
 
     if (!isMongoConfigured()) {
-        return emptyResult;
+        return fallbackResult();
     }
 
     try {
         await connectMongoose();
     } catch (error) {
-        console.warn("loadBlogIndex failed to connect to MongoDB; returning empty blog index", error);
-        return emptyResult;
+        console.warn("loadBlogIndex failed to connect to MongoDB; returning preview blog index", error);
+        return fallbackResult();
     }
+
+    try {
 
     const baseMatch: FilterQuery<BlogPostDocument> = {
         status: "published",
@@ -297,6 +290,10 @@ export async function loadBlogIndex(searchParams: RawSearchParams): Promise<Blog
         selectedCategory,
         allPostsCount: totalPublished,
     };
+    } catch (error) {
+        console.warn("loadBlogIndex query failed; returning preview blog index", error);
+        return fallbackResult();
+    }
 }
 
 type BlogPostDetailQuery = Pick<
@@ -371,7 +368,12 @@ function buildPostDetail(
 export async function loadBlogPost(slug: string): Promise<BlogPostData | null> {
     if (!slug) return null;
 
-    await connectMongoose();
+    if (!isMongoConfigured()) {
+        return getPreviewBlogPost(slug);
+    }
+
+    try {
+        await connectMongoose();
 
     const postDoc = await BlogPostModel.findOne({ slug, status: "published" })
         .select({
@@ -477,4 +479,8 @@ export async function loadBlogPost(slug: string): Promise<BlogPostData | null> {
         post,
         related,
     };
+    } catch (error) {
+        console.warn("loadBlogPost failed; serving preview blog post", error);
+        return getPreviewBlogPost(slug);
+    }
 }

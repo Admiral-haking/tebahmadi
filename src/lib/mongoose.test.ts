@@ -4,13 +4,17 @@ import { connectMongoose, isMongoConfigured } from './mongoose';
 
 describe('connectMongoose and isMongoConfigured', () => {
   const originalMongoUri = process.env.MONGO_URI;
+  const originalFailureCooldown = process.env.MONGO_FAILURE_COOLDOWN_MS;
   const globalWithMongoose = globalThis as typeof globalThis & {
     __mongooseConnection?: Promise<typeof mongoose>;
+    __mongooseConnectionFailure?: { error: unknown; until: number; uri: string };
   };
 
   beforeEach(() => {
     delete (process.env as Record<string, string | undefined>).MONGO_URI;
+    delete (process.env as Record<string, string | undefined>).MONGO_FAILURE_COOLDOWN_MS;
     globalWithMongoose.__mongooseConnection = undefined;
+    globalWithMongoose.__mongooseConnectionFailure = undefined;
     Object.defineProperty(mongoose.connection, 'readyState', {
       value: 0,
       configurable: true,
@@ -21,10 +25,16 @@ describe('connectMongoose and isMongoConfigured', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     globalWithMongoose.__mongooseConnection = undefined;
+    globalWithMongoose.__mongooseConnectionFailure = undefined;
     if (originalMongoUri === undefined) {
       delete (process.env as Record<string, string | undefined>).MONGO_URI;
     } else {
       process.env.MONGO_URI = originalMongoUri;
+    }
+    if (originalFailureCooldown === undefined) {
+      delete (process.env as Record<string, string | undefined>).MONGO_FAILURE_COOLDOWN_MS;
+    } else {
+      process.env.MONGO_FAILURE_COOLDOWN_MS = originalFailureCooldown;
     }
   });
 
@@ -82,6 +92,7 @@ describe('connectMongoose and isMongoConfigured', () => {
 
   it('clears the cached promise after a failed connection so retries can succeed', async () => {
     process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/test';
+    process.env.MONGO_FAILURE_COOLDOWN_MS = '0';
 
     const connectSpy = vi
       .spyOn(mongoose, 'connect')
@@ -94,5 +105,17 @@ describe('connectMongoose and isMongoConfigured', () => {
     const result = await connectMongoose();
     expect(result).toBe(mongoose);
     expect(connectSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('reuses a recent connection failure during the cooldown window', async () => {
+    process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/test';
+    process.env.MONGO_FAILURE_COOLDOWN_MS = '5000';
+
+    const connectSpy = vi.spyOn(mongoose, 'connect').mockRejectedValue(new Error('connection refused'));
+
+    await expect(connectMongoose()).rejects.toThrow('connection refused');
+    await expect(connectMongoose()).rejects.toThrow('connection refused');
+
+    expect(connectSpy).toHaveBeenCalledTimes(1);
   });
 });

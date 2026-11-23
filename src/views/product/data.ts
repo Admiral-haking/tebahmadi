@@ -253,7 +253,8 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
     if (!isMongoConfigured()) {
         return getPreviewProductDetail(slug);
     }
-    await connectMongoose();
+    try {
+        await connectMongoose();
 
     const product = await ProductModel.findOne({ slug, status: "active" }).lean();
     if (!product) {
@@ -540,28 +541,32 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
                 : 0;
     const totalReviews = typeof aggregateTotal === "number" ? aggregateTotal : reviews.length;
 
-    return {
-        id: toStringId(product._id) ?? "",
-        slug: product.slug ?? slug,
-        title: product.title ?? "بدون عنوان",
-        description: product.description ?? undefined,
-        seoTitle: typeof product.seoTitle === "string" ? product.seoTitle : undefined,
-        seoDescription: typeof product.seoDescription === "string" ? product.seoDescription : undefined,
-        brand: product.brand ?? undefined,
-        categories: categoryInfos,
-        productTypeId,
-        productTypeName: productType?.name ?? undefined,
-        productFacts,
-        variants,
-        activeVariantCount: variants.length,
-        hasInventory,
-        colorAttributeLabel: colorAttribute?.label,
-        sizeAttributeLabel: sizeAttribute?.label ?? sizeAttribute?.key,
-        variantAttributes,
-        reviews,
-        reviewStats: {
-            averageRating,
-            total: totalReviews,
-        },
-    };
+        return {
+            id: toStringId(product._id) ?? "",
+            slug: product.slug ?? slug,
+            title: product.title ?? "بدون عنوان",
+            description: product.description ?? undefined,
+            seoTitle: typeof product.seoTitle === "string" ? product.seoTitle : undefined,
+            seoDescription: typeof product.seoDescription === "string" ? product.seoDescription : undefined,
+            brand: product.brand ?? undefined,
+            categories: categoryInfos,
+            productTypeId,
+            productTypeName: productType?.name ?? undefined,
+            productFacts,
+            variants,
+            activeVariantCount: variants.length,
+            hasInventory,
+            colorAttributeLabel: colorAttribute?.label,
+            sizeAttributeLabel: sizeAttribute?.label ?? sizeAttribute?.key,
+            variantAttributes,
+            reviews,
+            reviewStats: {
+                averageRating,
+                total: totalReviews,
+            },
+        };
+    } catch (error) {
+        console.warn("loadProductDetail failed; serving preview product", error);
+        return getPreviewProductDetail(slug);
+    }
 }

@@ -147,7 +147,8 @@ async function loadSimilarProducts(product: ProductDetailData): Promise<ProductC
         return [];
     }
 
-    await connectMongoose();
+    try {
+        await connectMongoose();
 
     const baseQuery: Record<string, unknown> = {
         status: "active",
@@ -223,6 +224,10 @@ async function loadSimilarProducts(product: ProductDetailData): Promise<ProductC
     });
 
     return products;
+    } catch (error) {
+        console.warn("loadSimilarProducts failed; serving preview products", error);
+        return getPreviewSimilarProducts(product.slug);
+    }
 }
 
 export default async function SimilarProducts({

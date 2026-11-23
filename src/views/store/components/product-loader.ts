@@ -376,7 +376,7 @@ export async function loadStoreProducts(
   const sort = parseSort(searchParams.sort);
   const page = parsePage(searchParams.page);
 
-  if (!isMongoConfigured()) {
+  const previewResult = () => {
     const q = singleValue(searchParams.q);
     const discountOnly = singleValue(searchParams.discount) === "1" || singleValue(searchParams.discount) === "true";
     const inStockOnly = singleValue(searchParams.inStock) === "1" || singleValue(searchParams.inStock) === "true";
@@ -395,9 +395,14 @@ export async function loadStoreProducts(
       page,
       pageSize: STORE_PAGE_SIZE,
     });
+  };
+
+  if (!isMongoConfigured()) {
+    return previewResult();
   }
 
-  await connectMongoose();
+  try {
+    await connectMongoose();
 
   const { activeCategoryId, productTypeIds } = context;
   let categoryIds: Types.ObjectId[] | undefined;
@@ -539,4 +544,8 @@ export async function loadStoreProducts(
     currentPage,
     pageSize: STORE_PAGE_SIZE,
   };
+  } catch (error) {
+    console.warn("loadStoreProducts failed; serving preview products", error);
+    return previewResult();
+  }
 }

@@ -18,7 +18,7 @@ import { clampNonNegative } from '@/lib/calc';
 import { sendOrderConfirmationSms, sendShipmentTrackingSms } from '@/lib/sms';
 import type { OfferDocument } from '@/orders/models/Offer';
 import { supportsMongoTransactions } from '@/lib/mongo';
-import { connectMongoose } from '@/lib/mongoose';
+import { connectMongoose, isMongoConfigured } from '@/lib/mongoose';
 import {
   INVOICE_PROGRESS_STATES,
   ORDER_PROGRESS_FREEZE_MS,
@@ -1644,6 +1644,10 @@ async function applyInvoiceStatusTransition(
 }
 
 async function cancelExpiredPendingInvoicesBatch(): Promise<void> {
+  if (!isMongoConfigured() || mongoose.connection.readyState !== 1) {
+    return;
+  }
+
   try {
     await connectMongoose();
   } catch (error) {
@@ -1695,6 +1699,10 @@ async function forceCompleteInvoiceProgress(invoiceId: string): Promise<void> {
 }
 
 async function finalizeOverdueShippedInvoicesBatch(): Promise<void> {
+  if (!isMongoConfigured() || mongoose.connection.readyState !== 1) {
+    return;
+  }
+
   try {
     await connectMongoose();
   } catch (error) {
@@ -1748,6 +1756,9 @@ async function runInvoiceMaintenanceSweep(): Promise<void> {
 
 function ensureInvoiceMaintenanceScheduler(): void {
   if (typeof window !== 'undefined') {
+    return;
+  }
+  if (!isMongoConfigured()) {
     return;
   }
   // Opt-out flag: the public-facing instance sets DISABLE_BACKGROUND_JOBS=1 so

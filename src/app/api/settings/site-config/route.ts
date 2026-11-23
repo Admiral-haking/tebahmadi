@@ -311,10 +311,20 @@ function buildEnvHealth(env: ReturnType<typeof buildEnvSummary>) {
 }
 
 export async function GET() {
-  await connectMongoose();
-  const [config, status] = await Promise.all([getSiteConfig(), isConfigured()]);
   const env = buildEnvSummary();
-  return NextResponse.json({ data: config, status, env, envHealth: buildEnvHealth(env) });
+  try {
+    await connectMongoose();
+    const [config, status] = await Promise.all([getSiteConfig(), isConfigured()]);
+    return NextResponse.json({ data: config, status, env, envHealth: buildEnvHealth(env) });
+  } catch (error) {
+    console.warn('Site config status is temporarily unavailable', error);
+    return NextResponse.json({
+      data: null,
+      status: { ok: false, missingKeys: [] },
+      env,
+      envHealth: buildEnvHealth(env),
+    });
+  }
 }
 
 export async function PATCH(request: NextRequest) {

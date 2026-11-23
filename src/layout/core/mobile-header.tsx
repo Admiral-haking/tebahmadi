@@ -22,14 +22,42 @@ export default async function HeaderMobile({ title: _title }: { title: string })
         borderTop: 0,
       }}
     >
-      <Stack direction="row" alignItems="center" gap={1.25} sx={{ width: '100%', px: { xs: 1.5, sm: 2 }, py: 1.25, minWidth: 0 }}>
-        <Logo size={46} showName />
-        <SearchBox onSearchUrl="/search" alwaysShowSearch boxSx={{ flex: 1, minWidth: 0 }} />
-        <MegaMenuMobile categories={JSON.parse(JSON.stringify(categories as any))} />
+      <Stack
+        direction="row"
+        alignItems="center"
+        sx={{
+          width: '100%',
+          px: { xs: 1, sm: 2 },
+          py: { xs: 1, sm: 1.25 },
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'row-reverse',
+          gap: { xs: 0.75, sm: 1.25 },
+          direction: 'rtl',
+        }}
+      >
+        <Box sx={{ width: 40, height: 40, flex: '0 0 40px', order: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+          <MegaMenuMobile categories={JSON.parse(JSON.stringify(categories as any))} />
+        </Box>
+        <SearchBox
+          onSearchUrl="/search"
+          alwaysShowSearch
+          boxSx={{
+            width: 'auto',
+            flex: 1,
+            order: 2,
+            maxWidth: 'none',
+            minWidth: 0,
+            '& button': { display: { xs: 'none', sm: 'inline-flex' } },
+          }}
+        />
+        <Box sx={{ minWidth: 0, order: 3, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <Logo size={40} />
+        </Box>
       </Stack>
-      <Stack direction="row" justifyContent="center" alignItems="center" gap={1} sx={{ minHeight: 46, px: 2, borderTop: '1px solid', borderColor: 'divider', color: 'primary.main' }}>
+      <Stack direction="row" justifyContent="center" alignItems="center" gap={0.75} sx={{ minHeight: 44, px: { xs: 1, sm: 2 }, minWidth: 0, borderTop: '1px solid', borderColor: 'divider', color: 'primary.main' }}>
         <Box component="span" sx={{ width: 24, height: 24, border: '1px solid', borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 800 }}>i</Box>
-        <Typography sx={{ fontSize: 12.5 }}>زمان آماده‌سازی و ارسال سفارش‌ها: <b>۳ تا ۷ روز کاری</b></Typography>
+        <Typography sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center', fontSize: { xs: 11.5, sm: 12.5 } }}>زمان آماده‌سازی و ارسال سفارش‌ها: <b>۳ تا ۷ روز کاری</b></Typography>
       </Stack>
     </Stack>
   );

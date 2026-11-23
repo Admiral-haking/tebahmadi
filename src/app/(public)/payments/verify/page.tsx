@@ -358,9 +358,20 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function VerifyPage({ searchParams }: VerifyPageProps) {
-  await connectMongoose();
-
   const resolvedSearchParams = await searchParams;
   const input = parseVerifyInput(resolvedSearchParams);
+
+  try {
+    await connectMongoose();
+  } catch (error) {
+    console.warn("Payment verification is temporarily unavailable", error);
+    return (
+      <PaymentVerificationView
+        status={false}
+        message="فعلاً امکان بررسی پرداخت وجود ندارد؛ لطفاً چند لحظه بعد دوباره تلاش کنید."
+      />
+    );
+  }
+
   return renderResult(input);
 }

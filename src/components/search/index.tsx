@@ -77,12 +77,13 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
             position: 'relative',
             maxWidth: 400,
             width: '100%',
+            minWidth: 0,
             ...boxSx
         }}
     >
         <FormProvider  {...methods}>
 
-            <form onSubmit={onSubmit} noValidate autoComplete="off">
+            <form onSubmit={onSubmit} noValidate autoComplete="off" style={{ minWidth: 0 }}>
 
                 <Stack
                     direction="row"
@@ -91,13 +92,16 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
                     sx={{
                         p: .5,
                         overflow: 'hidden',
+                        width: '100%',
+                        minWidth: 0,
                         transition: 'all .2s ease',
-                        px: 2,
+                        px: { xs: 1, sm: 2 },
+                        gap: { xs: 0.75, sm: 2 },
                         borderRadius: 3,
                         bgcolor: 'background.default'
                     }}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
+                    <svg style={{ flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
                         <path fill="currentColor" d="M20.313 11.157a9.157 9.157 0 1 1-18.313 0a9.157 9.157 0 0 1 18.313 0" opacity={0.5}></path>
                         <path fill="currentColor" d="m17.1 18.122l3.666 3.666a.723.723 0 0 0 1.023-1.022L18.122 17.1a9 9 0 0 1-1.022 1.022"></path>
                     </svg>
@@ -109,7 +113,8 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
                                 {...props}
                                 placeholder="جستجو..."
                                 sx={{
-                                    p: 1
+                                    p: 1,
+                                    minWidth: 0,
                                 }}
                                 fullWidth
                                 value={field.value}
@@ -117,7 +122,7 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
                             />
 
                             <Fade in={!!alwaysShowSearch || !!field.value}>
-                                <Button size="small" type="submit">
+                                <Button size="small" type="submit" sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
                                     جستجو
                                 </Button>
                             </Fade>

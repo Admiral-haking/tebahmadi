@@ -160,95 +160,112 @@ function computePricingAndMedia(
 }
 
 async function handle(req: NextRequest): Promise<NextResponse> {
-  await connectMongoose();
+  try {
+    await connectMongoose();
 
-  const params = req.nextUrl.searchParams;
-  const page = parsePositiveInt(params.get('page'), 1);
-  const pageSize = normalizePageSize(
-    params.get('item_per_page') ?? params.get('page_size') ?? params.get('limit'),
-  );
-  const skip = (page - 1) * pageSize;
+    const params = req.nextUrl.searchParams;
+    const page = parsePositiveInt(params.get('page'), 1);
+    const pageSize = normalizePageSize(
+      params.get('item_per_page') ?? params.get('page_size') ?? params.get('limit'),
+    );
+    const skip = (page - 1) * pageSize;
 
-  const baseUrl = resolveSiteBaseUrl();
-  const now = new Date();
-  const query = { status: 'active' as const };
+    const baseUrl = resolveSiteBaseUrl();
+    const now = new Date();
+    const query = { status: 'active' as const };
 
-  const [products, total] = await Promise.all([
-    ProductModel.find(query, {
-      _id: 1,
-      slug: 1,
-      title: 1,
-      variants: 1,
-      categories: 1,
-    })
-      .sort({ updatedAt: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(pageSize)
-      .lean()
-      .exec(),
-    ProductModel.countDocuments(query),
-  ]);
+    const [products, total] = await Promise.all([
+      ProductModel.find(query, {
+        _id: 1,
+        slug: 1,
+        title: 1,
+        variants: 1,
+        categories: 1,
+      })
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize)
+        .lean()
+        .exec(),
+      ProductModel.countDocuments(query),
+    ]);
 
-  const categoryIds = new Set<string>();
-  products.forEach((product) => {
-    if (!Array.isArray(product.categories)) {
-      return;
-    }
-    product.categories.forEach((categoryId) => {
-      const id = toStringId(categoryId);
-      if (id) {
-        categoryIds.add(id);
+    const categoryIds = new Set<string>();
+    products.forEach((product) => {
+      if (!Array.isArray(product.categories)) {
+        return;
       }
+      product.categories.forEach((categoryId) => {
+        const id = toStringId(categoryId);
+        if (id) {
+          categoryIds.add(id);
+        }
+      });
     });
-  });
 
-  const categoryNameMap = await loadCategoryNames([...categoryIds]);
+    const categoryNameMap = await loadCategoryNames([...categoryIds]);
 
-  const items = products
-    .map((product) => {
-      const productId = toStringId(product._id);
-      const slug = typeof product.slug === 'string' ? product.slug : '';
-      const productPath = slug ? `/product/${slug}` : '';
-      const pageUrl = productPath ? toAbsoluteUrl(productPath, baseUrl) : '';
+    const items = products
+      .map((product) => {
+        const productId = toStringId(product._id);
+        const slug = typeof product.slug === 'string' ? product.slug : '';
+        const productPath = slug ? `/product/${slug}` : '';
+        const pageUrl = productPath ? toAbsoluteUrl(productPath, baseUrl) : '';
 
-      const { price, oldPrice, isAvailable, mediaId, color } = computePricingAndMedia(
-        product.variants,
-        now,
-      );
+        const { price, oldPrice, isAvailable, mediaId, color } = computePricingAndMedia(
+          product.variants,
+          now,
+        );
 
-      if (price === null) {
-        return null;
-      }
+        if (price === null) {
+          return null;
+        }
 
-      const imageUrl = mediaId
-        ? buildMediaUrl(mediaId, baseUrl)
-        : toAbsoluteUrl(FALLBACK_IMAGE, baseUrl);
+        const imageUrl = mediaId
+          ? buildMediaUrl(mediaId, baseUrl)
+          : toAbsoluteUrl(FALLBACK_IMAGE, baseUrl);
 
-      return {
-        title: product.title,
-        id: productId || slug,
-        price,
-        old_price: oldPrice ?? undefined,
-        category: pickCategoryName(product.categories, categoryNameMap),
-        image: imageUrl,
-        color: color ?? undefined,
-        guarantee: undefined,
-        is_available: isAvailable,
-        url: pageUrl,
-      };
-    })
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+        return {
+          title: product.title,
+          id: productId || slug,
+          price,
+          old_price: oldPrice ?? undefined,
+          category: pickCategoryName(product.categories, categoryNameMap),
+          image: imageUrl,
+          color: color ?? undefined,
+          guarantee: undefined,
+          is_available: isAvailable,
+          url: pageUrl,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
-  const pagesCount = total > 0 ? Math.ceil(total / pageSize) : 0;
+    const pagesCount = total > 0 ? Math.ceil(total / pageSize) : 0;
 
-  return NextResponse.json({
-    success: true,
-    products: items,
-    total_items: total,
-    pages_count: pagesCount,
-    item_per_page: pageSize,
-    page_num: page,
-  });
+    return NextResponse.json({
+      success: true,
+      products: items,
+      total_items: total,
+      pages_count: pagesCount,
+      item_per_page: pageSize,
+      page_num: page,
+    });
+  } catch (error) {
+    console.warn('Public product list unavailable; returning an empty result', error);
+    const params = req.nextUrl.searchParams;
+    const page = parsePositiveInt(params.get('page'), 1);
+    const pageSize = normalizePageSize(
+      params.get('item_per_page') ?? params.get('page_size') ?? params.get('limit'),
+    );
+    return NextResponse.json({
+      success: true,
+      products: [],
+      total_items: 0,
+      pages_count: 0,
+      item_per_page: pageSize,
+      page_num: page,
+    });
+  }
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {

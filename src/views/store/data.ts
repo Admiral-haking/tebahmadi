@@ -177,7 +177,7 @@ function ensureHasProductTypes(ids: Set<string>) {
     }
 }
 
-export async function loadStoreCategoryContext(slugSegments: string[]): Promise<StoreCategoryContext> {
+async function loadStoreCategoryContextFromMongo(slugSegments: string[]): Promise<StoreCategoryContext> {
     await connectMongoose();
 
     const segments = normalizeSegments(slugSegments);
@@ -366,6 +366,29 @@ export async function loadStoreCategoryContext(slugSegments: string[]): Promise<
         productTypeIds: Array.from(productTypeIds),
         mediaId: activeMediaId,
     };
+}
+
+export async function loadStoreCategoryContext(slugSegments: string[]): Promise<StoreCategoryContext> {
+    const segments = normalizeSegments(slugSegments);
+    if (segments.length === 0) {
+        throw new Error("Category path is required");
+    }
+
+    const previewContext = getPreviewStoreCategoryContext(segments);
+    if (!isMongoConfigured()) {
+        if (previewContext) return previewContext;
+        throw new Error("Category not found");
+    }
+
+    try {
+        return await loadStoreCategoryContextFromMongo(segments);
+    } catch (error) {
+        if (previewContext) {
+            console.warn("loadStoreCategoryContext failed; serving preview category", error);
+            return previewContext;
+        }
+        throw error;
+    }
 }
 
 const loadRootCategoriesCached = unstable_cache(
