@@ -17,8 +17,8 @@ export default async function Layout({
             {children}
             <CartRecoveryPrompt />
             <SmartPopup config={config?.smartPopup ?? null} />
-            <Script id="goftino-loader" strategy="lazyOnload">
-                {`(function(){var loaded=false;function inject(){if(loaded)return;loaded=true;var s=document.createElement("script");s.src="/goftino.js";s.async=true;document.body.appendChild(s);}if("requestIdleCallback" in window){window.requestIdleCallback(inject,{timeout:5000});}else{setTimeout(inject,3500);}window.addEventListener("pointerdown",inject,{once:true,passive:true});window.addEventListener("keydown",inject,{once:true});})();`}
+            <Script id="dartamas-chat-widget" strategy="afterInteractive">
+                {`(function () { function loadChatWidget() { if (document.getElementById('7Hqdkw')) { return; } var script = document.createElement('script'); script.id = '7Hqdkw'; script.src = 'https://my.dartamas.com/chatButtonModule.js?t=' + Date.now(); script.setAttribute('data-url', 'sipOnline'); script.setAttribute('data-no-minify', '1'); script.setAttribute('data-nowprocket', '1'); script.setAttribute('data-no-defer', '1'); script.setAttribute('data-cfasync', 'false'); script.setAttribute('data-noptimize', '1'); script.setAttribute('data-pagespeed-no-defer', ''); document.body.appendChild(script); } if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', loadChatWidget, { once: true }); } else { loadChatWidget(); } })();`}
             </Script>
         </>
     );
