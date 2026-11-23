@@ -1,9 +1,9 @@
 "use client";
 
 import { Badge, IconButton, NoSsr, Tooltip } from "@mui/material";
-import { ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/useCart";
+import { BrandIcon } from "@/components/brand-icons";
 import { TEB_COLORS } from "@/theme/tokens";
 import { formatFaNumber } from "@/lib/format";
 
@@ -45,7 +45,7 @@ export default function CartButton() {
                             },
                         }}
                     >
-                        <ShoppingBag size={19} strokeWidth={2} />
+                        <BrandIcon name="cart" size={19} strokeWidth={2} />
                     </Badge>
                 </IconButton>
             </Tooltip>

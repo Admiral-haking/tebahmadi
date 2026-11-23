@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge, Box, NoSsr, Stack, Typography } from "@mui/material";
-import { Home, ShoppingBag, Store, User } from "lucide-react";
 import { useCart } from "@/components/cart/useCart";
 import { useAuth } from "@/auth";
 import { TEB_COLORS } from "@/theme/tokens";
 import { formatFaNumber } from "@/lib/format";
+import { BrandIcon, type BrandIconName } from "@/components/brand-icons";
 
 export function MobileBottomNav() {
     const pathname = usePathname() || "/";
@@ -18,19 +18,19 @@ export function MobileBottomNav() {
         return null;
     }
 
-    const items = [
+    const items: Array<{ key: string; label: string; href: string; icon: BrandIconName; active: boolean; badge?: number }> = [
         {
             key: "home",
             label: "خانه",
             href: "/",
-            icon: Home,
+            icon: "home",
             active: pathname === "/",
         },
         {
             key: "store",
             label: "فروشگاه",
             href: "/store",
-            icon: Store,
+            icon: "store",
             active:
                 pathname.startsWith("/store") ||
                 pathname.startsWith("/product") ||
@@ -40,7 +40,7 @@ export function MobileBottomNav() {
             key: "cart",
             label: "سبد خرید",
             href: "/cart",
-            icon: ShoppingBag,
+            icon: "cart",
             active: pathname.startsWith("/cart"),
             badge: itemsCount,
         },
@@ -48,7 +48,7 @@ export function MobileBottomNav() {
             key: "account",
             label: user ? "سفارش‌ها" : "حساب کاربری",
             href: user ? "/orders" : "/auth",
-            icon: User,
+            icon: user ? "orders" : "account",
             active: pathname.startsWith("/orders") || pathname.startsWith("/auth"),
         },
     ];
@@ -77,7 +77,6 @@ export function MobileBottomNav() {
                 sx={{ height: 60, px: 1 }}
             >
                 {items.map((item) => {
-                    const Icon = item.icon;
                     return (
                         <Box
                             key={item.key}
@@ -123,11 +122,11 @@ export function MobileBottomNav() {
                                                 },
                                             }}
                                         >
-                                            <Icon size={18} strokeWidth={2} />
+                                            <BrandIcon name={item.icon} size={18} strokeWidth={2} />
                                         </Badge>
                                     </NoSsr>
                                 ) : (
-                                    <Icon size={18} strokeWidth={2} />
+                                    <BrandIcon name={item.icon} size={18} strokeWidth={2} />
                                 )}
                             </Box>
                             <Typography

@@ -4,6 +4,7 @@ import SearchBox from '@/components/search';
 import { loadCategoryTree } from '@/lib/cache';
 import MegaMenuMobile from '../components/mega-menu-mobile';
 import { glassSurface } from '@/theme/design-system';
+import { BrandIcon } from '@/components/brand-icons';
 
 export default async function HeaderMobile({ title: _title }: { title: string }) {
   const categories = await loadCategoryTree();
@@ -42,6 +43,7 @@ export default async function HeaderMobile({ title: _title }: { title: string })
         <SearchBox
           onSearchUrl="/search"
           alwaysShowSearch
+          leadingIcon={<BrandIcon name="search" size={24} />}
           boxSx={{
             width: 'auto',
             flex: 1,
@@ -56,7 +58,9 @@ export default async function HeaderMobile({ title: _title }: { title: string })
         </Box>
       </Stack>
       <Stack direction="row" justifyContent="center" alignItems="center" gap={0.75} sx={{ minHeight: 44, px: { xs: 1, sm: 2 }, minWidth: 0, borderTop: '1px solid', borderColor: 'divider', color: 'primary.main' }}>
-        <Box component="span" sx={{ width: 24, height: 24, border: '1px solid', borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 800 }}>i</Box>
+        <Box component="span" sx={{ width: 24, height: 24, border: '1px solid', borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'primary.main' }}>
+          <BrandIcon name="info" size={15} />
+        </Box>
         <Typography sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center', fontSize: { xs: 11.5, sm: 12.5 } }}>زمان آماده‌سازی و ارسال سفارش‌ها: <b>۳ تا ۷ روز کاری</b></Typography>
       </Stack>
     </Stack>

@@ -1,8 +1,9 @@
-import OptimizedImage from '@/components/image';
 import { SiteInfoDocument } from '@/settings/models/SiteInfo';
 import { loadRootCategories, StoreCategorySummary } from '@/views/store/data';
-import { Box, Button, Divider, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import Link from 'next/link';
+import { BrandIcon } from '@/components/brand-icons';
+import { resolveBrandIconName } from '@/lib/brand-icons';
 
 export default async function Categories({ siteInfo }: { siteInfo: SiteInfoDocument }) {
   const categories = await loadRootCategories();
@@ -49,13 +50,46 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
         gap: { xs: 1.5, sm: 2, md: 2.5 },
       }}
     >
-      {categories.map((category, index) => (
-        <Box
+      {categories.map((category) => (
+        <CategoryTile
           key={category.id}
-          component={Button}
-          LinkComponent={Link}
-          href={category.path && category.path.trim().length > 0 ? '/store/' + category.path : '/store'}
-          sx={{
+          category={category}
+        />
+      ))}
+    </Box>
+  );
+}
+
+export function getCategoryDisplayName(name: string | null | undefined, path: string | null | undefined): string {
+  const trimmedName = name?.trim();
+  if (trimmedName) return trimmedName;
+
+  const segment = path
+    ?.split("/")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .pop()
+    ?.replace(/[-_]+/g, " ");
+
+  return segment ? `دسته‌بندی ${segment}` : "دسته‌بندی محصولات";
+}
+
+export function CategoryTile({ category }: { category: StoreCategorySummary }) {
+  const categoryLabel = getCategoryDisplayName(category.name, category.path);
+  const iconName = resolveBrandIconName(
+    category.name,
+    category.path,
+    (category as StoreCategorySummary & { icon?: string }).icon,
+  );
+
+  return (
+    <Box
+      component={Button}
+      LinkComponent={Link}
+      href={category.path && category.path.trim().length > 0 ? '/store/' + category.path : '/store'}
+      aria-label={categoryLabel}
+      data-brand-icon={iconName}
+      sx={{
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
@@ -70,60 +104,60 @@ async function CategoryGrid({ categories }: { categories: StoreCategorySummary[]
               borderColor: 'primary.main',
             },
           }}
-        >
-          <Box
-            className="category-icon"
-            sx={{
-              position: 'relative',
-              width: { xs: 74, sm: 88, md: 108 },
-              height: { xs: 74, sm: 88, md: 108 },
-              borderRadius: { xs: 3, md: 4 },
-              overflow: 'hidden',
-              mb: 1,
-              border: '1px solid',
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              boxShadow: '0 8px 24px rgba(42, 90, 68, .08)',
-              transition: 'transform 180ms ease, border-color 180ms ease',
-            }}
-          >
-            <OptimizedImage
-              src={
-                category.mediaId
-                  ? '/api/media/' + category.mediaId
-                  : (category as unknown as { imageUrl?: string }).imageUrl || '/category.png'
-              }
-              fallbackSrc="/category.png"
-              alt={category.name || 'category'}
-              fill
-              sizes="(max-width: 600px) 74px, (max-width: 900px) 88px, 108px"
-              priority={index < 5}
-              fetchPriority={index < 5 ? 'high' : 'auto'}
-              style={{ objectFit: 'cover' }}
-            />
-          </Box>
-
-          <Typography
-            variant="body2"
-            component="p"
-            sx={{
-              textAlign: 'center',
-              width: '100%',
-              lineHeight: 1.45,
-              px: 0.5,
-              fontSize: { xs: '0.78rem', sm: '0.9rem' },
-              fontWeight: 600,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {category.name}
-          </Typography>
+    >
+      <Box
+        className="category-icon"
+        sx={{
+          position: 'relative',
+          display: 'grid',
+          placeItems: 'center',
+          width: { xs: 74, sm: 88, md: 108 },
+          height: { xs: 74, sm: 88, md: 108 },
+          borderRadius: { xs: 3, md: 4 },
+          overflow: 'hidden',
+          mb: 1,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          color: 'primary.main',
+          backgroundImage: 'radial-gradient(circle at 25% 20%, rgba(197,160,89,.18), transparent 38%), linear-gradient(145deg, rgba(42,90,68,.08), rgba(249,248,246,.92))',
+          boxShadow: '0 8px 24px rgba(42, 90, 68, .08)',
+          transition: 'transform 180ms ease, border-color 180ms ease',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            inset: 8,
+            border: '1px solid',
+            borderColor: 'rgba(42,90,68,.12)',
+            borderRadius: { xs: 2, md: 3 },
+            pointerEvents: 'none',
+          },
+        }}
+      >
+        <Box sx={{ position: 'relative', zIndex: 1, width: { xs: 38, sm: 46, md: 54 }, height: { xs: 38, sm: 46, md: 54 } }}>
+          <BrandIcon name={iconName} size="100%" />
         </Box>
-      ))}
+      </Box>
+
+      <Typography
+        variant="body2"
+        component="p"
+        sx={{
+          textAlign: 'center',
+          width: '100%',
+          lineHeight: 1.45,
+          px: 0.5,
+          fontSize: { xs: '0.78rem', sm: '0.9rem' },
+          fontWeight: 600,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {categoryLabel}
+      </Typography>
     </Box>
   );
 }

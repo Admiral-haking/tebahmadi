@@ -15,9 +15,10 @@ describe("buildCategoryMenuItems", () => {
         id: "root",
         label: "دمنوش‌ها",
         href: "/store/teas",
+        icon: "tea",
         children: [
-          { id: "child-2", label: "نعناع", href: "/store/teas/mint" },
-          { id: "child-1", label: "گل سرخ", href: "/store/teas/rose" },
+          { id: "child-2", label: "نعناع", href: "/store/teas/mint", icon: "tea" },
+          { id: "child-1", label: "گل سرخ", href: "/store/teas/rose", icon: "tea" },
         ],
       },
     ]);
