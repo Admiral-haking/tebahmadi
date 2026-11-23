@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requirePermission } from '@/lib/auth';
+import { hasDeveloperAccess } from '@/lib/developer-access';
 import {
   getPaymentGatewayControls,
   isPaymentGateway,
@@ -18,11 +19,17 @@ const updateSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  if (!hasDeveloperAccess(request)) {
+    return NextResponse.json({ error: 'developer_access_required' }, { status: 401 });
+  }
   await requirePermission(request, 'orders:write');
   return NextResponse.json({ data: await getPaymentGatewayControls() });
 }
 
 export async function PUT(request: NextRequest) {
+  if (!hasDeveloperAccess(request)) {
+    return NextResponse.json({ error: 'developer_access_required' }, { status: 401 });
+  }
   await requirePermission(request, 'orders:write');
 
   try {
