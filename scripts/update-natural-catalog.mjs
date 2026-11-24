@@ -122,11 +122,16 @@ const productTypes = mongoose.connection.collection('producttypes');
 const categories = mongoose.connection.collection('categories');
 const products = mongoose.connection.collection('products');
 const slugs = updates.map((item) => item.slug);
-const found = await products.find({ slug: { $in: slugs } }, { projection: { slug: 1 } }).toArray();
+const skus = updates.map((item) => item.sku);
+const found = await products.find(
+  { $or: [{ slug: { $in: slugs } }, { 'variants.sku': { $in: skus } }] },
+  { projection: { slug: 1, variants: { sku: 1 } } },
+).toArray();
 const foundSlugs = new Set(found.map((item) => item.slug));
-const missing = slugs.filter((slug) => !foundSlugs.has(slug));
+const foundSkus = new Set(found.flatMap((item) => (item.variants || []).map((variant) => variant.sku)));
+const missing = updates.filter((item) => !foundSlugs.has(item.slug) && !foundSkus.has(item.sku)).map((item) => item.slug);
 
-console.log(`پیش‌بررسی: ${found.length} از ${updates.length} محصول هدف پیدا شد.`);
+console.log(`پیش‌بررسی: ${updates.length - missing.length} از ${updates.length} محصول هدف پیدا شد.`);
 if (missing.length > 0 && (!createMissing || missing.some((slug) => slug !== 'unwanted-hair-oil'))) {
   throw new Error(`محصول هدف پیدا نشد: ${missing.join(', ')}`);
 }
@@ -140,7 +145,7 @@ if (process.argv.includes('--dry-run')) {
 const now = new Date();
 let created = 0;
 for (const item of updates) {
-  if (!foundSlugs.has(item.slug)) {
+  if (!foundSlugs.has(item.slug) && !foundSkus.has(item.sku)) {
     const typeResult = await productTypes.findOneAndUpdate(
       { name: item.typeName },
       {
@@ -182,6 +187,7 @@ for (const item of updates) {
     );
     await products.insertOne({
       _id: new mongoose.Types.ObjectId(),
+      slug: item.slug,
       productTypeId: typeResult._id,
       typeVersion: 1,
       title: item.title,
@@ -211,10 +217,12 @@ for (const item of updates) {
     created += 1;
     continue;
   }
+  const productFilter = foundSlugs.has(item.slug) ? { slug: item.slug } : { 'variants.sku': item.sku };
   const result = await products.updateOne(
-    { slug: item.slug },
+    productFilter,
     {
       $set: {
+        slug: item.slug,
         description: item.description,
         attributeValues: item.attributeValues,
         attrs: item.attrs,
