@@ -36,6 +36,8 @@ import { CHECKOUT_STEP_STORAGE_KEY } from "./checkout-session";
 import { EmptyState } from "@/components/ui";
 import { TEB_COLORS, TEB_RADII } from "@/theme/tokens";
 import { logCartRecommendationEvents } from "./cart-suggestions.api";
+import { useAuth, useLoginDialog } from "@/auth";
+import { requiresCartLogin } from "@/features/cart/cart-auth";
 
 export type UpsellProduct = {
   id: string;
@@ -83,6 +85,8 @@ const collectVariantIdentityKeys = (variant: Record<string, unknown>): string[] 
 export default function CartPageContent() {
   usePaymentCleanup();
   const { state, lines, savedLines, clear, addFixedLine, addPerUnitLine, syncLineConstraints } = useCart();
+  const { user, status } = useAuth();
+  const { openLogin } = useLoginDialog();
   const [upsellProducts, setUpsellProducts] = React.useState<UpsellProduct[]>([]);
   const [isUpsellLoading, setIsUpsellLoading] = React.useState(false);
   const carouselRef = React.useRef<HTMLDivElement | null>(null);
@@ -316,25 +320,34 @@ export default function CartPageContent() {
       if (!product.inStock) {
         return;
       }
-      if (product.line.priceModel === "per_unit") {
-        addPerUnitLine(product.line, 1, product.line.unitOfMeasure);
-      } else {
-        addFixedLine(product.line, 1);
+      const addUpsell = () => {
+        if (product.line.priceModel === "per_unit") {
+          addPerUnitLine(product.line, 1, product.line.unitOfMeasure);
+        } else {
+          addFixedLine(product.line, 1);
+        }
+        void logCartRecommendationEvents(
+          [
+            { event: "click", algo: product.algo ?? "curated", productId: product.id },
+            { event: "add", algo: product.algo ?? "curated", productId: product.id },
+          ],
+          cartProductIdsKey,
+        ).catch(() => undefined);
+        setRecentlyAddedId(product.line.variantId);
+        if (recentlyAddedTimer.current) {
+          window.clearTimeout(recentlyAddedTimer.current);
+        }
+        recentlyAddedTimer.current = window.setTimeout(() => setRecentlyAddedId(null), 1500);
+      };
+
+      if (requiresCartLogin(status, Boolean(user))) {
+        openLogin(addUpsell);
+        return;
       }
-      void logCartRecommendationEvents(
-        [
-          { event: "click", algo: product.algo ?? "curated", productId: product.id },
-          { event: "add", algo: product.algo ?? "curated", productId: product.id },
-        ],
-        cartProductIdsKey,
-      ).catch(() => undefined);
-      setRecentlyAddedId(product.line.variantId);
-      if (recentlyAddedTimer.current) {
-        window.clearTimeout(recentlyAddedTimer.current);
-      }
-      recentlyAddedTimer.current = window.setTimeout(() => setRecentlyAddedId(null), 1500);
+
+      addUpsell();
     },
-    [addFixedLine, addPerUnitLine, cartProductIdsKey],
+    [addFixedLine, addPerUnitLine, cartProductIdsKey, openLogin, status, user],
   );
 
   const scrollCarousel = React.useCallback((direction: number) => {

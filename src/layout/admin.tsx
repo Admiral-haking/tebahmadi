@@ -12,7 +12,8 @@ export function LayoutAdmin({ children }: ChildrenProps) {
             sx={{
                 minHeight: "100dvh",
                 bgcolor: TEB_COLORS.background,
-                pb: { xs: 10, md: 4 },
+                pt: { xs: "76px", md: 0 },
+                pb: { xs: "calc(76px + env(safe-area-inset-bottom))", md: 4 },
                 overflowX: "clip",
             }}
         >

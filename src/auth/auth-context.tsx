@@ -81,16 +81,14 @@ export function AuthProvider({ children }: ChildrenProps) {
   }, []);
 
   useEffect(() => {
-    setTimeout(() => {
-      if (initialized.current) {
-        return;
-      }
-      initialized.current = true;
-      refresh().catch(() => {
-        // refresh handles errors internally
-      });
-    }, 1e3);
-  }, []);
+    if (initialized.current) {
+      return;
+    }
+    initialized.current = true;
+    refresh().catch(() => {
+      // refresh handles errors internally
+    });
+  }, [refresh]);
 
   const value: AuthContextValue = {
     user,

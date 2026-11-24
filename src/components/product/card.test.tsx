@@ -21,7 +21,7 @@ describe("ProductCard", () => {
     );
 
     expect(markup).toContain("روغن گیاهی نمونه");
-    expect(markup).toContain("افزودن به سبد");
+    expect(markup).toContain("مشاهده و انتخاب");
     expect(markup).not.toContain("opacity:0");
   });
 });

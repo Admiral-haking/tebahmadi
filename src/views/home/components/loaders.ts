@@ -4,7 +4,9 @@ import { ProductCardProps } from "@/components/product";
 import { loadDiscountProducts, loadNewestProducts, loadPopularProducts } from "@/lib/cache";
 import MediaModel from "@/models/Media";
 import { formatFinalProduct } from "@/views/store/components/product-loader";
+import { selectDiscountProducts } from "./discount-selection";
 import { Types } from "mongoose";
+import { isMongoConfigured } from "@/lib/mongoose";
 import {
     getPreviewDiscountProducts,
     getPreviewNewestProducts,
@@ -15,6 +17,10 @@ export async function loadPopular() {
     try {
         const { items } = await loadPopularProducts();
 
+        if (!isMongoConfigured()) {
+            return getPreviewPopularProducts().items;
+        }
+
         const mediaIds = new Set<string>();
         items.forEach((product) => {
             const variants = Array.isArray(product.activeVariants) ? product.activeVariants : [];
@@ -51,14 +57,10 @@ export async function loadPopular() {
 
         const products: ProductCardProps[] = (await Promise.all(items.map(async (product) => await formatFinalProduct(product, mediaMap)))).filter((product) => product.inStock);
 
-        if (products.length === 0) {
-            return getPreviewPopularProducts().items;
-        }
-
         return products;
     } catch (error) {
-        console.warn("loadPopular failed, serving preview fallback:", error);
-        return getPreviewPopularProducts().items;
+        console.warn("loadPopular failed; returning no published products:", error);
+        return [];
     }
 }
 
@@ -66,6 +68,10 @@ export async function loadDiscount() {
     try {
         const { items } = await loadDiscountProducts();
 
+        if (!isMongoConfigured()) {
+            return getPreviewDiscountProducts().items;
+        }
+
         const mediaIds = new Set<string>();
         items.forEach((product) => {
             const variants = Array.isArray(product.activeVariants) ? product.activeVariants : [];
@@ -100,16 +106,14 @@ export async function loadDiscount() {
             }
         }
 
-        const products: ProductCardProps[] = (await Promise.all(items.map(async (product) => await formatFinalProduct(product, mediaMap)))).filter((product) => product.inStock);
+        const products: ProductCardProps[] = await Promise.all(
+            items.map(async (product) => await formatFinalProduct(product, mediaMap)),
+        );
 
-        if (products.length === 0) {
-            return getPreviewDiscountProducts().items;
-        }
-
-        return products;
+        return selectDiscountProducts(products);
     } catch (error) {
-        console.warn("loadDiscount failed, serving preview fallback:", error);
-        return getPreviewDiscountProducts().items;
+        console.warn("loadDiscount failed; returning no special offers:", error);
+        return [];
     }
 }
 
@@ -117,6 +121,10 @@ export async function loadNewest() {
     try {
         const { items } = await loadNewestProducts();
 
+        if (!isMongoConfigured()) {
+            return getPreviewNewestProducts().items;
+        }
+
         const mediaIds = new Set<string>();
         items.forEach((product) => {
             const variants = Array.isArray(product.activeVariants) ? product.activeVariants : [];
@@ -153,13 +161,9 @@ export async function loadNewest() {
 
         const products: ProductCardProps[] = (await Promise.all(items.map(async (product) => await formatFinalProduct(product, mediaMap)))).filter((product) => product.inStock);
 
-        if (products.length === 0) {
-            return getPreviewNewestProducts().items;
-        }
-
         return products;
     } catch (error) {
-        console.warn("loadNewest failed, serving preview fallback:", error);
-        return getPreviewNewestProducts().items;
+        console.warn("loadNewest failed; returning no published products:", error);
+        return [];
     }
 }

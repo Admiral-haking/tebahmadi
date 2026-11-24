@@ -4,11 +4,11 @@ import ProductModel, { type ProductDocument } from "@/catalog/models/Product";
 import ProductTypeModel, { type AttributeDef, type AttributeKind } from "@/catalog/models/ProductType";
 import CategoryModel from "@/catalog/models/Category";
 import MediaModel from "@/media/models/Media";
-import { connectMongoose } from "@/lib/mongoose";
+import { connectMongoose, isMongoConfigured } from "@/lib/mongoose";
 import { effectiveUnitPrice } from "@/catalog/services/productService";
 import { Types } from "mongoose";
 import { ProductReviewModel } from "@/reviews/models/ProductReview";
-import { isMongoConfigured, getPreviewProductDetail } from "@/lib/preview-fallback";
+import { getPreviewProductDetail } from "@/lib/preview-fallback";
 
 const ALLOWED_UNITS = ['unit', 'pair', 'kg', 'g', 'lb', 'oz', 'l', 'ml'] as const;
 export type Unit = typeof ALLOWED_UNITS[number];
@@ -261,7 +261,7 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
 
     const product = await ProductModel.findOne({ slug, status: "active" }).lean();
     if (!product) {
-        return getPreviewProductDetail(slug);
+        return null;
     }
 
     const productTypeId = toStringId(product.productTypeId);
@@ -569,7 +569,7 @@ export async function loadProductDetail(slug: string): Promise<ProductDetailData
             },
         };
     } catch (error) {
-        console.warn("loadProductDetail failed; serving preview product", error);
-        return getPreviewProductDetail(slug);
+        console.warn("loadProductDetail failed; returning no product", error);
+        return null;
     }
 }

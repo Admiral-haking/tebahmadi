@@ -7,9 +7,6 @@ import MegaButton from './mega-button';
 
 export default async function DiscountProducts() {
   const products = await loadDiscount();
-  if (!products || products.length === 0) {
-    return null;
-  }
 
   return (
     <Container component="section" maxWidth="lg" sx={{ my: { xs: 3, md: 5 }, px: { xs: 1.5, sm: 2 } }}>
@@ -43,7 +40,25 @@ export default async function DiscountProducts() {
           <MegaButton color="secondary" sx={{ flexShrink: 0 }} />
         </Stack>
       </Box>
-      <DiscountClient products={products} />
+      {products.length > 0 ? (
+        <DiscountClient products={products} />
+      ) : (
+        <Box
+          sx={{
+            mx: { xs: 2, md: 4 },
+            mt: { xs: 2, md: 3 },
+            px: 2,
+            py: { xs: 2.5, md: 3 },
+            border: '1px dashed rgba(255,255,255,.45)',
+            borderRadius: { xs: 2, md: 3 },
+            textAlign: 'center',
+          }}
+        >
+          <Typography variant="body2" sx={{ opacity: .86 }}>
+            فعلاً محصول تخفیف‌دار فعالی ثبت نشده است.
+          </Typography>
+        </Box>
+      )}
       </Box>
     </Container>
   );

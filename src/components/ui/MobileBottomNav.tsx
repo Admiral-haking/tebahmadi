@@ -8,6 +8,11 @@ import { useAuth } from "@/auth";
 import { TEB_COLORS } from "@/theme/tokens";
 import { formatFaNumber } from "@/lib/format";
 import { BrandIcon, type BrandIconName } from "@/components/brand-icons";
+import type { AuthUser } from "@/auth";
+
+function hasElevatedRole(user: AuthUser | null): boolean {
+    return Boolean(user?.roles?.some((role) => role !== "customer"));
+}
 
 export function MobileBottomNav() {
     const pathname = usePathname() || "/";
@@ -44,6 +49,15 @@ export function MobileBottomNav() {
             active: pathname.startsWith("/cart"),
             badge: itemsCount,
         },
+        ...(hasElevatedRole(user)
+            ? [{
+                key: "admin",
+                label: "پنل مدیریت",
+                href: "/admin",
+                icon: "authenticity" as const,
+                active: pathname.startsWith("/admin"),
+            }]
+            : []),
         {
             key: "account",
             label: user ? "سفارش‌ها" : "حساب کاربری",

@@ -236,11 +236,11 @@ export function ProductCard({
                             : "موجود و آماده ارسال"}
                 </Typography>
 
-                {/* 7. Add to cart CTA (>= 44px touch target) */}
+                {/* The card does not have enough variant data to mutate the cart safely. */}
                 <Box
                     component={inStock ? Link : "div"}
                     href={inStock ? href : undefined}
-                    aria-label={inStock ? `افزودن ${title} به سبد خرید` : "ناموجود"}
+                    aria-label={inStock ? `مشاهده و انتخاب ${title}` : "ناموجود"}
                     sx={{
                         mt: 0.5,
                         minHeight: 44,
@@ -270,7 +270,7 @@ export function ProductCard({
                     }}
                 >
                     <ShoppingBag size={16} strokeWidth={2} />
-                    <span>{inStock ? "افزودن به سبد" : "ناموجود"}</span>
+                    <span>{inStock ? "مشاهده و انتخاب" : "ناموجود"}</span>
                 </Box>
             </CardContent>
         </Card>

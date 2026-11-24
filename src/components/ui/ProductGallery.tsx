@@ -40,7 +40,7 @@ export function ProductGallery({
                     position: "relative",
                     width: "100%",
                     aspectRatio: "1 / 1",
-                    borderRadius: `${TEB_RADII.lg}px`,
+                    borderRadius: { xs: `${TEB_RADII.md}px`, sm: `${TEB_RADII.lg}px` },
                     overflow: "hidden",
                     bgcolor: TEB_COLORS.softSurface,
                     border: `1px solid ${TEB_COLORS.border}`,
@@ -53,7 +53,7 @@ export function ProductGallery({
                     fill
                     priority
                     sizes="(max-width: 900px) 100vw, 50vw"
-                    style={{ objectFit: "cover" }}
+                    style={{ objectFit: "contain", padding: "4%" }}
                 />
                 {discountBadge}
             </Box>
@@ -65,6 +65,10 @@ export function ProductGallery({
                     sx={{
                         overflowX: "auto",
                         pb: 0.5,
+                        px: { xs: 0.25, sm: 0 },
+                        flexWrap: "nowrap",
+                        justifyContent: { xs: "flex-start", sm: "center" },
+                        WebkitOverflowScrolling: "touch",
                     }}
                 >
                     {safeImages.map((image, index) => {
@@ -79,11 +83,11 @@ export function ProductGallery({
                                 aria-pressed={isSelected}
                                 sx={{
                                     position: "relative",
-                                    width: 72,
-                                    height: 72,
+                                    width: { xs: 60, sm: 72 },
+                                    height: { xs: 60, sm: 72 },
                                     flexShrink: 0,
                                     p: 0,
-                                    borderRadius: `${TEB_RADII.md}px`,
+                                    borderRadius: { xs: `${TEB_RADII.sm}px`, sm: `${TEB_RADII.md}px` },
                                     overflow: "hidden",
                                     cursor: "pointer",
                                     bgcolor: TEB_COLORS.softSurface,
@@ -99,8 +103,8 @@ export function ProductGallery({
                                     fallbackSrc={fallbackSrc}
                                     alt={image.alt}
                                     fill
-                                    sizes="72px"
-                                    style={{ objectFit: "cover" }}
+                                    sizes="(max-width: 600px) 60px, 72px"
+                                    style={{ objectFit: "contain", padding: "6px" }}
                                 />
                             </Box>
                         );

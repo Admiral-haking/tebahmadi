@@ -195,8 +195,6 @@ async function loadStoreCategoryContextFromMongo(slugSegments: string[]): Promis
         .lean()
         .exec();
     if (!rootCategory) {
-        const previewContext = getPreviewStoreCategoryContext(segments);
-        if (previewContext) return previewContext;
         throw new Error("Category not found");
     }
 
@@ -383,10 +381,7 @@ export async function loadStoreCategoryContext(slugSegments: string[]): Promise<
     try {
         return await loadStoreCategoryContextFromMongo(segments);
     } catch (error) {
-        if (previewContext) {
-            console.warn("loadStoreCategoryContext failed; serving preview category", error);
-            return previewContext;
-        }
+        console.warn("loadStoreCategoryContext failed; returning no category", error);
         throw error;
     }
 }
@@ -403,7 +398,7 @@ const loadRootCategoriesCached = unstable_cache(
             .exec();
         return roots.map((doc) => toCategorySummary(doc));
     },
-    ["root-categories-v2"],
+    ["root-categories-v3"],
     { tags: ["category-tree", "catalog"] },
 );
 
@@ -416,7 +411,7 @@ export async function loadRootCategories(): Promise<StoreCategorySummary[]> {
             console.warn("loadRootCategories failed; returning empty list", error);
         }
     }
-    if (categories.length === 0) {
+    if (categories.length === 0 && !isMongoConfigured()) {
         return PREVIEW_CATEGORIES;
     }
     return categories;

@@ -139,7 +139,7 @@ export function moveSavedLineToCart(state: CartState, variantId: string): CartSt
   return { ...nextState, lines: nextLines };
 }
 
-function cartReducer(state: CartState, action: CartAction): CartState {
+export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_LINE': {
       const incoming = applyQuantityConstraints(action.payload);

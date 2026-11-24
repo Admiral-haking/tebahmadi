@@ -7,7 +7,7 @@ import UserModel, { UserDocument } from '@/models/User';
 import type { Permission, UserRole } from '@/types';
 
 export const AUTH_COOKIE_NAME = 'auth_token';
-const DEFAULT_JWT_TTL_SECONDS = 3600;
+const DEFAULT_JWT_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 export interface AuthTokenPayload {
   sub: string;
