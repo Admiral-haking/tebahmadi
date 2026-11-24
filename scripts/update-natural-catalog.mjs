@@ -25,6 +25,7 @@ const updates = [
   {
     slug: 'slimming-oil',
     sku: 'TA-SLIMMING-OIL',
+    variantActive: true,
     description: 'روغن گیاهی طب احمدی با حجم ۶۰ سی‌سی و ترکیبی از گلنار فارسی، دارچین، زنجبیل، شوید، میخک، زیره، رازیانه و انیسون. این محصول برای استفاده موضعی در روتین مراقبت بدن و ماساژ شکم و پهلو تهیه شده است. روزانه مقدار مناسبی روی ناحیه موردنظر بزنید و حدود ۵ دقیقه ماساژ دهید؛ ادامه روش مصرف باید مطابق برچسب رسمی محصول باشد. پیش از مصرف روی بخش کوچکی از پوست تست شود و از تماس با چشم، زخم و پوست تحریک‌شده خودداری کنید. این محصول جایگزین تشخیص، پیشگیری یا درمان پزشکی، رژیم غذایی یا مشاوره پزشک نیست.',
     attributeValues: [
       { key: 'volumeMl', value: 60 },
@@ -54,6 +55,7 @@ const updates = [
   {
     slug: 'tab-ahmadi-deodorant-powder',
     sku: 'TA-DEODORANT-POWDER-20G',
+    variantActive: true,
     description: 'پودر عرق‌گیر طب احمدی، محصولی سبک و قابل‌حمل با وزن ۲۰ گرم برای کمک به کنترل رطوبت و کاهش بوی نامطبوع بدن و پا در استفاده روزانه است. پس از حمام مقدار کمی از پودر را روی پوست تمیز و خشک استفاده کنید؛ برای پا می‌توان مقدار کمی از پودر را با آب مخلوط کرد. بلافاصله پس از شیو استفاده نکنید و در صورت قرمزی، خارش یا سوزش مصرف را متوقف کنید. ماندگاری اعلامی محصول تا ۱۲۰ ساعت است و نتیجه مصرف به شرایط پوست و نحوه استفاده بستگی دارد.',
     attributeValues: [
       { key: 'ingredients', value: 'ترکیبات پودری عرق‌گیر طبق برچسب محصول' },
@@ -89,6 +91,7 @@ const updates = [
     typeName: 'مراقبت پوست و مو',
     categoryPath: 'skin-hair-care',
     sku: 'TA-UNWANTED-HAIR-OIL',
+    variantActive: false,
     description: 'روغن موضعی طب احمدی با حجم ۶۰ سی‌سی برای استفاده در روتین مراقبت پوست پس از اصلاح یا اپیلاسیون. ترکیبات، روش مصرف و هرگونه ادعای کاهش رشد مو باید پیش از فعال‌سازی با برچسب رسمی، مستندات ایمنی و الزامات قانونی تطبیق داده شود. این محصول جایگزین لیزر، تشخیص یا درمان پزشکی نیست و پیش از مصرف به تست حساسیت نیاز دارد.',
     attributeValues: [
       { key: 'volumeMl', value: 60 },
@@ -201,7 +204,7 @@ for (const item of updates) {
         attributeValues: item.variantAttributeValues,
         price: { model: 'fixed', amount: 0, unitOfMeasure: 'unit' },
         inventory: { trackingUnit: 'unit', quantity: 0, lowStockThreshold: 0, frozen: true },
-        active: false,
+        active: item.variantActive,
         createdAt: now,
         updatedAt: now,
       }],
@@ -229,6 +232,7 @@ for (const item of updates) {
         searchableText: item.searchableText,
         seoTitle: item.seoTitle,
         seoDescription: item.seoDescription,
+        'variants.$[variant].active': item.variantActive,
         'variants.$[variant].attributeValues': item.variantAttributeValues,
         updatedAt: now,
       },
