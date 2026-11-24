@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import fs from 'node:fs';
 
 const allowProduction = process.argv.includes('--allow-production');
+const createMissing = process.argv.includes('--create-missing');
 
 function loadEnvFile(path) {
   if (!fs.existsSync(path)) return;
@@ -84,6 +85,9 @@ const updates = [
   },
   {
     slug: 'unwanted-hair-oil',
+    title: 'روغن رفع موی زائد',
+    typeName: 'مراقبت پوست و مو',
+    categoryPath: 'skin-hair-care',
     sku: 'TA-UNWANTED-HAIR-OIL',
     description: 'روغن موضعی طب احمدی با حجم ۶۰ سی‌سی برای استفاده در روتین مراقبت پوست پس از اصلاح یا اپیلاسیون. ترکیبات، روش مصرف و هرگونه ادعای کاهش رشد مو باید پیش از فعال‌سازی با برچسب رسمی، مستندات ایمنی و الزامات قانونی تطبیق داده شود. این محصول جایگزین لیزر، تشخیص یا درمان پزشکی نیست و پیش از مصرف به تست حساسیت نیاز دارد.',
     attributeValues: [
@@ -114,6 +118,8 @@ const updates = [
 ];
 
 await mongoose.connect(uri);
+const productTypes = mongoose.connection.collection('producttypes');
+const categories = mongoose.connection.collection('categories');
 const products = mongoose.connection.collection('products');
 const slugs = updates.map((item) => item.slug);
 const found = await products.find({ slug: { $in: slugs } }, { projection: { slug: 1 } }).toArray();
@@ -121,7 +127,7 @@ const foundSlugs = new Set(found.map((item) => item.slug));
 const missing = slugs.filter((slug) => !foundSlugs.has(slug));
 
 console.log(`پیش‌بررسی: ${found.length} از ${updates.length} محصول هدف پیدا شد.`);
-if (missing.length > 0) {
+if (missing.length > 0 && (!createMissing || missing.some((slug) => slug !== 'unwanted-hair-oil'))) {
   throw new Error(`محصول هدف پیدا نشد: ${missing.join(', ')}`);
 }
 
@@ -132,7 +138,79 @@ if (process.argv.includes('--dry-run')) {
 }
 
 const now = new Date();
+let created = 0;
 for (const item of updates) {
+  if (!foundSlugs.has(item.slug)) {
+    const typeResult = await productTypes.findOneAndUpdate(
+      { name: item.typeName },
+      {
+        $set: {
+          name: item.typeName,
+          version: 1,
+          attributes: [
+            { key: 'volumeMl', label: 'حجم', kind: 'number', variant: true, filterable: true, unit: 'میلی‌لیتر', min: 1 },
+            { key: 'ingredients', label: 'ترکیبات', kind: 'text', searchable: true },
+            { key: 'usage', label: 'روش مصرف', kind: 'text' },
+            { key: 'applicationArea', label: 'ناحیه مصرف', kind: 'text', filterable: true },
+            { key: 'warning', label: 'هشدار مصرف', kind: 'text' },
+            { key: 'storage', label: 'شرایط نگهداری', kind: 'text' },
+          ],
+          updatedAt: now,
+        },
+        $setOnInsert: { createdAt: now },
+      },
+      { upsert: true, returnDocument: 'after' },
+    );
+    const categoryResult = await categories.findOneAndUpdate(
+      { path: item.categoryPath },
+      {
+        $set: {
+          name: 'مراقبت پوست و مو',
+          slug: item.categoryPath,
+          path: item.categoryPath,
+          depth: 0,
+          position: 2,
+          isActive: true,
+          seoTitle: 'محصولات مراقبت پوست و مو | طب احمدی',
+          seoDescription: 'محصولات موضعی مراقبت پوست و مو طب احمدی با اطلاعات ترکیبات، مصرف و هشدارها.',
+          productTypeId: typeResult._id,
+          updatedAt: now,
+        },
+        $setOnInsert: { parentId: null, ancestors: [], createdAt: now },
+      },
+      { upsert: true, returnDocument: 'after' },
+    );
+    await products.insertOne({
+      _id: new mongoose.Types.ObjectId(),
+      productTypeId: typeResult._id,
+      typeVersion: 1,
+      title: item.title,
+      brand: 'طب احمدی',
+      description: item.description,
+      attributeValues: item.attributeValues,
+      attrs: item.attrs,
+      variants: [{
+        _id: new mongoose.Types.ObjectId(),
+        sku: item.sku,
+        attributeValues: item.variantAttributeValues,
+        price: { model: 'fixed', amount: 0, unitOfMeasure: 'unit' },
+        inventory: { trackingUnit: 'unit', quantity: 0, lowStockThreshold: 0, frozen: true },
+        active: false,
+        createdAt: now,
+        updatedAt: now,
+      }],
+      categories: [categoryResult._id],
+      searchableText: item.searchableText,
+      seoTitle: item.seoTitle,
+      seoDescription: item.seoDescription,
+      status: 'draft',
+      showInCart: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+    created += 1;
+    continue;
+  }
   const result = await products.updateOne(
     { slug: item.slug },
     {
@@ -154,5 +232,5 @@ for (const item of updates) {
   }
 }
 
-console.log(`اطلاعات ${updates.length} محصول با موفقیت به‌روز شد.`);
+console.log(`اطلاعات ${updates.length - created} محصول به‌روز و ${created} محصول جدید به‌صورت draft/inactive ایجاد شد.`);
 await mongoose.disconnect();
