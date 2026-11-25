@@ -814,12 +814,7 @@ export default function CartPageContent() {
                   </Stack>
                   <AddressForm />
                   <Divider sx={{ borderColor: TEB_COLORS.border }} />
-                  <Stack spacing={1.25}>
-                    <Typography variant="subtitle1" fontWeight={800} color={TEB_COLORS.textPrimary}>
-                      روش ارسال
-                    </Typography>
-                    <CarrierSelect />
-                  </Stack>
+                  <CarrierSelect />
                 </Stack>
               </Paper>
             </Grid>
