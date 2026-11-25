@@ -6,7 +6,10 @@ import type { CartAvailabilityRow } from '@/components/cart/cart-availability';
 /**
  * Reads sellable stock from the catalog in one query. The cart never treats a
  * browser snapshot as authoritative: a missing variant, inactive product, or
- * inactive variant is returned as not sellable and is handled by checkout.
+ * explicitly inactive variant is returned as not sellable and is handled by
+ * checkout. `showInCart` is a separate presentation/purchase-link flag and
+ * must not make an otherwise active, in-stock product look unavailable after
+ * it was added from the product page.
  */
 export async function getCartVariantAvailability(variantIds: readonly string[]): Promise<CartAvailabilityRow[]> {
   const ids = Array.from(
@@ -21,17 +24,20 @@ export async function getCartVariantAvailability(variantIds: readonly string[]):
 
   const products = await ProductModel.find(
     { 'variants._id': { $in: ids.map((id) => new Types.ObjectId(id)) } },
-    { status: 1, showInCart: 1, variants: 1 },
+    { status: 1, variants: 1 },
   ).lean();
 
   const rows = new Map<string, CartAvailabilityRow>();
   for (const product of products) {
-    const productSellable = product.status === 'active' && product.showInCart !== false;
+    const productSellable = product.status === 'active';
     for (const variant of product.variants ?? []) {
       const variantId = variant._id?.toString();
       if (!variantId || !ids.includes(variantId)) continue;
       const available = Math.max(0, Number(variant.inventory?.quantity ?? 0) || 0);
-      const sellable = productSellable && variant.active === true;
+      // Older catalog rows may not have an `active` field. The product page
+      // already treats those rows as active, so the cart must use the same
+      // backwards-compatible rule and reject only an explicit false value.
+      const sellable = productSellable && variant.active !== false;
       rows.set(variantId, {
         variantId,
         available,

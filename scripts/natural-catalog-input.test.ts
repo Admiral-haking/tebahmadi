@@ -21,7 +21,9 @@ describe('supplier natural catalog input', () => {
   });
 
   it('keeps safety-sensitive and incomplete input out of the active catalog', () => {
-    const unwantedHairOil = naturalCatalogInput.find((item) => item.slug === 'unwanted-hair-oil');
+    const unwantedHairOil = naturalCatalogInput.find((item) => item.slug === 'unwanted-hair-oil') as
+      | { requiresSafetyReview?: boolean }
+      | undefined;
     const delayCapsules = naturalCatalogInput.find((item) => item.slug === 'men-delay-herbal-capsules');
 
     expect(unwantedHairOil?.requiresSafetyReview).toBe(true);
