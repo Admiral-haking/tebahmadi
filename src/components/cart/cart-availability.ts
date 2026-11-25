@@ -51,6 +51,21 @@ export function getUnavailableVariantIds(
   });
 }
 
+/**
+ * Background reconciliation must not delete a cart line merely because stock
+ * is temporarily empty or selling is paused. Those states are useful
+ * checkout warnings and the customer should be able to decide what to do.
+ * Only a variant that is no longer returned by the catalog can be safely
+ * removed without an explicit customer action.
+ */
+export function getReconciliationRemovalVariantIds(
+  variantIds: readonly string[],
+  rows: readonly CartAvailabilityRow[],
+): string[] {
+  const returnedVariantIds = new Set(rows.map((row) => row.variantId));
+  return normalizeCartVariantIds(variantIds).filter((variantId) => !returnedVariantIds.has(variantId));
+}
+
 function formatQuantity(value: number): string {
   return value.toLocaleString('fa-IR', { maximumFractionDigits: 3 });
 }

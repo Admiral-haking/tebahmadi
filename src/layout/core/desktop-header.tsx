@@ -16,6 +16,7 @@ export default async function HeaderDesktop() {
   return (
     <Box
       component="header"
+      className="teb-desktop-header"
       sx={{
         display: { xs: 'none', md: 'block' },
         position: 'sticky',

@@ -15,10 +15,11 @@ type Props = InputProps & {
     preserveQueryParams?: boolean;
     onSearch?: (str: string) => any
     leadingIcon?: ReactNode;
+    boxClassName?: string;
 
 };
 
-export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSearch, initialQuery, preserveQueryParams, onSearch, leadingIcon, ...props }: Props) {
+export default function SearchBox({ boxSx = {}, boxClassName, onSearchUrl: url, alwaysShowSearch, initialQuery, preserveQueryParams, onSearch, leadingIcon, ...props }: Props) {
     const methods = useForm<{ q: string }>({
         resolver: zodResolver(z.object({ q: z.string() })),
         defaultValues: { q: initialQuery ?? "" },
@@ -74,6 +75,7 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
     }, [initialQuery])
 
     return <Box
+        className={boxClassName}
         sx={{
             position: 'relative',
             maxWidth: 400,

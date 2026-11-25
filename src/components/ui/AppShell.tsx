@@ -28,6 +28,7 @@ export function AppShell({
 
     return (
         <Box
+            className="teb-app-shell"
             sx={{
                 minHeight: "100vh",
                 display: "flex",
@@ -43,6 +44,7 @@ export function AppShell({
 
             <Box
                 component="main"
+              className="teb-app-main"
                 sx={{
                     flex: 1,
                     position: "relative",

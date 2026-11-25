@@ -70,6 +70,7 @@ export function MobileBottomNav() {
     return (
         <Box
             component="nav"
+            className="teb-mobile-bottom-nav"
             aria-label="ناوبری پایین موبایل"
             sx={{
                 display: { xs: "block", md: "none" },
