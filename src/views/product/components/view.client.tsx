@@ -856,8 +856,10 @@ export default function ProductDetailClient({
                             sx={{
                                 position: "relative",
                                 width: "100%",
-                                height: "100%",
-                                minHeight: { xs: 360, sm: 520, md: 420, lg: 480 },
+                                maxWidth: { xs: 420, md: "none" },
+                                aspectRatio: { xs: "4 / 5", md: "1 / 1" },
+                                maxHeight: { xs: 520, sm: 560, md: 600, lg: 640 },
+                                mx: "auto",
                                 borderRadius: { xs: 3, md: 5 },
                                 overflow: "hidden",
                                 bgcolor: "rgba(42, 90, 68, .045)",
@@ -874,6 +876,7 @@ export default function ProductDetailClient({
                                 fill
                                 priority
                                 transparentBackground
+                                sizes="(max-width: 600px) 92vw, (max-width: 900px) 48vw, 540px"
                                 style={{ objectFit: "contain", padding: isMobile ? "4%" : "2%" }}
                                 containerStyle={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
                             />
@@ -906,6 +909,8 @@ export default function ProductDetailClient({
                                                 fallbackSrc={FALLBACK_IMAGE}
                                                 width={72}
                                                 height={72}
+                                                loading="lazy"
+                                                sizes="72px"
                                                 transparentBackground
                                                 style={{ objectFit: "cover" }}
                                             />
@@ -1045,8 +1050,11 @@ export default function ProductDetailClient({
                                 bottom: { xs: 82, md: "auto" },
                                 zIndex: 10,
                                 p: { xs: 1, md: 0 },
+                                pb: { xs: "calc(0.5rem + env(safe-area-inset-bottom))", md: 0 },
                                 mx: { xs: -1, md: 0 },
-                                borderRadius: 3,
+                                borderRadius: { xs: 2, md: 0 },
+                                border: { xs: "1px solid", md: "none" },
+                                borderColor: { xs: "divider", md: "transparent" },
                                 bgcolor: { xs: "rgba(255,255,255,.94)", md: "transparent" },
                                 backdropFilter: { xs: "blur(12px)", md: "none" },
                             }}
