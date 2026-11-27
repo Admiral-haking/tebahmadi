@@ -52,7 +52,7 @@ export function ProductGallery({
                     alt={current.alt}
                     fill
                     priority
-                    sizes="(max-width: 900px) 100vw, 50vw"
+                    sizes="(max-width: 600px) 92vw, (max-width: 900px) 48vw, 540px"
                     style={{ objectFit: "cover" }}
                 />
                 {discountBadge}

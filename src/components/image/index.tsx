@@ -96,7 +96,6 @@ export default function OptimizedImage(props: OptimizedImageProps) {
                 }}
                 style={{
                     objectFit: props.fill ? "cover" : "contain",
-                    opacity: isLoaded ? 1 : 0,
                     transition: "opacity 220ms ease",
                     ...(style || {}),
                 }}

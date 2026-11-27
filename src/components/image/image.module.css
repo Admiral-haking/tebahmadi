@@ -19,4 +19,11 @@
     );
     background-size: 200% 100%;
     animation: optimizedImageShimmer 1.3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shimmer {
+        animation: none;
+    }
 }
