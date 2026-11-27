@@ -5,6 +5,7 @@ import { Box, Button, Divider, LinearProgress, MenuItem, Paper, Stack, TextField
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { copyShippingText } from "@/orders/utils/shippingText";
+import { getBasalaamProductImageUrl } from "@/basalaam/services/image-utils";
 
 export function BslOrderDetails({ order_id, vendorId, items, refresh }: { order_id: number, vendorId: string, items: any[], refresh: VoidFunction }) {
     const [loading, setLoading] = useState(false);
@@ -138,7 +139,7 @@ export function BslOrderDetails({ order_id, vendorId, items, refresh }: { order_
                         >
                             <Box
                                 component="img"
-                                src={item.product.photos[0].original}
+                                src={getBasalaamProductImageUrl(item.product?.photos)}
                                 width={100}
                                 height={100}
                                 alt={item.displayName}

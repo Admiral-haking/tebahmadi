@@ -48,9 +48,9 @@ import StatusChip from './components/StatusChip';
 import StatusUpdateForm from './components/StatusUpdateForm';
 import {
   formatToman,
+  getProgressLabel,
   STATUS_LABELS,
   INVOICE_STATUSES,
-  PROGRESS_LABELS,
   type InvoiceStatus,
 } from './constants';
 import Splash from '@/components/splash';
@@ -60,6 +60,7 @@ import { useSiteInfo } from '../site-settings/hooks';
 import { ContentCopy } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { copyShippingText } from '@/orders/utils/shippingText';
+import { getReceiptAddress } from './receipt-utils';
 import {
   cancelSnappPayInvoiceAction,
   updateSnappPayInvoiceAction,
@@ -221,7 +222,7 @@ const ReceiptToPrint = forwardRef<HTMLDivElement, ReceiptToPrintProps>(({ invoic
       </Box>
 
       <Box sx={{ textAlign: 'center', my: 1 }}>------------------------------</Box>
-      <Box sx={{ textAlign: 'center', fontSize: '11px' }}>{data?.addresses?.[0].address}</Box>
+      <Box sx={{ textAlign: 'center', fontSize: '11px' }}>{getReceiptAddress(data)}</Box>
       <Box sx={{ textAlign: 'center', fontSize: '11px' }}>از خرید شما متشکریم</Box>
     </Box>
   );
@@ -1036,7 +1037,7 @@ export default function InvoiceDetailView({ invoiceId }: InvoiceDetailProps) {
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography variant="h6">مراحل ارسال</Typography>
                       <Chip
-                        label={progressView?.current ? PROGRESS_LABELS[progressView.current].title : 'ثبت نشده'}
+                        label={getProgressLabel(progressView?.current)}
                         color={progressView?.current === 'order-finished' ? 'success' : 'default'}
                         size="small"
                         variant={progressView?.current ? 'filled' : 'outlined'}

@@ -28,7 +28,7 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 
 import {
   formatToman,
-  PROGRESS_LABELS,
+  getProgressLabel,
   STATUS_COLORS,
   type InvoiceStatus,
   type InvoiceProgressState,
@@ -609,9 +609,7 @@ export default function OrdersTable({
             {invoices.map((invoice) => {
               const statusPalette = STATUS_COLORS[invoice.status];
               const progressState = invoice.progressState ?? null;
-              const progressLabel = progressState
-                ? PROGRESS_LABELS[progressState].title
-                : "ثبت نشده";
+              const progressLabel = getProgressLabel(progressState);
               const progressDate = getProgressDate(invoice);
               const paymentStatusLabel = getPaymentStatusLabel(
                 invoice.paymentStatus,

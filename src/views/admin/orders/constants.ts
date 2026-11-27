@@ -43,3 +43,10 @@ export const PROGRESS_LABELS: Record<InvoiceProgressState, { title: string; help
   'packaged-posted': { title: 'بسته‌بندی و ارسال', helper: 'تحویل به پست یا پیک' },
   'order-finished': { title: 'تحویل نهایی', helper: 'سفارش تکمیل شده است' },
 };
+
+export function getProgressLabel(state?: string | null): string {
+  if (!state) {
+    return 'ثبت نشده';
+  }
+  return PROGRESS_LABELS[state as InvoiceProgressState]?.title ?? 'وضعیت نامشخص';
+}

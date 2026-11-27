@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { File as NodeFile } from "node:buffer";
 import { DEFAULT_AI_IMAGE_SYSTEM_PROMPT } from "@/ai/constants";
+import { getImageBase64 } from "./response-utils";
 
 // Disable Next's default body parser for this route
 export const config = {
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
             quality: 'medium'
         });
 
-        const b64 = result.data?.[0].b64_json;
+        const b64 = getImageBase64(result);
         if (!b64) throw new Error("AI did not return an image");
 
         const stream = Buffer.from(b64, "base64");

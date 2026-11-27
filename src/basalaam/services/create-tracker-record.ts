@@ -2,6 +2,7 @@ import { TrackerModel } from "@/tracking"
 import { normalizeTrackerItems } from "@/tracking/service/tracker-items";
 import BslVariantModel, { BslVariant } from "../models/variants"
 import { BslOrder } from "./orders";
+import { getBasalaamProductImageUrl } from "./image-utils";
 
 type Props = BslOrder
 export async function bslOrderToTrack({
@@ -38,7 +39,7 @@ export async function bslOrderToTrack({
         quantity,
         serviceVariantId: `${variation ? variation.id : productId}`,
         title,
-        src: photos[0]?.original,
+        src: getBasalaamProductImageUrl(photos),
         variantId: variants.find((x: BslVariant) => x.bslProductId === productId && (variation ? x.bslVariantId === variation.id : true))?.variantId,
         trackingCode
     })));

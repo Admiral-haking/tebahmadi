@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import BslOrder from "../models/orders";
 import { type BslOrder as IBslOrder, bslOrders } from "./orders";
+import { getBasalaamProductImageUrl } from "./image-utils";
 import BslVariantModel from "../models/variants";
 import ProductModel from "@/catalog/models/Product";
 import { bslOrderToTrack } from "./create-tracker-record";
@@ -141,7 +142,7 @@ async function bslOrderCreateDecide(order: IBslOrder, vendorId: string): Promise
             bslOrderId: id,
             bslOrderItemId: item.id,
             bslOrderStatus: status.id,
-            bslImageUrl: item.product.photos[0].original,
+            bslImageUrl: getBasalaamProductImageUrl(item.product?.photos),
             quantity: item.quantity,
             barcode: inventory.barcode,
             paymentType: "cache"
