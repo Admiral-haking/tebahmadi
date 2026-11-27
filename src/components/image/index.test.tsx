@@ -3,10 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/image", () => ({
-  default: ({ fill: _fill, priority: _priority, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & {
+  default: ({ fill: _fill, priority: _priority, alt = "", ...props }: React.ImgHTMLAttributes<HTMLImageElement> & {
     fill?: boolean;
     priority?: boolean;
-  }) => <img {...props} />,
+  }) => <img {...props} alt={alt} />,
 }));
 
 import OptimizedImage from ".";
