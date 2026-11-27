@@ -8,6 +8,7 @@ export function AnnouncementBar() {
   return (
     <Box
       component="aside"
+      className="teb-announcement"
       aria-label="اطلاعیه فروشگاه"
       sx={{
         bgcolor: "#171b12",
@@ -17,19 +18,21 @@ export function AnnouncementBar() {
         alignItems: "center",
       }}
     >
-      <Container maxWidth="lg" sx={{ minWidth: 0 }}>
+      <Container className="teb-announcement__container" maxWidth="lg" sx={{ minWidth: 0 }}>
         <Stack
+          className="teb-announcement__inner"
           direction="row"
           alignItems="center"
           justifyContent="center"
           gap={{ xs: 1, sm: 2 }}
           sx={{ py: 0.75, textAlign: "center", width: "100%", minWidth: 0 }}
         >
-          <Typography sx={{ minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: { xs: 10.5, sm: 13 }, lineHeight: 1.6 }}>
+          <Typography className="teb-announcement__text" sx={{ minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: { xs: 10.5, sm: 13 }, lineHeight: 1.6 }}>
             پیشنهادهای تازه طب احمدی را از دست ندهید
           </Typography>
           <Box
             component={Link}
+            className="teb-announcement__link"
             href="/store"
             sx={{
               flexShrink: 0,
@@ -62,6 +65,7 @@ export function MobileBottomNav() {
   return (
     <Box
       component="nav"
+      className="teb-mobile-bottom-nav"
       aria-label="دسترسی سریع موبایل"
       sx={{
         ...glassSurface,

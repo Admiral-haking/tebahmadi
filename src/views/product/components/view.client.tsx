@@ -22,6 +22,8 @@ import {
 } from "@mui/material";
 
 import { useCart } from "@/components/cart/useCart";
+import { useAuth, useLoginDialog } from "@/auth";
+import { requiresCartLogin } from "@/features/cart/cart-auth";
 import type {
     ProductDetailData,
     ProductVariantDetail,
@@ -143,8 +145,10 @@ export default function ProductDetailClient({
     initialVariantId?: string;
 }) {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"), { noSsr: true });
     const { addFixedLine, addPerUnitLine, lines } = useCart();
+    const { user, status } = useAuth();
+    const { openLogin } = useLoginDialog();
     const hasVariants = product.variants.length > 0;
     const variantAttributes = product.variantAttributes ?? [];
     const reviews = product.reviews ?? [];
@@ -542,16 +546,25 @@ export default function ProductDetailClient({
             maximumOrderQuantity: selectedVariant.maximumOrderQuantity,
         } as const;
 
-        if (selectedVariant.priceModel === "per_unit") {
-            const normalized = clampPerUnitQuantity(requestedQty) ?? requestedQty;
-            addPerUnitLine(line, normalized, selectedVariant.unitOfMeasure);
-        } else {
-            const normalized = clampFixedQuantity(quantity) ?? quantity;
-            addFixedLine(line, normalized);
+        const addSelectedLine = () => {
+            if (selectedVariant.priceModel === "per_unit") {
+                const normalized = clampPerUnitQuantity(requestedQty) ?? requestedQty;
+                addPerUnitLine(line, normalized, selectedVariant.unitOfMeasure);
+            } else {
+                const normalized = clampFixedQuantity(quantity) ?? quantity;
+                addFixedLine(line, normalized);
+            }
+
+            setSelectionErrors([]);
+            setShowSuc(true);
+        };
+
+        if (requiresCartLogin(status, Boolean(user))) {
+            openLogin(addSelectedLine);
+            return;
         }
 
-        setSelectionErrors([]);
-        setShowSuc(true);
+        addSelectedLine();
     };
 
     const renderAttributeControl = (attribute: VariantAttributeDefinition) => {
@@ -820,8 +833,8 @@ export default function ProductDetailClient({
                 <Grid
                     size={{ xs: 12, md: 6 }}
                     sx={{
-                        p: { xs: 1.5, sm: 2 },
-                        borderRadius: { xs: 4, md: 6 },
+                        p: { xs: 1, sm: 2, md: 2.5 },
+                        borderRadius: { xs: 2, sm: 3, md: 4 },
                         bgcolor: "background.paper",
                         border: "1px solid",
                         borderColor: "divider",
@@ -857,10 +870,11 @@ export default function ProductDetailClient({
                                 position: "relative",
                                 width: "100%",
                                 maxWidth: { xs: 420, md: "none" },
-                                aspectRatio: { xs: "4 / 5", md: "1 / 1" },
-                                maxHeight: { xs: 520, sm: 560, md: 600, lg: 640 },
+                                aspectRatio: { xs: "4 / 5", sm: "4 / 5", md: "1 / 1" },
+                                minHeight: 0,
+                                maxHeight: { xs: "min(520px, 72svh)", sm: 560, md: 600, lg: 640 },
                                 mx: "auto",
-                                borderRadius: { xs: 3, md: 5 },
+                                borderRadius: { xs: 2, md: 3 },
                                 overflow: "hidden",
                                 bgcolor: "rgba(42, 90, 68, .045)",
                                 '&  *': {
@@ -883,7 +897,19 @@ export default function ProductDetailClient({
                         </Box>
 
                         {thumbnails.length > 1 && (
-                            <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="center" sx={{ width: "100%" }}>
+                            <Stack
+                                direction="row"
+                                gap={1}
+                                sx={{
+                                    width: "100%",
+                                    overflowX: "auto",
+                                    flexWrap: "nowrap",
+                                    justifyContent: { xs: "flex-start", md: "center" },
+                                    px: { xs: 0.25, md: 0 },
+                                    pb: 0.5,
+                                    WebkitOverflowScrolling: "touch",
+                                }}
+                            >
                                 {thumbnails.map((media, index) => {
                                     const thumbSrc = getThumbnailSource(media);
                                     const fullSrc = media.fullUrl ?? thumbSrc;
@@ -893,9 +919,10 @@ export default function ProductDetailClient({
                                             key={`${media.id}-${index}`}
                                             onClick={() => handleThumbnailClick(media)}
                                             sx={{
-                                                width: 72,
-                                                height: 72,
-                                                borderRadius: 2.5,
+                                                width: { xs: 58, sm: 68, md: 72 },
+                                                height: { xs: 58, sm: 68, md: 72 },
+                                                borderRadius: { xs: 1.5, md: 2.5 },
+                                                flexShrink: 0,
                                                 overflow: "hidden",
                                                 bgcolor: isActive ? "background.paper" : "background.default",
                                                 border: "2px solid",
@@ -912,7 +939,7 @@ export default function ProductDetailClient({
                                                 loading="lazy"
                                                 sizes="72px"
                                                 transparentBackground
-                                                style={{ objectFit: "cover" }}
+                                                style={{ objectFit: "contain", padding: 5 }}
                                             />
                                         </Box>
                                     );
@@ -925,8 +952,8 @@ export default function ProductDetailClient({
                 <Grid
                     size={{ xs: 12, md: 6 }}
                     sx={{
-                        p: { xs: 2, sm: 2.5, md: 3 },
-                        borderRadius: { xs: 4, md: 6 },
+                        p: { xs: 1.5, sm: 2.5, md: 3 },
+                        borderRadius: { xs: 2, sm: 3, md: 4 },
                         bgcolor: "background.paper",
                         border: "1px solid",
                         borderColor: "divider",
@@ -1051,16 +1078,17 @@ export default function ProductDetailClient({
                                 zIndex: 10,
                                 p: { xs: 1, md: 0 },
                                 pb: { xs: "calc(0.5rem + env(safe-area-inset-bottom))", md: 0 },
-                                mx: { xs: -1, md: 0 },
-                                borderRadius: { xs: 2, md: 0 },
+                                mx: { xs: -0.5, md: 0 },
+                                width: { xs: "calc(100% + 8px)", md: "auto" },
+                                borderRadius: 3,
+                                bgcolor: { xs: "rgba(249,248,246,.96)", md: "transparent" },
+                                backdropFilter: { xs: "blur(12px)", md: "none" },
                                 border: { xs: "1px solid", md: "none" },
                                 borderColor: { xs: "divider", md: "transparent" },
-                                bgcolor: { xs: "rgba(255,255,255,.94)", md: "transparent" },
-                                backdropFilter: { xs: "blur(12px)", md: "none" },
                             }}
                         >
                             <Stack spacing={0.5}>
-                                <Stack direction="row" alignItems="center">
+                                <Stack direction="row" alignItems="center" justifyContent="center">
                                     <IconButton
                                         size="small"
                                         aria-label="کاهش"

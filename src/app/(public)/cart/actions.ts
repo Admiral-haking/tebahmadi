@@ -11,7 +11,7 @@ import { InvoiceModel } from '@/orders/models/Invoice';
 import { normalizeGuestCheckoutPhone } from '@/orders/validation/guest-checkout';
 import {
   buildCartAvailabilityIssues,
-  getUnavailableVariantIds,
+  getReconciliationRemovalVariantIds,
   normalizeCartVariantIds,
   type CartAvailabilityLine,
   type CartAvailabilityRow,
@@ -390,7 +390,7 @@ export async function reconcileCartAvailabilityAction(
   try {
     await connectMongoose();
     const rows = await getCartVariantAvailability(ids);
-    return { ok: true, unavailableVariantIds: getUnavailableVariantIds(ids, rows) };
+    return { ok: true, unavailableVariantIds: getReconciliationRemovalVariantIds(ids, rows) };
   } catch (error) {
     console.error('reconcileCartAvailabilityAction failed', error);
     return { ok: false, unavailableVariantIds: [] };

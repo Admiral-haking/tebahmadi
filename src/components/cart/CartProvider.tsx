@@ -139,7 +139,7 @@ export function moveSavedLineToCart(state: CartState, variantId: string): CartSt
   return { ...nextState, lines: nextLines };
 }
 
-function cartReducer(state: CartState, action: CartAction): CartState {
+export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_LINE': {
       const incoming = applyQuantityConstraints(action.payload);
@@ -385,7 +385,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const result = await reconcileCartAvailabilityAction(variantIds);
       if (!cancelled && result.ok && result.unavailableVariantIds.length > 0) {
         dispatch({ type: 'REMOVE_UNAVAILABLE_LINES', variantIds: result.unavailableVariantIds });
-        toast.error('برخی کالاهای ناموجود از سبد خرید حذف شدند.');
+        toast.info('برخی کالاهایی که دیگر در فروشگاه وجود نداشتند از سبد خرید حذف شدند.');
       }
     };
     void reconcile().catch(() => undefined);

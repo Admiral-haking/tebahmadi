@@ -108,7 +108,7 @@ const loadCategoryTreeCached = createCachedFunction(
     await connectMongoose();
     return CategoryModel.find({}).sort({ depth: 1, position: 1 }).lean();
   },
-  () => ['category-tree'],
+  () => ['category-tree-v2'],
   () => [TAGS.CATEGORY_TREE, TAGS.CATALOG],
   () => [] as Lean<CategoryDocument>[],
 );
@@ -136,7 +136,7 @@ const loadProductBySlugCached = createCachedFunction(
     await connectMongoose();
     return ProductModel.findOne({ slug, status: { $ne: 'archived' } }).lean();
   },
-  (slug: string) => ['product-by-slug', slug],
+  (slug: string) => ['product-by-slug-v2', slug],
   (slug: string) => [TAGS.PRODUCT(slug), TAGS.CATALOG],
   () => null,
 );
@@ -150,7 +150,7 @@ const loadProductsCached = createCachedFunction(
     await connectMongoose();
     return ProductModel.find({ status: 'active' }).sort({ createdAt: -1 }).lean();
   },
-  () => ['product-list'],
+  () => ['product-list-v2'],
   () => [TAGS.CATALOG, TAGS.PRODUCT_LIST],
   () => [] as Lean<ProductDocument>[],
 );
@@ -329,7 +329,7 @@ const loadPopularProductsCached = createCachedFunction(
     await connectMongoose();
     return await getPopularProducts({ page: 1, perPage: 16 });
   },
-  () => ['popular-home-v2'],
+  () => ['popular-home-v3'],
   () => [TAGS.PRODUCT_LIST],
   () => ({ items: [], total: 0, page: 1, perPage: 16 }),
 )
@@ -344,7 +344,7 @@ const loadDiscountProductsCached = createCachedFunction(
     await connectMongoose();
     return await getDiscountProducts({ page: 1, perPage: 16 });
   },
-  () => ['discount-home-v2'],
+  () => ['discount-home-v4'],
   () => [TAGS.PRODUCT_LIST],
   () => ({ items: [], total: 0, page: 1, perPage: 16 }),
 )
@@ -358,7 +358,7 @@ const loadNewestProductsCached = createCachedFunction(
     await connectMongoose();
     return await getNewestProducts({ page: 1, perPage: 12 });
   },
-  () => ['newest'],
+  () => ['newest-v2'],
   () => [TAGS.PRODUCT_LIST],
   () => ({ items: [], total: 0, page: 1, perPage: 12 }),
 )

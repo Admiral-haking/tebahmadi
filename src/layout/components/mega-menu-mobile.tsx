@@ -2,11 +2,11 @@
 
 import { CategoryDocument } from "@/catalog/models/Category";
 import { Box, Divider, Drawer, IconButton, Stack } from "@mui/material";
-import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useMemo, useState } from "react";
 import { brandTokens } from "@/theme/design-system";
 import { buildCategoryMenuItems, CategoryMenuDivider, CategoryMenuHeader, CategoryMenuList } from "./category-menu";
+import { BrandIcon } from "@/components/brand-icons";
 
 type Props = {
   categories: CategoryDocument[];
@@ -25,7 +25,7 @@ export default function MegaMenuMobile({ categories }: Props) {
         aria-expanded={open ? "true" : undefined}
         sx={{ color: "primary.main", flexShrink: 0, width: 40, height: 40, p: 0.5 }}
       >
-        <MenuRoundedIcon />
+        <BrandIcon name="menu" size={24} />
       </IconButton>
 
       <Drawer

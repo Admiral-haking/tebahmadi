@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, Button, Fade, InputBase, InputProps, Stack, SxProps } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import z from "zod";
 
 type Props = InputProps & {
@@ -14,10 +14,12 @@ type Props = InputProps & {
     initialQuery?: string;
     preserveQueryParams?: boolean;
     onSearch?: (str: string) => any
+    leadingIcon?: ReactNode;
+    boxClassName?: string;
 
 };
 
-export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSearch, initialQuery, preserveQueryParams, onSearch, ...props }: Props) {
+export default function SearchBox({ boxSx = {}, boxClassName, onSearchUrl: url, alwaysShowSearch, initialQuery, preserveQueryParams, onSearch, leadingIcon, ...props }: Props) {
     const methods = useForm<{ q: string }>({
         resolver: zodResolver(z.object({ q: z.string() })),
         defaultValues: { q: initialQuery ?? "" },
@@ -73,6 +75,7 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
     }, [initialQuery])
 
     return <Box
+        className={boxClassName}
         sx={{
             position: 'relative',
             maxWidth: 400,
@@ -101,10 +104,10 @@ export default function SearchBox({ boxSx = {}, onSearchUrl: url, alwaysShowSear
                         bgcolor: 'background.default'
                     }}
                 >
-                    <svg style={{ flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
+                    {leadingIcon ?? <svg style={{ flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
                         <path fill="currentColor" d="M20.313 11.157a9.157 9.157 0 1 1-18.313 0a9.157 9.157 0 0 1 18.313 0" opacity={0.5}></path>
                         <path fill="currentColor" d="m17.1 18.122l3.666 3.666a.723.723 0 0 0 1.023-1.022L18.122 17.1a9 9 0 0 1-1.022 1.022"></path>
-                    </svg>
+                    </svg>}
                     <Controller
                         control={control}
                         name="q"

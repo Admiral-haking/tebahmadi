@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildCartAvailabilityIssues,
+  getReconciliationRemovalVariantIds,
   getUnavailableVariantIds,
   normalizeCartVariantIds,
   type CartAvailabilityLine,
@@ -22,6 +23,16 @@ describe('cart availability helpers', () => {
     ];
 
     expect(getUnavailableVariantIds(ids, rows)).toEqual(['v-2', 'v-3', 'v-4']);
+  });
+
+  it('only removes catalog-missing variants during background reconciliation', () => {
+    const ids = ['v-active-empty', 'v-paused', 'v-missing'];
+    const rows: CartAvailabilityRow[] = [
+      { variantId: 'v-active-empty', available: 0, sellable: true, reason: 'insufficient_inventory' },
+      { variantId: 'v-paused', available: 0, sellable: false, reason: 'not_sellable' },
+    ];
+
+    expect(getReconciliationRemovalVariantIds(ids, rows)).toEqual(['v-missing']);
   });
 
   it('creates item-specific Persian messages for partial stock and frozen items', () => {

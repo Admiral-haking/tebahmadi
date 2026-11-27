@@ -28,6 +28,7 @@ export function AppShell({
 
     return (
         <Box
+            className="teb-app-shell"
             sx={{
                 minHeight: "100vh",
                 display: "flex",
@@ -43,16 +44,17 @@ export function AppShell({
 
             <Box
                 component="main"
+              className="teb-app-main"
                 sx={{
                     flex: 1,
                     position: "relative",
-                    pb: { xs: 10, md: 4 },
+                    pb: { xs: "calc(84px + env(safe-area-inset-bottom))", md: 4 },
                 }}
             >
                 {children}
             </Box>
 
-            <Box sx={{ pb: { xs: 8, md: 0 } }}>
+            <Box sx={{ pb: { xs: "calc(24px + env(safe-area-inset-bottom))", md: 0 } }}>
                 {footer}
             </Box>
 

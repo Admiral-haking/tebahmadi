@@ -16,6 +16,11 @@ vi.mock("@/components/cart/useCart", () => ({
   }),
 }));
 
+vi.mock("@/auth", () => ({
+  useAuth: () => ({ user: null, status: "unauthenticated" }),
+  useLoginDialog: () => ({ openLogin: vi.fn() }),
+}));
+
 vi.mock("@mui/material", async () => {
   const actual = await vi.importActual<typeof import("@mui/material")>("@mui/material");
   return {

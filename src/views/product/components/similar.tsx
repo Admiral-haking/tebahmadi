@@ -2,11 +2,11 @@ import ProductCard, { type ProductCardProps } from "@/components/product";
 import ProductModel, { type ProductDocument, type VariantSchema } from "@/catalog/models/Product";
 import { effectiveUnitPrice } from "@/catalog/services/productService";
 import MediaModel from "@/media/models/Media";
-import { connectMongoose } from "@/lib/mongoose";
+import { connectMongoose, isMongoConfigured } from "@/lib/mongoose";
 import { Grid, Stack, Typography } from "@mui/material";
 import { Types } from "mongoose";
 import type { ProductDetailData } from "../data";
-import { isMongoConfigured, getPreviewSimilarProducts } from "@/lib/preview-fallback";
+import { getPreviewSimilarProducts } from "@/lib/preview-fallback";
 
 const SIMILAR_LIMIT = 8;
 
@@ -225,8 +225,8 @@ async function loadSimilarProducts(product: ProductDetailData): Promise<ProductC
 
     return products;
     } catch (error) {
-        console.warn("loadSimilarProducts failed; serving preview products", error);
-        return getPreviewSimilarProducts(product.slug);
+        console.warn("loadSimilarProducts failed; returning no similar products", error);
+        return [];
     }
 }
 

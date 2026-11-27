@@ -43,7 +43,7 @@ describe("ProductCard", () => {
     );
 
     expect(markup).toContain("روغن گیاهی نمونه");
-    expect(markup).toContain("افزودن به سبد");
+    expect(markup).toContain("مشاهده و انتخاب");
     expect(markup).not.toContain("opacity:0");
     expect(markup).toContain('data-loading="lazy"');
     expect(markup).toContain('data-fetch-priority="auto"');

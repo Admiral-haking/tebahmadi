@@ -11,6 +11,7 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import JsonLd from "@/components/seo/json-ld";
 import ChunkLoadRecovery from "@/components/chunk-load-recovery-client";
 import { BRAND } from "@/config/brand";
+import { criticalLayoutCss } from "@/layout/critical-layout-css";
 
 const ProgressBar = dynamic(() => import("@/components/progress"))
 
@@ -90,6 +91,7 @@ export default async function RootLayout({
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/tebahmadi-mark.svg" />
+        <style id="tebahmadi-critical-layout" dangerouslySetInnerHTML={{ __html: criticalLayoutCss }} />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
         {/* JSON-LD Structured Data for AI/SEO */}
@@ -130,7 +132,10 @@ export default async function RootLayout({
                       {children}
                     </Layout>
                   </CartProvider>
-                  <Toaster />
+                  <Toaster
+                    position="bottom-center"
+                    mobileOffset={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}
+                  />
                 </LoginDialogProvider>
               </LoginProvider>
             </AuthProvider>

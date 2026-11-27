@@ -3,11 +3,11 @@
 import { CategoryDocument } from "@/catalog/models/Category";
 import { Box, Button, IconButton, Popover, Stack } from "@mui/material";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
-import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useMemo, useState } from "react";
 import { brandTokens } from "@/theme/design-system";
 import { buildCategoryMenuItems, CategoryMenuDivider, CategoryMenuHeader, CategoryMenuList } from "./category-menu";
+import { BrandIcon } from "@/components/brand-icons";
 
 type Props = {
   categories: CategoryDocument[];
@@ -30,7 +30,7 @@ export default function MegaMenu({ categories }: Props) {
         aria-controls={open ? "storefront-mega-menu" : undefined}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         endIcon={<KeyboardArrowDownRoundedIcon sx={{ fontSize: 19 }} />}
-        startIcon={<GridViewRoundedIcon sx={{ fontSize: 19 }} />}
+        startIcon={<BrandIcon name="category" size={19} />}
         sx={{
           minHeight: 48,
           px: 2.1,

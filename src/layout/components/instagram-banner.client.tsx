@@ -117,6 +117,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
     width: 1920,
     height: 720,
     quality: 75,
+    unoptimized: true,
   });
 
   const {
@@ -127,6 +128,7 @@ export default function InstagramBannerCarousel({ initialSlides }: { initialSlid
     width: 1200,
     height: 675,
     quality: 75,
+    unoptimized: true,
   });
 
   const hasDots = items.length > 1;

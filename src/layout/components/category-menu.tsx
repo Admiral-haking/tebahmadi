@@ -3,14 +3,16 @@
 import { CategoryDocument } from "../../catalog/models/Category";
 import { Box, Divider, List, ListItemButton, ListItemText, Stack, Typography } from "@mui/material";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import Link from "next/link";
 import { brandTokens } from "../../theme/design-system";
+import { BrandIcon } from "@/components/brand-icons";
+import { resolveBrandIconName, type BrandIconName } from "@/lib/brand-icons";
 
 export type CategoryMenuChild = {
   id: string;
   label: string;
   href: string;
+  icon: BrandIconName;
 };
 
 export type CategoryMenuItem = CategoryMenuChild & {
@@ -33,12 +35,14 @@ export function buildCategoryMenuItems(categories: CategoryDocument[]): Category
     id: asId(root._id),
     label: root.name,
     href: categoryHref(root.path),
+    icon: resolveBrandIconName(root.name, root.path),
     children: categories
       .filter((category) => asId(category.parentId) === asId(root._id))
       .map((child) => ({
         id: asId(child._id),
         label: child.name,
         href: categoryHref(child.path),
+        icon: resolveBrandIconName(child.name, child.path),
       })),
   }));
 }
@@ -48,7 +52,7 @@ export function CategoryMenuList({ items, onNavigate }: { items: CategoryMenuIte
     return (
       <Stack alignItems="center" textAlign="center" gap={1} sx={{ px: 2, py: 4, color: "text.secondary" }}>
         <Box sx={{ width: 42, height: 42, display: "grid", placeItems: "center", borderRadius: "50%", bgcolor: brandTokens.color.primarySoft, color: "primary.main" }}>
-          <SpaOutlinedIcon sx={{ fontSize: 21 }} />
+          <BrandIcon name="category" size={21} />
         </Box>
         <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary" }}>دسته‌بندی‌ای برای نمایش وجود ندارد</Typography>
         <Typography sx={{ fontSize: 11.5 }}>دسته‌بندی‌ها پس از ثبت در پنل مدیریت اینجا نمایش داده می‌شوند.</Typography>
@@ -74,7 +78,7 @@ export function CategoryMenuList({ items, onNavigate }: { items: CategoryMenuIte
             }}
           >
             <Box sx={{ display: "grid", placeItems: "center", width: 30, height: 30, borderRadius: "50%", bgcolor: brandTokens.color.primarySoft, color: "primary.main", flexShrink: 0 }}>
-              <SpaOutlinedIcon sx={{ fontSize: 17 }} />
+              <BrandIcon name={item.icon} size={17} />
             </Box>
             <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }} />
             <ChevronLeftRoundedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
@@ -89,6 +93,7 @@ export function CategoryMenuList({ items, onNavigate }: { items: CategoryMenuIte
                   onClick={onNavigate}
                   sx={{ minHeight: 32, borderRadius: 1.5, px: 1, py: 0.25, color: "text.secondary", "&:hover": { bgcolor: brandTokens.color.primarySoft, color: brandTokens.color.primaryDeep } }}
                 >
+                  <BrandIcon name={child.icon} size={14} style={{ flexShrink: 0, marginInlineEnd: 6 }} />
                   <ListItemText primary={child.label} primaryTypographyProps={{ fontSize: 12.5 }} />
                 </ListItemButton>
               ))}
@@ -108,7 +113,7 @@ export function CategoryMenuHeader({ mobile = false }: { mobile?: boolean }) {
         <Typography sx={{ mt: 0.35, fontSize: 11.5, color: "text.secondary" }}>دسته‌بندی‌های طب احمدی</Typography>
       </Box>
       <Box sx={{ width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: "50%", bgcolor: brandTokens.color.primarySoft, color: "primary.main" }}>
-        <SpaOutlinedIcon sx={{ fontSize: 18 }} />
+        <BrandIcon name="herbs" size={18} />
       </Box>
     </Stack>
   );

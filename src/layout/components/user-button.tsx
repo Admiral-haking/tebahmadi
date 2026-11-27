@@ -13,11 +13,12 @@ import {
     Stack,
     Typography,
 } from "@mui/material";
-import { LogOut, Package, ShieldCheck, User, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useAuth, useLoginDialog } from "@/auth";
 import type { AuthUser } from "@/auth";
 import ProfileForm from "./profile-form";
 import { TEB_COLORS } from "@/theme/tokens";
+import { BrandIcon } from "@/components/brand-icons";
 
 function hasElevatedRole(user: AuthUser | null | undefined): boolean {
     if (!user?.roles?.length) {
@@ -77,7 +78,7 @@ export default function UserButton(): JSX.Element {
             <Button
                 onClick={() => openLogin()}
                 variant="outlined"
-                startIcon={<User size={17} strokeWidth={2} />}
+                startIcon={<BrandIcon name="account" size={17} strokeWidth={2} />}
                 sx={{
                     minHeight: 44,
                     px: 2,
@@ -119,7 +120,7 @@ export default function UserButton(): JSX.Element {
                             fontWeight: 700,
                         }}
                     >
-                        {initials ?? <User size={15} />}
+                        {initials ?? <BrandIcon name="account" size={15} />}
                     </Avatar>
                 }
                 sx={{
@@ -204,7 +205,7 @@ export default function UserButton(): JSX.Element {
                             href="/orders"
                             variant="contained"
                             fullWidth
-                            startIcon={<Package size={17} />}
+                            startIcon={<BrandIcon name="orders" size={17} />}
                         >
                             سفارش‌های من
                         </Button>
@@ -214,7 +215,7 @@ export default function UserButton(): JSX.Element {
                                 href="/admin"
                                 variant="outlined"
                                 fullWidth
-                                startIcon={<ShieldCheck size={17} />}
+                                startIcon={<BrandIcon name="authenticity" size={17} />}
                             >
                                 پنل مدیریت فروشگاه
                             </Button>
@@ -224,7 +225,7 @@ export default function UserButton(): JSX.Element {
                             variant="text"
                             color="error"
                             fullWidth
-                            startIcon={<LogOut size={17} />}
+                            startIcon={<BrandIcon name="logout" size={17} />}
                             sx={{ color: TEB_COLORS.error }}
                         >
                             خروج از حساب کاربری
