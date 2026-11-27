@@ -15,6 +15,7 @@ import {
 import { BookmarkPlus, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { TEB_COLORS, TEB_RADII } from '@/theme/tokens';
 import { roundInventoryQuantity } from '@/lib/inventory-state';
+import OptimizedImage from '@/components/image';
 import { useCart, type CartLine } from './useCart';
 import type { CartAvailabilityRow } from './cart-availability';
 
@@ -212,28 +213,37 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
   return (
     <Stack
       direction="row"
-      flexWrap="wrap"
-      spacing={2}
+      flexWrap="nowrap"
+      spacing={{ xs: 1.25, sm: 2 }}
       sx={{
-        p: 2,
+        p: { xs: 1.25, sm: 2 },
         border: `1px solid ${TEB_COLORS.border}`,
         borderRadius: `${TEB_RADII.md}px`,
         bgcolor: TEB_COLORS.background,
       }}
     >
       <Box
-        component="img"
-        src={thumbSrc}
-        alt={line.title}
         sx={{
-          width: 92,
-          height: 92,
+          position: 'relative',
+          width: { xs: 72, sm: 92 },
+          height: { xs: 72, sm: 92 },
+          flexShrink: 0,
+          overflow: 'hidden',
           borderRadius: `${TEB_RADII.md}px`,
-          objectFit: 'cover',
           border: `1px solid ${TEB_COLORS.border}`,
           bgcolor: TEB_COLORS.surfaceSoft,
         }}
-      />
+      >
+        <OptimizedImage
+          src={thumbSrc}
+          fallbackSrc={FALLBACK_IMAGE}
+          alt={line.title}
+          fill
+          loading="lazy"
+          sizes="96px"
+          style={{ objectFit: 'cover' }}
+        />
+      </Box>
       <Stack flex={1} spacing={1.25} minWidth={0}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1.25}>
           <Stack gap={0.5} flex={1} minWidth={0}>
@@ -266,7 +276,7 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
           </Stack>
         </Stack>
 
-        <Stack direction="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={1} sx={{ width: '100%' }}>
+        <Stack direction="row" flexWrap={{ xs: 'wrap', sm: 'nowrap' }} justifyContent="space-between" alignItems="center" gap={1} sx={{ width: '100%' }}>
           <Stack>
             <Stack
               direction="row"
