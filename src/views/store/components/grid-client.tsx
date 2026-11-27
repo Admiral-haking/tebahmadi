@@ -114,9 +114,12 @@ export default function StoreProductGridClient({
 
     return <Stack spacing={4}>
         <Grid container spacing={2}>
-            {renderedProducts.map((product) => (
+            {renderedProducts.map((product, index) => (
                 <Grid key={product.id} size={{ xs: 6, sm: 4, md: 3 }}>
-                    <ProductCard {...product} />
+                    <ProductCard
+                        {...product}
+                        priorityImage={index === 0 && currentPage === initialPage}
+                    />
                 </Grid>
             ))}
         </Grid>

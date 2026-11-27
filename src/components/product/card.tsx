@@ -105,7 +105,7 @@ export function ProductCard({
                         priority={priorityImage}
                         fetchPriority={priorityImage ? "high" : "auto"}
                         loading={priorityImage ? undefined : "lazy"}
-                        sizes="(max-width: 600px) 50vw, (max-width: 900px) 33vw, 25vw"
+                        sizes="(max-width: 600px) 46vw, (max-width: 900px) 30vw, 260px"
                         style={{ objectFit: "cover" }}
                     />
 
