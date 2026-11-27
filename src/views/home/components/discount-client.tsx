@@ -36,7 +36,11 @@ export default function DiscountClient({ products }: Props) {
               p: { xs: 0.75, md: 1 },
             }}
           >
-            <ProductCard {...item} priorityImage={index === 0} />
+            <ProductCard
+              {...item}
+              imageSizes="(max-width: 600px) 78vw, (max-width: 900px) 240px, 260px"
+              priorityImage={index === 0}
+            />
           </Box>
         ))}
       </Box>

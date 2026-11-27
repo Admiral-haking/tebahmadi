@@ -64,6 +64,7 @@ describe("ProductDetailClient responsive purchase shell", () => {
 
     expect(markup).toContain('sizes="(max-width: 600px) 92vw, (max-width: 900px) 48vw, 540px"');
     expect(markup).toContain("env(safe-area-inset-bottom)");
+    expect(markup).toContain("calc(60px + env(safe-area-inset-bottom))");
     expect(markup).toContain("افزودن به سبد خرید");
     expect(markup).toContain("تعداد");
   });

@@ -240,7 +240,7 @@ export default function CartLineItem({ line, mode = 'cart', availability }: Cart
           alt={line.title}
           fill
           loading="lazy"
-          sizes="96px"
+          sizes="(max-width: 600px) 72px, 92px"
           style={{ objectFit: 'cover' }}
         />
       </Box>

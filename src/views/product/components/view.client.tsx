@@ -1047,7 +1047,7 @@ export default function ProductDetailClient({
                             sx={{
                                 mt: 2,
                                 position: { xs: "sticky", md: "static" },
-                                bottom: { xs: 82, md: "auto" },
+                                bottom: { xs: "calc(60px + env(safe-area-inset-bottom))", md: "auto" },
                                 zIndex: 10,
                                 p: { xs: 1, md: 0 },
                                 pb: { xs: "calc(0.5rem + env(safe-area-inset-bottom))", md: 0 },

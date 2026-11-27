@@ -67,4 +67,19 @@ describe("ProductCard", () => {
     expect(markup).toContain('data-priority="true"');
     expect(markup).not.toContain('data-loading="lazy"');
   });
+
+  it("accepts a caller-specific image size for wider carousels", () => {
+    const markup = renderToStaticMarkup(
+      <ProductCard
+        id="p1"
+        slug="sample"
+        title="روغن گیاهی نمونه"
+        finalPrice={120000}
+        inStock
+        imageSizes="(max-width: 600px) 78vw, 240px"
+      />,
+    );
+
+    expect(markup).toContain('data-sizes="(max-width: 600px) 78vw, 240px"');
+  });
 });

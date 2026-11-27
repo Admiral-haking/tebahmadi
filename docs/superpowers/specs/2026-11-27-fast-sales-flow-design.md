@@ -111,4 +111,3 @@ Avoid broad global CSS changes and avoid changing API/action signatures.
 3. Start the production server locally and check `/store`, `/product/<known-slug>`, and `/cart` with HTTP 200 responses.
 4. Inspect generated markup/source assertions for responsive `sizes`, lazy loading, and the mobile CTA.
 5. Measure the post-change build duration and `.next` size with the same commands used for the baseline; report the actual values without claiming browser Core Web Vitals unless a browser trace is available.
-

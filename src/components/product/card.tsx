@@ -24,6 +24,7 @@ export type ProductCardProps = {
     imageUrl?: string;
     colors?: string[];
     sizes?: string[];
+    imageSizes?: string;
     priorityImage?: boolean;
 };
 
@@ -41,6 +42,7 @@ export function ProductCard({
     stockCount,
     imageUrl,
     sizes = [],
+    imageSizes,
     priorityImage = false,
 }: ProductCardProps) {
     const resolvedDiscount = discountPercent ?? calculateDiscountPercent(originalPrice, finalPrice);
@@ -105,7 +107,7 @@ export function ProductCard({
                         priority={priorityImage}
                         fetchPriority={priorityImage ? "high" : "auto"}
                         loading={priorityImage ? undefined : "lazy"}
-                        sizes="(max-width: 600px) 46vw, (max-width: 900px) 30vw, 260px"
+                        sizes={imageSizes ?? "(max-width: 600px) 46vw, (max-width: 900px) 30vw, 260px"}
                         style={{ objectFit: "cover" }}
                     />
 

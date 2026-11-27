@@ -44,6 +44,6 @@ describe("CartLineItem", () => {
     expect(markup).toContain("افزایش تعداد");
     expect(markup).toContain('data-product-image="true"');
     expect(markup).toContain('loading="lazy"');
-    expect(markup).toContain('sizes="96px"');
+    expect(markup).toContain('sizes="(max-width: 600px) 72px, 92px"');
   });
 });

@@ -245,4 +245,3 @@
   ```
 
   Do not stage the pre-existing `.codex-attachments/` directory. If all checks pass, push the commits on `main`; deployment requires a separate explicit delivery step and post-deploy health check.
-
