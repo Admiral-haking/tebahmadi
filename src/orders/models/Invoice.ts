@@ -63,27 +63,6 @@ const progressSchema = new Schema(
   { _id: false }
 );
 
-const tapinAutomationSchema = new Schema(
-  {
-    state: {
-      type: String,
-      enum: ['queued', 'running', 'ready_to_print', 'blocked', 'failed'],
-      index: true,
-    },
-    jobId: { type: String, trim: true },
-    manualId: { type: String, trim: true, maxlength: 128 },
-    attempts: { type: Number, min: 0, default: 0 },
-    lastAttemptAt: { type: Date },
-    nextAttemptAt: { type: Date },
-    lastErrorCode: { type: String, trim: true, maxlength: 100 },
-    lastErrorMessage: { type: String, trim: true, maxlength: 500 },
-    quoteSnapshot: { type: Schema.Types.Mixed },
-    readyToPrintAt: { type: Date },
-    lastSyncedAt: { type: Date },
-  },
-  { _id: false },
-);
-
 const tapinShipmentSchema = new Schema(
   {
     id: { type: String, required: true, trim: true },
@@ -200,7 +179,6 @@ const invoiceSchema = new Schema(
       offerSnapshot: Schema.Types.Mixed,
     },
     torobClid: { type: String, trim: true },
-    tapinAutomation: tapinAutomationSchema,
     tapinShipment: tapinShipmentSchema,
     tapinRegistrationLock: {
       token: { type: String, trim: true },

@@ -26,25 +26,7 @@ function numericString(message: string) {
     .transform((value) => (value && value.length > 0 ? value : '5'));
 }
 
-function optionalIntegerString(message: string) {
-  return z
-    .string()
-    .trim()
-    .optional()
-    .refine((value) => !value || /^\d+$/.test(value), { message })
-    .transform((value) => value ?? '');
-}
-
-function optionalChoice(values: string[], message: string) {
-  return z
-    .string()
-    .trim()
-    .optional()
-    .refine((value) => !value || values.includes(value), { message })
-    .transform((value) => value ?? '');
-}
-
-const baseConfigFieldsSchema = z.object({
+export const configFieldsSchema = z.object({
   smsSignature: optionalString(),
   marketingWhatsAppLink: optionalUrl('لینک واتساپ معتبر نیست'),
   lowStockThreshold: numericString('فقط عدد وارد کنید'),
@@ -55,38 +37,6 @@ const baseConfigFieldsSchema = z.object({
     .trim()
     .optional()
     .transform((value) => (value === 'deepseek' ? 'deepseek' : 'openai')),
-  tapinAutoRegisterEnabled: z.boolean(),
-  tapinAutoRegisterShopId: optionalString(),
-  tapinAutoRegisterBoxId: optionalIntegerString('شناسه جعبه باید عدد باشد'),
-  tapinAutoRegisterPackageWeightGrams: optionalIntegerString('وزن بسته‌بندی باید عدد باشد'),
-  tapinAutoRegisterOrderType: optionalChoice(['0', '1', '3', '5'], 'نوع سفارش معتبر نیست'),
-  tapinAutoRegisterPacketType: optionalChoice(['1', '2', '3'], 'نوع بسته معتبر نیست'),
-  tapinAutoRegisterContentType: optionalChoice(['1', '2', '3', '4'], 'نوع محتوا معتبر نیست'),
-  tapinAutoRegisterPayType: optionalChoice(['0', '1', '2', '3'], 'نوع پرداخت معتبر نیست'),
-  tapinAutoRegisterHasInsurance: z.boolean(),
-  tapinAutoRegisterMaxAttempts: optionalIntegerString('تعداد تلاش باید عدد باشد'),
-  tapinAutoRegisterRetryDelaySeconds: optionalIntegerString('فاصله تلاش باید عدد باشد'),
-});
-
-export const configFieldsSchema = baseConfigFieldsSchema.superRefine((value, context) => {
-  if (!value.tapinAutoRegisterEnabled) return;
-
-  const requiredKeys: Array<keyof typeof value> = [
-    'tapinAutoRegisterShopId',
-    'tapinAutoRegisterBoxId',
-    'tapinAutoRegisterPackageWeightGrams',
-    'tapinAutoRegisterOrderType',
-    'tapinAutoRegisterPacketType',
-    'tapinAutoRegisterContentType',
-    'tapinAutoRegisterPayType',
-    'tapinAutoRegisterMaxAttempts',
-    'tapinAutoRegisterRetryDelaySeconds',
-  ];
-  requiredKeys.forEach((key) => {
-    if (!value[key]) {
-      context.addIssue({ code: 'custom', path: [key], message: 'برای فعال‌سازی باید تکمیل شود.' });
-    }
-  });
 });
 
 export type ConfigFieldValues = z.infer<typeof configFieldsSchema>;
@@ -99,17 +49,6 @@ export const CONFIG_FIELD_DEFAULTS: ConfigFieldValues = {
   maintenanceMode: false,
   torobOrderTrackingEnabled: false,
   aiProvider: 'openai',
-  tapinAutoRegisterEnabled: false,
-  tapinAutoRegisterShopId: '',
-  tapinAutoRegisterBoxId: '',
-  tapinAutoRegisterPackageWeightGrams: '',
-  tapinAutoRegisterOrderType: '',
-  tapinAutoRegisterPacketType: '',
-  tapinAutoRegisterContentType: '',
-  tapinAutoRegisterPayType: '',
-  tapinAutoRegisterHasInsurance: false,
-  tapinAutoRegisterMaxAttempts: '3',
-  tapinAutoRegisterRetryDelaySeconds: '60',
 };
 
 export const REQUIRED_CONFIG_FIELD_KEYS: ConfigFieldKey[] = [];
@@ -186,96 +125,6 @@ export const CONFIG_SECTIONS: ConfigSectionDefinition[] = [
         label: 'رهگیری سفارشات ترب (Torob)',
         helperText: 'با فعال‌سازی این گزینه، ترب می‌تواند از طریق API از وضعیت سفارشات مطلع شود.',
         type: 'switch',
-      },
-    ],
-  },
-  {
-    id: 'tapin',
-    title: 'ارسال خودکار تاپین',
-    subtitle: 'پس از پرداخت موفق، مرسوله را با اطلاعات صریح و قابل بررسی در تاپین ثبت می‌کند.',
-    fields: [
-      {
-        key: 'tapinAutoRegisterEnabled',
-        label: 'فعال‌سازی ثبت خودکار پس از پرداخت',
-        helperText: 'بدون تکمیل همهٔ گزینه‌های زیر فعال نمی‌شود و وضعیت تاپین را خودکار به آمادهٔ ارسال تغییر نمی‌دهد.',
-        type: 'switch',
-      },
-      {
-        key: 'tapinAutoRegisterShopId',
-        label: 'شناسه فروشگاه تاپین',
-        helperText: 'UUID فروشگاه را دقیقاً از پنل تاپین وارد کنید.',
-        placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-      },
-      {
-        key: 'tapinAutoRegisterBoxId',
-        label: 'شناسه جعبه تاپین',
-        helperText: 'شناسه جعبه باید از فهرست رسمی تاپین انتخاب شود.',
-        placeholder: 'مثلاً 12',
-      },
-      {
-        key: 'tapinAutoRegisterPackageWeightGrams',
-        label: 'وزن بسته‌بندی (گرم)',
-        helperText: 'وزن بسته‌بندی را بدون حدس و برحسب گرم وارد کنید.',
-        placeholder: 'مثلاً 180',
-      },
-      {
-        key: 'tapinAutoRegisterOrderType',
-        label: 'نوع سفارش تاپین',
-        type: 'select',
-        options: [
-          { value: '0', label: 'نوع ۰' },
-          { value: '1', label: 'نوع ۱' },
-          { value: '3', label: 'نوع ۳' },
-          { value: '5', label: 'نوع ۵' },
-        ],
-      },
-      {
-        key: 'tapinAutoRegisterPacketType',
-        label: 'نوع بسته',
-        type: 'select',
-        options: [
-          { value: '1', label: 'نوع ۱' },
-          { value: '2', label: 'نوع ۲' },
-          { value: '3', label: 'نوع ۳' },
-        ],
-      },
-      {
-        key: 'tapinAutoRegisterContentType',
-        label: 'نوع محتوا',
-        type: 'select',
-        options: [
-          { value: '1', label: 'نوع ۱' },
-          { value: '2', label: 'نوع ۲' },
-          { value: '3', label: 'نوع ۳' },
-          { value: '4', label: 'نوع ۴' },
-        ],
-      },
-      {
-        key: 'tapinAutoRegisterPayType',
-        label: 'نوع پرداخت تاپین',
-        type: 'select',
-        options: [
-          { value: '0', label: 'نوع ۰' },
-          { value: '1', label: 'نوع ۱' },
-          { value: '2', label: 'نوع ۲' },
-          { value: '3', label: 'نوع ۳' },
-        ],
-      },
-      {
-        key: 'tapinAutoRegisterHasInsurance',
-        label: 'بیمهٔ مرسوله',
-        helperText: 'مقدار خاموش نیز به‌صورت صریح ذخیره می‌شود.',
-        type: 'switch',
-      },
-      {
-        key: 'tapinAutoRegisterMaxAttempts',
-        label: 'حداکثر تلاش مجدد',
-        placeholder: '3',
-      },
-      {
-        key: 'tapinAutoRegisterRetryDelaySeconds',
-        label: 'فاصلهٔ تلاش مجدد (ثانیه)',
-        placeholder: '60',
       },
     ],
   },

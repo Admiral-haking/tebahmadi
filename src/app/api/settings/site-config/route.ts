@@ -5,10 +5,6 @@ import { getSiteConfig, isConfigured, updateSiteConfig } from '@/settings/servic
 import type { SiteConfigDocument } from '@/settings/models/SiteConfig';
 import { requirePermission } from '@/lib/auth';
 import { ENV_REQUIREMENTS } from '@/settings/site-config/env-presets';
-import {
-  mergeAndParseTapinAutomationSettings,
-  TapinAutomationConfigError,
-} from '@/services/tapin/automation-config';
 
 type EnvValidationStatus = 'ok' | 'warning' | 'error';
 type EnvSummaryItem = (typeof ENV_REQUIREMENTS)[number] & {
@@ -337,27 +333,10 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const parsed = updateSchema.parse(body);
-    const current = await getSiteConfig();
-    mergeAndParseTapinAutomationSettings(
-      (current?.values ?? {}) as Record<string, unknown>,
-      (parsed.values ?? {}) as Record<string, unknown>,
-    );
     const config = await updateSiteConfig(parsed as Partial<SiteConfigDocument>);
     const status = await isConfigured();
     return NextResponse.json({ data: config, status });
   } catch (error) {
-    if (error instanceof TapinAutomationConfigError) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'TAPIN_AUTOMATION_CONFIG_INVALID',
-            message: error.message,
-            fields: error.issues,
-          },
-        },
-        { status: 400 },
-      );
-    }
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.flatten() }, { status: 400 });
     }
