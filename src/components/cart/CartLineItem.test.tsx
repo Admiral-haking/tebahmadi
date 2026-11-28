@@ -14,7 +14,7 @@ vi.mock("./useCart", () => ({
 }));
 
 vi.mock("@/components/image", () => ({
-  default: ({ src, alt, loading, sizes }: { src: string; alt: string; loading?: string; sizes?: string }) => (
+  default: ({ src, alt, loading, sizes }: { src: string; alt: string; loading?: "lazy" | "eager"; sizes?: string }) => (
     <img data-product-image="true" src={src} alt={alt} loading={loading} sizes={sizes} />
   ),
 }));
