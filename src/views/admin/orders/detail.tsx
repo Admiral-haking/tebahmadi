@@ -61,6 +61,8 @@ import { ContentCopy } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { copyShippingText } from '@/orders/utils/shippingText';
 import { getReceiptAddress } from './receipt-utils';
+import TapinShipmentCard from './components/TapinShipmentCard';
+import type { TapinShipmentView } from './components/tapin-shipment.types';
 import {
   cancelSnappPayInvoiceAction,
   updateSnappPayInvoiceAction,
@@ -102,6 +104,7 @@ interface InvoiceView {
   progress?: InvoiceProgressView | null;
   paymentMethod?: string;
   paymentMethodData?: Record<string, any> | null;
+  tapinShipment?: TapinShipmentView | null;
 }
 
 interface ReceiptToPrintProps {
@@ -265,6 +268,7 @@ function serializeInvoice(invoice: any): InvoiceView {
         typeof line?.mediaId === 'string'
           ? line.mediaId
           : line?.mediaId?.toString?.() ?? undefined,
+      weightGrams: typeof line?.weightGrams === 'number' ? line.weightGrams : undefined,
     }))
     : [];
 
@@ -306,6 +310,23 @@ function serializeInvoice(invoice: any): InvoiceView {
     progress,
     paymentMethod: invoice?.paymentMethod ?? undefined,
     paymentMethodData: invoice?.paymentMethodData ?? null,
+    tapinShipment: invoice?.tapinShipment
+      ? {
+        ...invoice.tapinShipment,
+        registeredAt: invoice.tapinShipment.registeredAt
+          ? new Date(invoice.tapinShipment.registeredAt).toISOString()
+          : new Date().toISOString(),
+        syncedAt: invoice.tapinShipment.syncedAt
+          ? new Date(invoice.tapinShipment.syncedAt).toISOString()
+          : undefined,
+        itemWeights: Array.isArray(invoice.tapinShipment.itemWeights)
+          ? invoice.tapinShipment.itemWeights.map((item: any) => ({
+            variantId: item?.variantId?.toString?.() ?? String(item?.variantId ?? ''),
+            weightGrams: Number(item?.weightGrams ?? 0),
+          }))
+          : undefined,
+      }
+      : null,
   };
 }
 
@@ -872,6 +893,8 @@ export default function InvoiceDetailView({ invoiceId }: InvoiceDetailProps) {
                   </Stack>
                 </CardContent>
               </Card>
+
+              <TapinShipmentCard invoice={invoice} onChanged={() => void mutate()} />
             </Stack>
           </Grid>
 

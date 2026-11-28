@@ -40,6 +40,7 @@ export interface InvoiceLineView {
   priceModel: 'fixed' | 'per_unit';
   unitOfMeasure?: string;
   mediaId?: string;
+  weightGrams?: number;
 }
 
 interface InvoiceLinesTableProps {
