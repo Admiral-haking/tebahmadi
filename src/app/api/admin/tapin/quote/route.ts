@@ -7,7 +7,10 @@ import { InvoiceModel } from '@/orders/models/Invoice';
 import { checkTapinPrice } from '@/services/tapin/orders';
 import { invoiceToTapin } from '@/services/tapin/invoice';
 import { TapinError } from '@/services/tapin/client';
-import { tapinInvoiceRequestSchema, tapinShipmentSchema } from '@/services/tapin/validation';
+import {
+  tapinManualInvoiceRequestSchema,
+  tapinShipmentSchema,
+} from '@/services/tapin/validation';
 import {
   resolveTapinInsurance,
   resolveTapinPayType,
@@ -17,7 +20,7 @@ import {
 export async function POST(request: NextRequest) {
   await requirePermission(request, 'orders:read');
   try {
-    const input = tapinInvoiceRequestSchema.parse(await request.json());
+    const input = tapinManualInvoiceRequestSchema.parse(await request.json());
     if (!Types.ObjectId.isValid(input.invoiceId)) {
       return NextResponse.json({ error: 'شناسه سفارش معتبر نیست.' }, { status: 400 });
     }
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
     quotePayload.pay_type = payType;
     quotePayload.has_insurance = resolveTapinInsurance(payType, input.hasInsurance);
     quotePayload.employee_code = input.employeeCode;
-    quotePayload.pre_paid_price = resolveTapinPrePaidPrice(payType, input.prePaidPrice);
+    quotePayload.pre_paid_price = resolveTapinPrePaidPrice(payType, input.prePaidPrice ?? 0);
     quotePayload.packaging_price = input.packagingPrice;
     if (input.kioskId) quotePayload.kiosk_id = input.kioskId;
     if (input.duration) quotePayload.duration = input.duration;

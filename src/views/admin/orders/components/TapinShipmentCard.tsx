@@ -658,7 +658,10 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
               type="number"
               label="هزینه بسته‌بندی (تومان، اختیاری)"
               value={packagingPriceToman}
-              onChange={(event) => setPackagingPriceToman(event.target.value === '' ? '' : Math.max(0, Number(event.target.value)))}
+              onChange={(event) => {
+                setPackagingPriceToman(event.target.value === '' ? '' : Math.max(0, Number(event.target.value)));
+                clearQuote();
+              }}
             />
             <TextField
               fullWidth
@@ -666,7 +669,10 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
               type="number"
               label="کد کارمند (اختیاری)"
               value={employeeCode}
-              onChange={(event) => setEmployeeCode(event.target.value === '' ? '' : Number(event.target.value))}
+              onChange={(event) => {
+                setEmployeeCode(event.target.value === '' ? '' : Number(event.target.value));
+                clearQuote();
+              }}
             />
           </Stack>
 
@@ -676,7 +682,10 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
               type="number"
               label="پیش‌پرداخت پرداخت در محل (تومان، اختیاری)"
               value={prePaidPriceToman}
-              onChange={(event) => setPrePaidPriceToman(event.target.value === '' ? '' : Math.max(0, Number(event.target.value)))}
+              onChange={(event) => {
+                setPrePaidPriceToman(event.target.value === '' ? '' : Math.max(0, Number(event.target.value)));
+                clearQuote();
+              }}
             />
           ) : null}
 

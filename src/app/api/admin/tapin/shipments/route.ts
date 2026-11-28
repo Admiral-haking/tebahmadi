@@ -16,12 +16,15 @@ import {
   resolveTapinPrePaidPrice,
 } from '@/services/tapin/payment';
 import { ensureTapinIndexes } from '@/services/tapin/indexes';
-import { tapinInvoiceRequestSchema, tapinRegisterSchema } from '@/services/tapin/validation';
+import {
+  tapinManualInvoiceRequestSchema,
+  tapinRegisterSchema,
+} from '@/services/tapin/validation';
 
 export async function POST(request: NextRequest) {
   const user = await requirePermission(request, 'orders:write');
   try {
-    const input = tapinInvoiceRequestSchema.parse(await request.json());
+    const input = tapinManualInvoiceRequestSchema.parse(await request.json());
     if (!Types.ObjectId.isValid(input.invoiceId)) {
       return NextResponse.json({ error: 'شناسه سفارش معتبر نیست.' }, { status: 400 });
     }
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
     payload.pay_type = payType;
     payload.has_insurance = resolveTapinInsurance(payType, input.hasInsurance);
     payload.employee_code = input.employeeCode;
-    const prePaidPrice = resolveTapinPrePaidPrice(payType, input.prePaidPrice);
+    const prePaidPrice = resolveTapinPrePaidPrice(payType, input.prePaidPrice ?? 0);
     payload.pre_paid_price = prePaidPrice;
     payload.packaging_price = input.packagingPrice;
     if (input.presenterCode) payload.presenter_code = input.presenterCode;
