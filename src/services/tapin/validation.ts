@@ -103,3 +103,58 @@ export const tapinInvoiceRequestSchema = z
       });
     }
   });
+
+/**
+ * Request contract used by the admin's explicit quote/register form.
+ *
+ * Keep packaging fields required here. The legacy request schema above keeps
+ * backwards-compatible defaults for older internal callers, but an admin
+ * action must never silently turn a missing packaging choice into a Tapin
+ * decision.
+ */
+export const tapinManualInvoiceRequestSchema = z
+  .object({
+    invoiceId: z.string().trim().min(1),
+    shopId: z.string().uuid().optional(),
+    provinceCode: z.coerce.number().int().positive(),
+    cityCode: z.coerce.number().int().positive(),
+    boxId: z.coerce.number().int().positive(),
+    packetType: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    packageWeight: z.coerce.number().int().nonnegative(),
+    orderType: z.union([z.literal(0), z.literal(1), z.literal(3), z.literal(5)]),
+    registerType: z.union([z.literal(0), z.literal(1), z.literal(2)]),
+    contentType: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+    hasInsurance: z.boolean(),
+    payType: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]).optional(),
+    employeeCode: z.coerce.number().int().optional(),
+    prePaidPrice: z.coerce.number().int().nonnegative().optional(),
+    packagingPrice: z.coerce.number().int().nonnegative().optional(),
+    presenterCode: z.coerce.number().int().positive().optional(),
+    kioskId: z.coerce.number().int().positive().optional(),
+    duration: z.coerce.number().int().positive().max(48).optional(),
+    parcelTurning: z.boolean().optional(),
+    itemWeights: z
+      .array(
+        z.object({
+          variantId: z.string().trim().min(1),
+          weightGrams: z.coerce.number().int().nonnegative(),
+        }),
+      )
+      .optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.kioskId && value.duration !== 48) {
+      context.addIssue({
+        code: 'custom',
+        path: ['duration'],
+        message: 'مدت نگهداری لاکر باید ۴۸ ساعت باشد.',
+      });
+    }
+    if (!value.kioskId && value.duration !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['duration'],
+        message: 'مدت نگهداری فقط برای لاکر قابل ارسال است.',
+      });
+    }
+  });
