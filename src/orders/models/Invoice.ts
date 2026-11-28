@@ -123,6 +123,19 @@ const tapinShipmentSchema = new Schema(
   { _id: false },
 );
 
+const tapinRegistrationAttemptSchema = new Schema(
+  {
+    manualId: { type: String, required: true, trim: true },
+    state: { type: String, enum: ['registering', 'unknown'], required: true },
+    startedAt: { type: Date, required: true },
+    lastCheckedAt: { type: Date },
+    lastError: { type: String, trim: true, maxlength: 300 },
+    // Contains only the validated admin form values; no Tapin token or OTP.
+    input: { type: Schema.Types.Mixed },
+  },
+  { _id: false },
+);
+
 const invoiceSchema = new Schema(
   {
     number: { type: String, required: true, trim: true },
@@ -184,6 +197,7 @@ const invoiceSchema = new Schema(
       token: { type: String, trim: true },
       claimedAt: { type: Date },
     },
+    tapinRegistrationAttempt: tapinRegistrationAttemptSchema,
     progress: progressSchema,
   },
   { timestamps: true }

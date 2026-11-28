@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Button,
@@ -19,7 +19,11 @@ import { toast } from 'sonner';
 
 import type { InvoiceLineView } from './InvoiceLinesTable';
 import { requestTapin } from './tapin-shipment-api';
-import { buildManualTapinPayload } from './tapin-shipment-form';
+import {
+  buildManualTapinPayload,
+  calculateTapinProductWeight,
+  manualTapinPayloadFingerprint,
+} from './tapin-shipment-form';
 import type {
   KioskOption,
   ManualTapinFormInput,
@@ -85,6 +89,8 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
   const [kioskId, setKioskId] = useState<number | ''>('');
   const [parcelTurning, setParcelTurning] = useState(false);
   const [quote, setQuote] = useState<Record<string, number> | null>(null);
+  const [quoteFingerprint, setQuoteFingerprint] = useState<string | null>(null);
+  const quoteRequestRef = useRef(0);
   const [itemWeights, setItemWeights] = useState<Record<string, number>>({});
 
   const tapinShipment = invoice.tapinShipment;
@@ -124,8 +130,11 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
     setItemWeights(
       Object.fromEntries(
         invoice.lines
-          .filter((line) => line.variantId)
-          .map((line) => [line.variantId as string, Math.max(0, Math.round(line.weightGrams ?? 0))]),
+          .map((line) => {
+            const key = line.variantId ?? line.sku;
+            return key ? [key, Math.max(0, Math.round(line.weightGrams ?? 0))] : null;
+          })
+          .filter((entry): entry is [string, number] => Boolean(entry)),
       ),
     );
   }, [invoice.lines, tapinShipment]);
@@ -147,7 +156,9 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
         setBoxId(0);
         setKiosks([]);
         setKioskId('');
+        quoteRequestRef.current += 1;
         setQuote(null);
+        setQuoteFingerprint(null);
       })
       .catch((error) => setOptionsError(tapinErrorMessage(error)));
   }, [shopId, tapinShipment]);
@@ -156,16 +167,15 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
     () => options?.states.find((item) => item.code === provinceCode)?.cities ?? [],
     [options, provinceCode],
   );
-  const productWeight = invoice.lines.reduce((sum, line) => {
-    const key = line.variantId ?? line.sku;
-    const weight = key ? itemWeights[key] : line.weightGrams;
-    return sum + Math.max(0, Math.round(weight ?? 0)) * Math.max(1, line.quantity ?? line.requestedQty ?? 1);
-  }, 0);
+  const productWeight = calculateTapinProductWeight(invoice.lines, itemWeights);
   const itemWeightsPayload = invoice.lines
     .filter((line) => line.variantId)
     .map((line) => ({
       variantId: line.variantId as string,
-      weightGrams: Math.max(0, Math.round(itemWeights[line.variantId as string] ?? 0)),
+      weightGrams: Math.max(
+        0,
+        Math.round(itemWeights[line.variantId as string] ?? line.weightGrams ?? 0),
+      ),
     }));
 
   const formInput: ManualTapinFormInput = {
@@ -191,19 +201,27 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
     itemWeights: itemWeightsPayload,
   };
   const payload = buildManualTapinPayload(formInput);
+  const payloadFingerprint = payload ? manualTapinPayloadFingerprint(payload) : null;
+  const quoteIsCurrent = Boolean(quote && quoteFingerprint && quoteFingerprint === payloadFingerprint);
   const ready = Boolean(payload && productWeight > 0);
 
-  const clearQuote = () => setQuote(null);
+  const clearQuote = () => {
+    quoteRequestRef.current += 1;
+    setQuote(null);
+    setQuoteFingerprint(null);
+  };
 
   const run = async (action: 'quote' | 'register') => {
     if (!payload || !ready) {
       toast.error('ابتدا همهٔ مشخصات بسته‌بندی و وزن کالا را تکمیل کنید.');
       return;
     }
-    if (action === 'register' && !quote) {
+    if (action === 'register' && !quoteIsCurrent) {
       toast.error('ابتدا هزینهٔ ارسال را استعلام کنید.');
       return;
     }
+    const requestId = action === 'quote' ? ++quoteRequestRef.current : quoteRequestRef.current;
+    const requestedFingerprint = manualTapinPayloadFingerprint(payload);
     setLoading(true);
     try {
       const result = await requestTapin<TapinQuoteResponse>(
@@ -215,8 +233,11 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
         },
       );
       if (action === 'quote') {
-        setQuote(result.data ?? null);
-        toast.success('هزینهٔ واقعی ارسال از تاپین دریافت شد.');
+        if (requestId === quoteRequestRef.current) {
+          setQuote(result.data ?? null);
+          setQuoteFingerprint(result.data ? requestedFingerprint : null);
+          toast.success('هزینهٔ واقعی ارسال از تاپین دریافت شد.');
+        }
       } else {
         toast.success('مرسوله با تأیید ادمین در تاپین ثبت شد.');
         onChanged();
@@ -410,7 +431,7 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
             {invoice.lines.map((line) => {
               const key = line.variantId ?? line.sku;
               const count = Math.max(1, line.quantity ?? line.requestedQty ?? 1);
-              const weight = key ? itemWeights[key] ?? 0 : 0;
+              const weight = key ? itemWeights[key] ?? line.weightGrams ?? 0 : line.weightGrams ?? 0;
               return (
                 <Stack
                   key={key || line.id}
@@ -645,7 +666,10 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
               <Switch
                 checked={parcelTurning}
                 disabled={kioskId === ''}
-                onChange={(event) => setParcelTurning(event.target.checked)}
+                onChange={(event) => {
+                  setParcelTurning(event.target.checked);
+                  clearQuote();
+                }}
               />
             }
             label="مرسوله قابلیت چرخش دارد (برای لاکر)"
@@ -660,6 +684,17 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
               value={packagingPriceToman}
               onChange={(event) => {
                 setPackagingPriceToman(event.target.value === '' ? '' : Math.max(0, Number(event.target.value)));
+                clearQuote();
+              }}
+            />
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              label="کد ارائه‌دهنده (اختیاری)"
+              value={presenterCode}
+              onChange={(event) => {
+                setPresenterCode(event.target.value);
                 clearQuote();
               }}
             />
@@ -724,6 +759,9 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
               هزینه ارسال: {formatPrice(quote.total_send_price ?? quote.send_price)} — مبلغ کل: {formatPrice(quote.total_price)} — وزن کل: {formatGrams(quote.total_weight)}
             </Alert>
           ) : null}
+          {quote && !quoteIsCurrent ? (
+            <Alert severity="warning">مشخصات بسته‌بندی تغییر کرده است؛ برای ثبت، دوباره استعلام بگیرید.</Alert>
+          ) : null}
 
           {!ready ? (
             <Alert severity="warning">برای استعلام، فروشگاه، مقصد، جعبه، وزن بسته، نوع‌ها، بیمه و وزن کالا را تکمیل کنید.</Alert>
@@ -733,7 +771,7 @@ function useTapinShipmentCardView({ invoice, onChanged }: Props) {
               استعلام قیمت
             </Button>
             <Button
-              disabled={!ready || !quote || loading}
+              disabled={!ready || !quoteIsCurrent || loading}
               variant="contained"
               onClick={() =>
                 window.confirm('مشخصات مشتری و بسته‌بندی تأیید و مرسوله در تاپین ثبت شود؟') && run('register')

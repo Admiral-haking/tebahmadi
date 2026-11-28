@@ -84,4 +84,22 @@ describe('manual Tapin registration contract', () => {
       products: [{ weight: 260 }],
     });
   });
+
+  it('rejects item-weight overrides that cannot be persisted as variant ids', () => {
+    const result = tapinManualInvoiceRequestSchema.safeParse({
+      invoiceId: '507f1f77bcf86cd799439011',
+      provinceCode: 11,
+      cityCode: 22,
+      boxId: 33,
+      packetType: 3,
+      packageWeight: 180,
+      orderType: 5,
+      registerType: 0,
+      contentType: 3,
+      hasInsurance: false,
+      itemWeights: [{ variantId: 'not-an-object-id', weightGrams: 260 }],
+    });
+
+    expect(result.success).toBe(false);
+  });
 });

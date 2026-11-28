@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildManualTapinPayload } from './tapin-shipment-form';
+import {
+  buildManualTapinPayload,
+  calculateTapinProductWeight,
+  manualTapinPayloadFingerprint,
+} from './tapin-shipment-form';
 
 describe('manual Tapin shipment form payload', () => {
   it('does not build a request while packaging choices are incomplete', () => {
@@ -53,5 +57,34 @@ describe('manual Tapin shipment form payload', () => {
       payType: 1,
       itemWeights: [{ variantId: 'variant-1', weightGrams: 250 }],
     });
+  });
+
+  it('uses the stored line weight when a legacy line has no variant id', () => {
+    expect(
+      calculateTapinProductWeight(
+        [{ sku: 'SKU-1', quantity: 2, weightGrams: 140 }],
+        {},
+      ),
+    ).toBe(280);
+  });
+
+  it('changes the quote fingerprint when any packaging choice changes', () => {
+    const base = {
+      invoiceId: 'invoice-1',
+      shopId: 'b3f8a6e5-4a0b-4e34-9a1b-1b5ef682b7dd',
+      provinceCode: 1,
+      cityCode: 2,
+      boxId: 10,
+      packetType: 2 as const,
+      packageWeight: 180,
+      orderType: 1 as const,
+      registerType: 0 as const,
+      contentType: 1 as const,
+      hasInsurance: true,
+    };
+
+    expect(manualTapinPayloadFingerprint(base)).not.toBe(
+      manualTapinPayloadFingerprint({ ...base, packageWeight: 220 }),
+    );
   });
 });

@@ -44,7 +44,7 @@ export type TapinShipmentView = {
   status: number;
   totalPrice?: number;
   sendPrice?: number;
-  registeredAt: string;
+  registeredAt?: string;
   syncedAt?: string;
   provinceCode?: number;
   cityCode?: number;

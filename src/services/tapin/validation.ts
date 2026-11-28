@@ -10,6 +10,10 @@ const tapinMobile = z.preprocess(
     .trim()
     .regex(/^09\d{9}$/, 'شماره موبایل معتبر نیست.'),
 );
+const tapinVariantId = z
+  .string()
+  .trim()
+  .regex(/^[0-9a-fA-F]{24}$/, 'شناسه واریانت معتبر نیست.');
 
 export const tapinProductSchema = z.object({
   count: z.coerce.number().int().positive(),
@@ -136,7 +140,7 @@ export const tapinManualInvoiceRequestSchema = z
     itemWeights: z
       .array(
         z.object({
-          variantId: z.string().trim().min(1),
+          variantId: tapinVariantId,
           weightGrams: z.coerce.number().int().nonnegative(),
         }),
       )
@@ -158,3 +162,13 @@ export const tapinManualInvoiceRequestSchema = z
       });
     }
   });
+
+export const tapinRegisteredOrderSchema = z.object({
+  id: z.string().trim().min(1),
+  order_id: z.coerce.number().int().positive(),
+  barcode: z.string().trim().min(1, 'بارکد واقعی تاپین در پاسخ وجود ندارد.'),
+  status: z.coerce.number().int(),
+  total_price: z.coerce.number().nonnegative().optional(),
+  send_price: z.coerce.number().nonnegative().optional(),
+  created_at: z.string().trim().optional(),
+});

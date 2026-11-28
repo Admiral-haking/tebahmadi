@@ -130,6 +130,7 @@ export const listTapinOrders = (
     city?: number;
     payType?: number;
     orderType?: number;
+    manualId?: string;
     createdAt?: string;
     shopId?: string;
   } = {},
@@ -162,11 +163,17 @@ export const listTapinOrders = (
       city_code: filters.city,
       pay_type: filters.payType,
       order_type: filters.orderType,
+      manual_id: filters.manualId,
       created_at: filters.createdAt,
       shop_id: filters.shopId,
     },
     { retrySafe: true },
   );
+
+export const findTapinOrderByManualId = async (manualId: string, shopId?: string) => {
+  const result = await listTapinOrders(1, 10, { manualId, shopId });
+  return result.list.find((item) => item.id && item.order_id && item.barcode) ?? null;
+};
 
 export const listTapinTransactions = (page = 1, count = 10, shopId?: string) =>
   tapinRequest<{

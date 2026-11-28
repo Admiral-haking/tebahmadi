@@ -4,6 +4,49 @@ function hasNumber(value: number | '' | undefined): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+type TapinWeightLine = {
+  variantId?: string;
+  sku: string;
+  quantity?: number;
+  requestedQty?: number;
+  weightGrams?: number;
+};
+
+/**
+ * Calculates the product-only weight used by both the form and the server.
+ * Legacy invoices may not have a variant id, so their stored line weight must
+ * remain usable instead of being replaced by zero in the UI.
+ */
+export function calculateTapinProductWeight(
+  lines: TapinWeightLine[],
+  itemWeights: Record<string, number>,
+): number {
+  return lines.reduce((sum, line) => {
+    const key = line.variantId ?? line.sku;
+    const override = key ? itemWeights[key] : undefined;
+    const weight = override ?? line.weightGrams ?? 0;
+    const count = Math.max(1, Math.round(line.quantity ?? line.requestedQty ?? 1));
+    return sum + Math.max(0, Math.round(weight)) * count;
+  }, 0);
+}
+
+function stableValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, stableValue(child)]),
+    );
+  }
+  return value;
+}
+
+/** Prevents an old quote from being used after any packaging value changed. */
+export function manualTapinPayloadFingerprint(payload: ManualTapinPayload): string {
+  return JSON.stringify(stableValue(payload));
+}
+
 /**
  * Builds the only payload the manual quote/register UI is allowed to send.
  * Packaging choices stay absent until the admin explicitly enters them.

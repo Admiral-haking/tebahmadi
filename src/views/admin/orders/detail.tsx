@@ -315,7 +315,7 @@ function serializeInvoice(invoice: any): InvoiceView {
         ...invoice.tapinShipment,
         registeredAt: invoice.tapinShipment.registeredAt
           ? new Date(invoice.tapinShipment.registeredAt).toISOString()
-          : new Date().toISOString(),
+          : undefined,
         syncedAt: invoice.tapinShipment.syncedAt
           ? new Date(invoice.tapinShipment.syncedAt).toISOString()
           : undefined,

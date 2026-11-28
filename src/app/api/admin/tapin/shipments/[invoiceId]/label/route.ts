@@ -27,7 +27,19 @@ export async function GET(request: NextRequest, context: Context) {
       invoice.tapinShipment.shopId ?? undefined,
     );
     const body = await upstream.arrayBuffer();
-    const contentType = upstream.headers.get('content-type') || 'application/pdf';
+    const contentType = (upstream.headers.get('content-type') || 'application/pdf')
+      .split(';', 1)[0]
+      .trim()
+      .toLowerCase();
+    if (!body.byteLength || !['application/pdf', 'application/octet-stream', 'text/html'].includes(contentType)) {
+      return NextResponse.json({ error: 'پاسخ لیبل تاپین فایل معتبر نیست.' }, { status: 502 });
+    }
+    if (contentType === 'application/pdf') {
+      const header = new TextDecoder().decode(body.slice(0, 5));
+      if (header !== '%PDF-') {
+        return NextResponse.json({ error: 'فایل PDF لیبل تاپین معتبر نیست.' }, { status: 502 });
+      }
+    }
     return new NextResponse(body, {
       headers: {
         'Content-Type': contentType,
